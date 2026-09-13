@@ -8,6 +8,7 @@ Nothing environment-specific (debug flags, hosts, secrets) belongs here.
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 
 # apps/api/config/settings/base.py -> apps/api/
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -67,6 +68,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.audit.context.AuditContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -109,6 +111,10 @@ DATABASES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Custom user model (email-based, master prompt §49) — must be set before
+# the first migration exists anywhere in the project.
+AUTH_USER_MODEL = "accounts.User"
 
 # --- Password validation ----------------------------------------------------
 
@@ -153,6 +159,7 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
     "DEFAULT_VERSION": "v1",
     "ALLOWED_VERSIONS": ["v1"],
+    "EXCEPTION_HANDLER": "config.exceptions.api_exception_handler",
 }
 
 # --- CORS --------------------------------------------------------------------
@@ -160,6 +167,19 @@ REST_FRAMEWORK = {
 # in local dev; environment-specific allow-lists live in dev/staging/prod.
 
 CORS_ALLOWED_ORIGINS: list[str] = []
+# The SPA sends the session cookie + CSRF header on every mutating request
+# (master prompt §49 "session management" — see docs/decisions-log.md).
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = list(default_headers) + ["x-company-id"]
+
+# --- CSRF --------------------------------------------------------------------
+
+CSRF_TRUSTED_ORIGINS: list[str] = []
+# Readable by JS on purpose: the SPA reads this cookie and echoes it back as
+# the X-CSRFToken header (standard DRF SessionAuthentication + SPA pattern).
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
 
 # --- Celery ------------------------------------------------------------------
 
@@ -198,3 +218,9 @@ EMAIL_HOST = env("EMAIL_HOST", default="localhost")
 EMAIL_PORT = env.int("EMAIL_PORT", default=1025)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@pausalac.rs")
+
+# --- Frontend -----------------------------------------------------------------
+# Base URL used when building links embedded in emails (verification, password
+# reset). Points at the Vue app (apps/app), not the Nuxt marketing site.
+
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
