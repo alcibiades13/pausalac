@@ -25,10 +25,9 @@ pausalac/
   docs/       # implementacioni plan, decisions log, arhivirani izvorni dokumenti
 ```
 
-**Status (Phase 1a — bootstrap):** monorepo, tooling i prazni ali pokretni
-skeletoni su na mestu. Auth, tenant model, RBAC, audit infrastruktura i sav
-poslovni domenski kod (fakture, KPO, limiti, ...) dolaze u sledećim fazama —
-videti `docs/implementation-plan.md`.
+**Status:** auth/tenant/RBAC/audit backend, dizajn-sistem primitivi, auth
+ekrani i Klijenti domen su gotovi (Phase 2a). Fakture, KPO, limiti, plaćanja,
+pravi dashboard dolaze u sledećim fazama — videti `docs/implementation-plan.md`.
 
 ## Preduslovi
 
@@ -37,42 +36,50 @@ videti `docs/implementation-plan.md`.
 - Python 3.12
 - Docker + Docker Compose (Postgres, Redis, MinIO, MailHog za lokalni razvoj)
 
-## Prvo pokretanje
-
-### 1. Infrastruktura (Postgres, Redis, MinIO, MailHog)
+## Prvo podešavanje (jednom)
 
 ```bash
 cp .env.example .env
-docker compose up -d
-```
 
-- MinIO konzola: http://localhost:9001 (podaci iz `.env`)
-- MailHog inbox: http://localhost:8025
-
-### 2. Backend (`apps/api`)
-
-```bash
 cd apps/api
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements/dev.txt
 python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+python manage.py createsuperuser   # opciono, za /admin
+cd ../..
+
+pnpm install
 ```
 
-Backend je dostupan na http://localhost:8000, health check na
-http://localhost:8000/health.
-
-Pokretanje testova: `pytest` (iz `apps/api`, sa aktivnim venv-om).
-
-### 3. Frontend (iz root-a repozitorijuma, jednom instalira oba app-a)
+## Svakodnevni rad
 
 ```bash
-pnpm install
-pnpm dev:app   # Vue app — http://localhost:5173
-pnpm dev:web   # Nuxt marketing sajt — http://localhost:3000
+pnpm dev
 ```
+
+Ovo pokreće (jednom komandom, u jednom terminalu, sa obojenim prefiksima
+po procesu):
+
+- infrastrukturu preko `docker compose up -d` (Postgres, Redis, MinIO,
+  MailHog — ostaju u pozadini i posle Ctrl+C)
+- Django dev server — http://localhost:8000 (health check `/health`)
+- Celery worker (obavezan — bez njega registracija/email ne rade, jer se
+  šalju kao pozadinski zadatak)
+- Vue app (`apps/app`) — http://localhost:5173
+
+Ctrl+C u tom terminalu gasi backend/Celery/frontend zajedno (infrastruktura
+u Docker-u ostaje da radi — ugasi je posebno sa `docker compose down` ako
+treba).
+
+- MailHog inbox (verifikacija emaila, reset lozinke): http://localhost:8025
+- MinIO konzola: http://localhost:9001 (podaci iz `.env`)
+
+Marketing sajt (`apps/web`, trenutno prazan skeleton) nije uključen u
+`pnpm dev` jer nema veze sa svakodnevnim radom na aplikaciji — pokreni ga
+posebno kad zatreba: `pnpm dev:web` — http://localhost:3000.
+
+Pokretanje backend testova: `pytest` (iz `apps/api`, sa aktivnim venv-om).
 
 ## Konvencije
 
