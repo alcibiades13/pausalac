@@ -9,7 +9,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-pausalac}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pausalac}
     ports:
-      - "5432:5432"
+      # Host-side port only — many dev machines already run a native
+      # Postgres on 5432. Must match POSTGRES_PORT in .env.
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +24,10 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      # Host-side port only — many dev machines already run a native
+      # Redis on 6379. Must match the port in REDIS_URL/CELERY_BROKER_URL
+      # in .env.
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -32,7 +37,9 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest
+    # minio/minio on Docker Hub is no longer pullable (MinIO moved
+    # distribution off Hub) — quay.io is the current official source.
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
