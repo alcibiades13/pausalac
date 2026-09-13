@@ -1,0 +1,10 @@
+{
+  "name": "@pausalac/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tokens.css": "./tokens.css",
+    "./tsconfig.base.json": "./tsconfig.base.json"
+  }
+}

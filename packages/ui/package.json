@@ -1,0 +1,7 @@
+{
+  "name": "@pausalac/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reserved for shared Vue component primitives (Button, Input, MoneyDisplay, etc. — master prompt §51/§89). Empty until Phase 1b's design-system pass."
+}

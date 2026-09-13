@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@pausalac/config/tokens.css";
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-navy);
+}

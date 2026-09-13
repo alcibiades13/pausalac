@@ -1,0 +1,43 @@
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+.~lock.*#
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Python / Django (apps/api) ---
+apps/api/.venv/
+apps/api/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+apps/api/staticfiles/
+apps/api/media/
+apps/api/*.sqlite3
+apps/api/.pytest_cache/
+apps/api/.coverage
+apps/api/htmlcov/
+
+# --- Node / frontend (apps/app, apps/web, packages/*) ---
+node_modules/
+**/node_modules/
+.pnpm-store/
+dist/
+.output/
+.nuxt/
+.nitro/
+.cache/
+*.local
+
+# --- Docker / infra ---
+docker/volumes/
+
+# --- Logs ---
+*.log
+npm-debug.log*
+pnpm-debug.log*
