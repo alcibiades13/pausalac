@@ -101,3 +101,33 @@ class ClientRbacTests(TestCase):
         url = reverse("client-list", kwargs={"version": "v1"})
         response = self.client.post(url, {"name": "Novi klijent"}, **self.headers)
         self.assertEqual(response.status_code, 403)
+
+
+class ClientListPaginationTests(TestCase):
+    """
+    config.pagination.DefaultPagination — added in Phase 2c so the invoice
+    form's client picker isn't silently capped at the default page size.
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        self.company = Company.objects.create(name="Firma A")
+        Membership.objects.create(user=self.owner, company=self.company)
+        Client.objects.bulk_create(
+            [Client(company=self.company, name=f"Klijent {i}") for i in range(30)]
+        )
+        self.client.login(username="owner@pausalac.rs", password="s3cr3t-pass")
+        self.headers = {"HTTP_X_COMPANY_ID": str(self.company.id)}
+        self.url = reverse("client-list", kwargs={"version": "v1"})
+
+    def test_default_page_size_is_25(self):
+        response = self.client.get(self.url, **self.headers)
+        self.assertEqual(len(response.json()["results"]), 25)
+
+    def test_page_size_query_param_is_honored(self):
+        response = self.client.get(self.url, {"page_size": 50}, **self.headers)
+        self.assertEqual(len(response.json()["results"]), 30)
+
+    def test_page_size_is_capped_at_max(self):
+        response = self.client.get(self.url, {"page_size": 500}, **self.headers)
+        self.assertEqual(len(response.json()["results"]), 30)  # only 30 exist, cap is 100

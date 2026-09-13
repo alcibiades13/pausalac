@@ -66,6 +66,28 @@ const router = createRouter({
           component: () => import('@/views/ClientFormView.vue'),
           props: true,
         },
+        {
+          path: 'fakture',
+          name: 'invoices',
+          component: () => import('@/views/InvoicesListView.vue'),
+        },
+        {
+          path: 'fakture/nova',
+          name: 'invoice-new',
+          component: () => import('@/views/InvoiceFormView.vue'),
+        },
+        {
+          path: 'fakture/:id/izmeni',
+          name: 'invoice-edit',
+          component: () => import('@/views/InvoiceFormView.vue'),
+          props: true,
+        },
+        {
+          path: 'fakture/:id',
+          name: 'invoice-detail',
+          component: () => import('@/views/InvoiceDetailView.vue'),
+          props: true,
+        },
       ],
     },
   ],

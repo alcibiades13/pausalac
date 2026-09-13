@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api'
+import { apiFetch, type Paginated } from '@/lib/api'
 import { useCompanyStore } from '@/stores/company'
 
 export interface Client {
@@ -22,13 +22,6 @@ export type ClientPayload = Pick<
   'client_type' | 'name' | 'tax_id' | 'email' | 'phone' | 'address' | 'notes'
 >
 
-interface Paginated<T> {
-  count: number
-  next: string | null
-  previous: string | null
-  results: T[]
-}
-
 function currentCompanyId(): number {
   const id = useCompanyStore().currentCompanyId
   if (id === null) {
@@ -37,8 +30,11 @@ function currentCompanyId(): number {
   return id
 }
 
-export function listClients(): Promise<Paginated<Client>> {
-  return apiFetch<Paginated<Client>>('clients/', { companyId: currentCompanyId() })
+export function listClients(options: { pageSize?: number } = {}): Promise<Paginated<Client>> {
+  return apiFetch<Paginated<Client>>('clients/', {
+    companyId: currentCompanyId(),
+    params: { page_size: options.pageSize },
+  })
 }
 
 export function getClient(id: number | string): Promise<Client> {

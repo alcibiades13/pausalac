@@ -36,6 +36,13 @@ async function onLogout() {
           >
             Klijenti
           </RouterLink>
+          <RouterLink
+            :to="{ name: 'invoices' }"
+            class="text-sm text-text-secondary hover:text-navy"
+            active-class="text-navy font-medium"
+          >
+            Fakture
+          </RouterLink>
         </nav>
         <Button variant="ghost" @click="onLogout">Odjavi se</Button>
       </div>

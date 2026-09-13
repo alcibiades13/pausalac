@@ -29,13 +29,22 @@ export class ApiError extends Error {
 
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
+/** Standard DRF PageNumberPagination envelope (config/pagination.py). */
+export interface Paginated<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   body?: unknown
   companyId?: string | number
+  params?: Record<string, string | number | boolean | undefined>
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
-  const { body, companyId, headers, method = 'GET', ...rest } = options
+  const { body, companyId, params, headers, method = 'GET', ...rest } = options
 
   const requestHeaders = new Headers(headers)
   requestHeaders.set('Content-Type', 'application/json')
@@ -50,7 +59,14 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     }
   }
 
-  const response = await fetch(`${API_BASE_URL}/${API_VERSION}/${path.replace(/^\//, '')}`, {
+  let url = `${API_BASE_URL}/${API_VERSION}/${path.replace(/^\//, '')}`
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value !== undefined) query.set(key, String(value))
+  }
+  if ([...query].length > 0) url += `?${query.toString()}`
+
+  const response = await fetch(url, {
     ...rest,
     method,
     headers: requestHeaders,
