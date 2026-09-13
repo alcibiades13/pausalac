@@ -40,12 +40,34 @@ const router = createRouter({
       component: () => import('@/views/VerifyEmailView.vue'),
     },
     {
-      path: '/pocetna',
-      name: 'home',
-      component: () => import('@/views/HomeView.vue'),
+      path: '/',
+      component: () => import('@/components/AppShell.vue'),
       meta: { requiresAuth: true },
+      children: [
+        { path: '', redirect: { name: 'home' } },
+        {
+          path: 'pocetna',
+          name: 'home',
+          component: () => import('@/views/HomeView.vue'),
+        },
+        {
+          path: 'klijenti',
+          name: 'clients',
+          component: () => import('@/views/ClientsListView.vue'),
+        },
+        {
+          path: 'klijenti/novi',
+          name: 'client-new',
+          component: () => import('@/views/ClientFormView.vue'),
+        },
+        {
+          path: 'klijenti/:id',
+          name: 'client-edit',
+          component: () => import('@/views/ClientFormView.vue'),
+          props: true,
+        },
+      ],
     },
-    { path: '/', redirect: { name: 'home' } },
   ],
 })
 

@@ -45,7 +45,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("update", "partial_update"):
             return [permissions.IsAuthenticated(), IsCompanyOwner()]
-        if self.action in ("retrieve", "members"):
+        if self.action in ("retrieve", "members", "onboarding"):
             return [permissions.IsAuthenticated(), IsCompanyMember()]
         return [permissions.IsAuthenticated()]
 
@@ -63,3 +63,48 @@ class CompanyViewSet(viewsets.ModelViewSet):
             raise exceptions.PermissionDenied("Nemate dozvolu da vidite članove ove kompanije.")
         memberships = Membership.objects.filter(company=company).select_related("user")
         return Response(MembershipSerializer(memberships, many=True).data)
+
+    @action(detail=True, methods=["get"])
+    def onboarding(self, request, pk=None, *args, **kwargs):
+        """
+        Onboarding-completion widget data (master prompt §34): what's done,
+        what's missing, as a percentage. Computed on read, never stored, so
+        it can't drift from the records it's summarizing.
+
+        Imports apps.clients.models.Client lazily: companies is a
+        lower-level domain that clients depends on (Client FKs to Company),
+        so reaching "up" into clients here is a deliberate, contained
+        exception for this one cross-domain read, not a module-level
+        coupling — see docs/decisions-log.md.
+        """
+        from apps.clients.models import Client
+
+        company = self.get_object()
+
+        completed = []
+        missing = []
+
+        if company.name and company.pib:
+            completed.append("company")
+        else:
+            missing.append("company")
+
+        if company.bank_account:
+            completed.append("bank")
+        else:
+            missing.append("bank")
+
+        if Client.objects.for_company(company).filter(is_active=True).exists():
+            completed.append("client")
+        else:
+            missing.append("client")
+
+        # Not built yet (SEF integration is Phase 4+, Documents is a later
+        # Phase 2/3 domain) — honestly reported as missing rather than
+        # silently omitted, matching §34's own example list.
+        missing.extend(["sef", "tax_document"])
+
+        total = len(completed) + len(missing)
+        percentage = round(len(completed) / total * 100) if total else 0
+
+        return Response({"completed": completed, "missing": missing, "percentage": percentage})

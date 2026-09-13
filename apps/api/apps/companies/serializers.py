@@ -16,6 +16,8 @@ class CompanySerializer(serializers.ModelSerializer):
             "country",
             "activity_code",
             "default_currency",
+            "bank_account",
+            "uses_sef",
             "is_active",
             "created_at",
             "updated_at",

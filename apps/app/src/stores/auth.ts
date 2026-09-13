@@ -12,6 +12,8 @@ export interface Company {
   country: string
   activity_code: string
   default_currency: string
+  bank_account: string
+  uses_sef: boolean
   is_active: boolean
   created_at: string
   updated_at: string

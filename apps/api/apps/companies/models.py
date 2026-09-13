@@ -13,9 +13,10 @@ from .managers import TenantScopedManager
 
 class Company(models.Model):
     """
-    Deliberately minimal for Phase 1b. Bank account, SEF/fiscalization
-    status, business activity, etc. are onboarding-wizard fields added in
-    Phase 2 — not blockers for the tenant/auth foundation.
+    Tenant root. `bank_account`/`uses_sef` were added in Phase 2a for
+    onboarding-completion tracking (apps/companies/views.py::onboarding) —
+    `uses_sef` is a user-declared preference only, not a real SEF
+    integration (master prompt §39: architecture seam, not a fake one).
     """
 
     name = models.CharField("naziv", max_length=255)
@@ -26,6 +27,10 @@ class Company(models.Model):
     country = models.CharField("država", max_length=2, default="RS")
     activity_code = models.CharField("šifra delatnosti", max_length=20, blank=True)
     default_currency = models.CharField("podrazumevana valuta", max_length=3, default="RSD")
+    # Deliberately unvalidated format (IBAN/domestic account, either) — no
+    # confirmed authoritative format rule to encode yet (master prompt §81).
+    bank_account = models.CharField("račun za uplate", max_length=64, blank=True)
+    uses_sef = models.BooleanField("koristi SEF", default=False)
     is_active = models.BooleanField("aktivna", default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

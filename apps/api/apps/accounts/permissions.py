@@ -25,6 +25,10 @@ ALL_PERMISSIONS: set[str] = {
     "manage_users",
     "manage_subscriptions",
     "manage_rules",
+    # Added in Phase 2a: the §30 example list wasn't exhaustive ("Na
+    # primer") and Clients is now a real protected resource.
+    "view_clients",
+    "manage_clients",
 }
 
 ROLE_PERMISSIONS: dict[str, set[str]] = {
@@ -37,10 +41,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         "upload_documents",
         "manage_tax_obligations",
         "view_audit",
+        "view_clients",
+        "manage_clients",
     },
     Role.ACCOUNTANT: {
         "view_financial_data",
         "view_documents",
         "view_audit",
+        "view_clients",
     },
 }

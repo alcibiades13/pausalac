@@ -14,6 +14,7 @@ from .health import health
 api_v1_patterns = [
     path("auth/", include("apps.accounts.urls")),
     path("companies/", include("apps.companies.urls")),
+    path("clients/", include("apps.clients.urls")),
     path("audit/", include("apps.audit.urls")),
 ]
 
