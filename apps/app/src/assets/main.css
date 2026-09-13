@@ -1,6 +1,18 @@
 @import "tailwindcss";
 @import "@pausalac/config/tokens.css";
 
+/*
+ * Tailwind's automatic content detection walks this app's own directory
+ * tree and skips node_modules — so it never sees packages/ui's .vue files,
+ * even though pnpm resolves @pausalac/ui there as a real (symlinked)
+ * source, not a prebuilt dependency. Without this, utility classes used
+ * only inside shared components (e.g. Alert's bg-danger/10) are silently
+ * missing from the built CSS. Add explicitly per shared package as they
+ * start being consumed (packages/ui today; packages/config has no
+ * templates, just tokens.css).
+ */
+@source "../../../../packages/ui/src";
+
 body {
   font-family: var(--font-sans);
   background-color: var(--color-background);

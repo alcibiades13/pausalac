@@ -2,7 +2,12 @@
 Custom DRF exception handler enforcing the API error contract
 (master prompt §110):
 
-    {"error": {"code": "...", "message": "...", "request_id": "..."}}
+    {"error": {"code": "...", "message": "...", "request_id": "...", "fields": {...}}}
+
+`fields` is present only for dict-shaped validation errors (serializer
+field errors) and is additive to the §110 example — it exists so frontend
+forms can render inline, per-field errors (§93) instead of only a single
+flattened message losing which field(s) actually failed.
 
 Never expose raw backend errors to users (§56) — this is the one place
 that shape gets decided, so individual views don't hand-roll error bodies.
@@ -48,6 +53,27 @@ def _flatten_message(detail) -> str:
     return str(detail)
 
 
+def _extract_fields(detail) -> dict[str, list[str]] | None:
+    """
+    DRF serializer validation errors arrive as `{"field": [ErrorDetail, ...]}`
+    (or nested for nested serializers, not handled here — none of our
+    serializers nest yet). Returns None for anything else (a single
+    top-level message, a bare list, ...) so `fields` is omitted entirely
+    rather than sent as a misleading single-key dict.
+    """
+    if not isinstance(detail, dict) or not detail:
+        return None
+    fields: dict[str, list[str]] = {}
+    for key, value in detail.items():
+        if isinstance(value, (list, tuple)):
+            fields[key] = [str(v) for v in value]
+        elif isinstance(value, dict):
+            return None  # nested serializer errors — not flattened here yet
+        else:
+            fields[key] = [str(value)]
+    return fields
+
+
 def _is_unmodified_default_detail(exc: Exception) -> bool:
     """
     True when `exc` was raised bare (e.g. `raise exceptions.NotAuthenticated()`)
@@ -88,6 +114,7 @@ def api_exception_handler(exc, context):
         )
 
     fallback = _DEFAULT_MESSAGES.get(response.status_code, "")
+    fields = None
     if _is_unmodified_default_detail(exc):
         # DRF's own generic wording (e.g. "Authentication credentials were
         # not provided.") — swap in the Serbian equivalent (§56/§83/§117).
@@ -97,13 +124,16 @@ def api_exception_handler(exc, context):
         # localized copy off of for anything more specific.
         message = fallback
     else:
+        fields = _extract_fields(response.data)
         message = _flatten_message(response.data) if response.data else fallback
 
-    response.data = {
-        "error": {
-            "code": _error_code(exc),
-            "message": message or fallback,
-            "request_id": request_id,
-        }
+    error = {
+        "code": _error_code(exc),
+        "message": message or fallback,
+        "request_id": request_id,
     }
+    if fields:
+        error["fields"] = fields
+
+    response.data = {"error": error}
     return response

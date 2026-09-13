@@ -1,0 +1,8 @@
+{
+  "extends": "@pausalac/config/tsconfig.base.json",
+  "include": ["src/**/*", "src/**/*.vue"],
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  }
+}

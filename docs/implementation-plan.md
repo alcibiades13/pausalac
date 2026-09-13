@@ -67,8 +67,8 @@ Everything beyond Phase 1a (auth, domain models, invoicing, KPO, limits, etc.) i
 | **0 — Discovery** ✅ | Architecture summary, decisions log, roadmap |
 | **1a — Bootstrap** ✅ | Monorepo, Docker Compose, empty Django/Vue/Nuxt skeletons, CI skeleton |
 | **1b — Auth/tenant/RBAC/audit backend** ✅ | Custom User model, session+CSRF auth (register/verify/login/logout/password-reset), Company/Membership tenant model, RBAC (`ROLE_PERMISSIONS`), tenant-scoping mechanism, append-only audit log + `AuditService`. Backend only — see `docs/decisions-log.md`. |
-| **1c — Frontend foundation** *(next)* | `packages/ui` design-system component primitives, login/register/forgot-password screens in `apps/app` wired to the Phase 1b API |
-| **2 — Core business** | Clients, Invoices (+PDF, +email), Payments, Dashboard, full Company onboarding wizard |
+| **1c — Frontend foundation** ✅ | `packages/ui` primitives (Button/Input/Card/Alert), auth store + API client in `apps/app`, login/register/forgot-password/reset/verify-email screens, minimal authenticated home view with a bridge create-company form. See `docs/decisions-log.md` for the Tailwind monorepo `@source` gotcha found while verifying this. |
+| **2 — Core business** *(next)* | Clients, Invoices (+PDF, +email), Payments, Dashboard, full Company onboarding wizard |
 | **3 — Compliance** | KPO, Limits (+ rules engine + what-if calculator), Obligations, Notifications, Documents |
 | **4 — Accounting platform** | Accounting organization, client relationships, accountant dashboard, permissions |
 | **5 — Billing** | Trial, Subscriptions, Plans, Entitlements |
