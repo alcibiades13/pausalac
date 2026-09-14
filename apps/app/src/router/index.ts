@@ -128,6 +128,11 @@ const router = createRouter({
           name: 'accounting-organization',
           component: () => import('@/views/AccountingOrganizationView.vue'),
         },
+        {
+          path: 'pretplata',
+          name: 'subscription',
+          component: () => import('@/views/SubscriptionView.vue'),
+        },
       ],
     },
   ],

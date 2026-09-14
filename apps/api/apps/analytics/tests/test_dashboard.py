@@ -280,6 +280,46 @@ class DashboardTests(TestCase):
         types = [item["type"] for item in body["attention"]]
         self.assertIn("onboarding_incomplete", types)
 
+    def test_expired_subscription_flips_health_to_critical(self):
+        from apps.subscriptions.models import Subscription
+
+        Subscription.objects.create(
+            company=self.company,
+            status=Subscription.Status.EXPIRED,
+            trial_ends_at=timezone.now() - timedelta(days=1),
+        )
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["business_health"]["status"], "critical")
+        types = [item["type"] for item in body["attention"]]
+        self.assertIn("subscription_inactive", types)
+
+    def test_trial_ending_soon_produces_attention_not_critical(self):
+        from apps.subscriptions.models import Subscription
+
+        Subscription.objects.create(
+            company=self.company,
+            status=Subscription.Status.TRIALING,
+            trial_ends_at=timezone.now() + timedelta(days=2),
+        )
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["business_health"]["status"], "attention")
+        types = [item["type"] for item in body["attention"]]
+        self.assertIn("trial_ending_soon", types)
+
+    def test_active_subscription_produces_no_attention_entry(self):
+        from apps.subscriptions.models import Subscription
+
+        Subscription.objects.create(
+            company=self.company,
+            status=Subscription.Status.ACTIVE,
+            trial_ends_at=timezone.now() - timedelta(days=20),
+        )
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["business_health"]["status"], "ok")
+
     def test_sef_and_tax_document_gaps_alone_do_not_trigger_attention(self):
         # A fully-onboarded-as-far-as-possible company (company+bank+client
         # all done) still has sef/tax_document permanently "missing" per

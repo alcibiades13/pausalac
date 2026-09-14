@@ -31,4 +31,12 @@ app.conf.beat_schedule = {
         "task": "apps.taxes.tasks.mark_overdue_tax_obligations_task",
         "schedule": crontab(minute=0),  # hourly
     },
+    "expire-trials": {
+        "task": "apps.subscriptions.tasks.expire_trials_task",
+        "schedule": crontab(hour=1, minute=0),  # daily — trial-day granularity doesn't need hourly
+    },
+    "send-trial-warnings": {
+        "task": "apps.subscriptions.tasks.send_trial_warnings_task",
+        "schedule": crontab(hour=1, minute=15),  # daily
+    },
 }

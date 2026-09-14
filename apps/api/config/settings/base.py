@@ -225,3 +225,11 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@pausalac.rs")
 # reset). Points at the Vue app (apps/app), not the Nuxt marketing site.
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
+
+# --- Subscriptions -------------------------------------------------------------
+# Trial length is a genuine business decision the spec explicitly leaves
+# open (master prompt §50/§104 call pricing/limits "TBD"; trial length is
+# the same category) — 14 days is an industry-standard default, not a
+# regulatory fact, so it's a single constant to change later, not
+# something to block Phase 5 on. See docs/decisions-log.md.
+SUBSCRIPTION_TRIAL_DAYS = env.int("SUBSCRIPTION_TRIAL_DAYS", default=14)

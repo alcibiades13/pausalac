@@ -46,7 +46,18 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             "send": "edit_invoice",
             "cancel": "cancel_invoice",
         }[self.action]
-        return [permissions.IsAuthenticated(), HasCompanyPermission(codename)()]
+        gates = [permissions.IsAuthenticated(), HasCompanyPermission(codename)()]
+        if self.action == "create":
+            # Phase 5's one real entitlement-enforcement point (master
+            # prompt §104: "backend must enforce") — added alongside the
+            # RBAC check above, not instead of it. Deliberately not swept
+            # across every other write endpoint this phase; see
+            # docs/decisions-log.md. Lazy import: apps.subscriptions sits
+            # after apps.invoices in DOMAIN_APPS.
+            from apps.subscriptions.permissions import HasActiveSubscription
+
+            gates.append(HasActiveSubscription())
+        return gates
 
     def get_queryset(self):
         base = Invoice.objects.select_related("client", "company").prefetch_related("items")

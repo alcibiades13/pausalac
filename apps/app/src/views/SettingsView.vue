@@ -67,6 +67,16 @@ async function onSave() {
     </Card>
 
     <Card>
+      <h2 class="mb-1 text-base font-semibold text-navy">Pretplata</h2>
+      <p class="mb-3 text-sm text-text-secondary">
+        Pogledaj status probnog perioda ili aktivne pretplate i promeni plan.
+      </p>
+      <RouterLink :to="{ name: 'subscription' }">
+        <Button variant="secondary">Otvori</Button>
+      </RouterLink>
+    </Card>
+
+    <Card>
       <h2 class="mb-1 text-base font-semibold text-navy">Računovodstvena agencija</h2>
       <p class="mb-3 text-sm text-text-secondary">
         Vodiš računovodstvenu agenciju? Ovde možeš da je registruješ, dodaš zaposlene i povežeš

@@ -120,7 +120,44 @@ class DashboardView(APIView):
                 }
             )
 
-        if outstanding["overdue_count"] or limits_critical or obligation_overdue:
+        # Lazy import — apps.subscriptions sits after apps.analytics in
+        # DOMAIN_APPS (same precedent as every other lower-domain-calls-
+        # later-domain case in this codebase).
+        from apps.subscriptions.models import Subscription
+
+        subscription = getattr(company, "subscription", None)
+        subscription_inactive = subscription is not None and subscription.status in (
+            Subscription.Status.EXPIRED,
+            Subscription.Status.CANCELLED,
+        )
+        if subscription_inactive:
+            attention.append(
+                {
+                    "type": "subscription_inactive",
+                    "message": (
+                        "Pretplata nije aktivna — izaberi plan da nastaviš da izdaješ fakture."
+                    ),
+                    "action": {"route": "subscription"},
+                }
+            )
+        elif subscription is not None and subscription.status == Subscription.Status.TRIALING:
+            days_left = (subscription.trial_ends_at.date() - timezone.now().date()).days
+            if days_left <= 3:
+                attention.append(
+                    {
+                        "type": "trial_ending_soon",
+                        "message": f"Probni period ističe za {days_left} dan(a).",
+                        "action": {"route": "subscription"},
+                    }
+                )
+
+        is_critical = (
+            outstanding["overdue_count"]
+            or limits_critical
+            or obligation_overdue
+            or subscription_inactive
+        )
+        if is_critical:
             reasons = []
             if outstanding["overdue_count"]:
                 reasons.append(f"{outstanding['overdue_count']} faktura(e) kasni sa naplatom.")
@@ -129,6 +166,8 @@ class DashboardView(APIView):
             )
             if obligation_overdue:
                 reasons.append("Poreska obaveza kasni.")
+            if subscription_inactive:
+                reasons.append("Pretplata nije aktivna.")
             business_health = {"status": "critical", "reasons": reasons}
         elif attention:
             business_health = {

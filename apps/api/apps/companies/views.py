@@ -56,6 +56,13 @@ class CompanyViewSet(viewsets.ModelViewSet):
             Membership.objects.create(
                 user=self.request.user, company=company, role=Membership.Role.OWNER
             )
+            # Lazy import — apps.subscriptions sits after apps.companies in
+            # DOMAIN_APPS, same precedent as every other lower-domain-calls-
+            # higher-domain case in this codebase (apps.invoices ->
+            # apps.notifications, apps.accounting -> apps.notifications).
+            from apps.subscriptions.services import SubscriptionService
+
+            SubscriptionService.get_or_create_trial(company)
 
     @action(detail=True, methods=["get"])
     def members(self, request, pk=None, *args, **kwargs):
