@@ -8,6 +8,7 @@ const ICON_BY_TYPE: Record<string, string> = {
   overdue_invoices: '🔴',
   email_unverified: '✉️',
   onboarding_incomplete: '⚙️',
+  limit_warning: '📈',
 }
 </script>
 

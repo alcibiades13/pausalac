@@ -9,6 +9,7 @@ from apps.accounts.models import User
 from apps.clients.models import Client
 from apps.companies.models import Company, Membership
 from apps.invoices.services import InvoiceService
+from apps.limits.testing import seed_test_rules
 from apps.payments.models import Payment
 from apps.payments.services import PaymentService
 
@@ -29,6 +30,7 @@ def _issued_invoice(company, client_obj, *, unit_price="1000.00", due_date=None)
 
 class DashboardTests(TestCase):
     def setUp(self):
+        seed_test_rules()
         self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
         self.owner.email_verified_at = timezone.now()
         self.owner.save(update_fields=["email_verified_at"])
@@ -50,6 +52,27 @@ class DashboardTests(TestCase):
         self.assertEqual(Decimal(body["revenue"]["ytd"]), Decimal("0.00"))
         self.assertEqual(body["revenue"]["basis"], "invoiced")
         self.assertEqual(body["outstanding"]["count"], 0)
+        self.assertIn("limits", body)
+        self.assertIn("pausal_limit", body["limits"])
+        self.assertIn("vat_threshold", body["limits"])
+
+    def test_limit_at_warning_level_produces_attention_without_being_critical(self):
+        # 5,100,000 / 6,000,000 = 85% -> "warning", not "critical".
+        _issued_invoice(self.company, self.client_obj, unit_price="5100000.00")
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["business_health"]["status"], "attention")
+        types = [item["type"] for item in body["attention"]]
+        self.assertIn("limit_warning", types)
+
+    def test_limit_at_critical_level_flips_health_to_critical(self):
+        # 5,700,000 / 6,000,000 = 95% -> "critical".
+        _issued_invoice(self.company, self.client_obj, unit_price="5700000.00")
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["business_health"]["status"], "critical")
+        types = [item["type"] for item in body["attention"]]
+        self.assertIn("limit_warning", types)
 
     def test_issued_invoice_counts_as_revenue_and_outstanding(self):
         _issued_invoice(self.company, self.client_obj, unit_price="1000.00")
@@ -143,6 +166,7 @@ class DashboardTests(TestCase):
 
 class DashboardTenantIsolationTests(TestCase):
     def setUp(self):
+        seed_test_rules()
         self.owner_a = User.objects.create_user(email="a@pausalac.rs", password="s3cr3t-pass")
         self.owner_b = User.objects.create_user(email="b@pausalac.rs", password="s3cr3t-pass")
         self.company_a = Company.objects.create(name="Firma A")
@@ -168,6 +192,7 @@ class DashboardTenantIsolationTests(TestCase):
 
 class DashboardRbacTests(TestCase):
     def test_accountant_can_view_dashboard(self):
+        seed_test_rules()
         company = Company.objects.create(name="Firma A")
         accountant = User.objects.create_user(
             email="accountant@pausalac.rs", password="s3cr3t-pass"

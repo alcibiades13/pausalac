@@ -93,6 +93,11 @@ const router = createRouter({
           name: 'settings',
           component: () => import('@/views/SettingsView.vue'),
         },
+        {
+          path: 'limiti',
+          name: 'limits',
+          component: () => import('@/views/LimitsView.vue'),
+        },
       ],
     },
   ],

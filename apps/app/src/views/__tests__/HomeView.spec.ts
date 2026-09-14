@@ -5,6 +5,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import HomeView from '../HomeView.vue'
 import { useAuthStore, type Company, type Membership } from '@/stores/auth'
 import { getDashboard } from '@/services/analytics'
+import type { LimitTrackerData, Limits } from '@/services/limits'
 
 vi.mock('@/services/analytics', () => ({
   getDashboard: vi.fn<typeof getDashboard>(),
@@ -18,8 +19,37 @@ const router = createRouter({
     { path: '/klijenti/novi', name: 'client-new', component: { template: '<div/>' } },
     { path: '/podesavanja', name: 'settings', component: { template: '<div/>' } },
     { path: '/fakture', name: 'invoices', component: { template: '<div/>' } },
+    { path: '/limiti', name: 'limits', component: { template: '<div/>' } },
   ],
 })
+
+function limitTracker(overrides: Partial<LimitTrackerData> = {}): LimitTrackerData {
+  return {
+    identifier: 'pausal_turnover_limit',
+    period: { type: 'calendar_year', start: '2026-01-01', end: '2026-12-31' },
+    threshold: '6000000.00',
+    current: '2840000.00',
+    currency: 'RSD',
+    percentage: 47,
+    remaining: '3160000.00',
+    warning_level: 'ok',
+    projection: null,
+    approval_status: 'unverified',
+    ...overrides,
+  }
+}
+
+function limitsFixture(): Limits {
+  return {
+    pausal_limit: limitTracker(),
+    vat_threshold: limitTracker({
+      identifier: 'vat_registration_threshold',
+      period: { type: 'trailing_12_months', start: '2025-09-14', end: '2026-09-14' },
+      threshold: '8000000.00',
+      percentage: 12,
+    }),
+  }
+}
 
 function membership(companyOverrides: Partial<Company> = {}): Membership {
   return {
@@ -72,6 +102,7 @@ describe('HomeView (dashboard)', () => {
       revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
       outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
+      limits: limitsFixture(),
     })
     const wrapper = mountHome()
     await flushPromises()
@@ -92,6 +123,7 @@ describe('HomeView (dashboard)', () => {
       revenue: { ytd: '1000.00', currency: 'RSD', basis: 'invoiced' },
       outstanding: { count: 1, total: '1000.00', currency: 'RSD', overdue_count: 1, overdue_total: '1000.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
+      limits: limitsFixture(),
     })
     const wrapper = mountHome()
     await flushPromises()
@@ -106,10 +138,27 @@ describe('HomeView (dashboard)', () => {
       revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
       outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
       onboarding: { completed: [], missing: [], percentage: 100 },
+      limits: limitsFixture(),
     })
     const wrapper = mountHome()
     await flushPromises()
     expect(wrapper.text()).not.toContain('Dovrši podešavanje')
+  })
+
+  it('shows the compact limits card with both percentages', async () => {
+    vi.mocked(getDashboard).mockResolvedValue({
+      business_health: { status: 'ok', reasons: [] },
+      attention: [],
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
+      limits: limitsFixture(),
+    })
+    const wrapper = mountHome()
+    await flushPromises()
+    expect(wrapper.text()).toContain('Limiti')
+    expect(wrapper.text()).toContain('47%')
+    expect(wrapper.text()).toContain('12%')
   })
 
   it('shows an error state with a retry option when loading fails', async () => {

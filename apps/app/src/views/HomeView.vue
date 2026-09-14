@@ -150,6 +150,25 @@ onMounted(loadDashboard)
           </Card>
         </div>
 
+        <Card>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-navy">Limiti</span>
+            <RouterLink :to="{ name: 'limits' }" class="text-sm text-primary hover:underline">
+              Detaljno →
+            </RouterLink>
+          </div>
+          <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="text-sm text-text-secondary">
+              Paušalni limit
+              <span class="ml-1 font-semibold text-navy">{{ dashboard.limits.pausal_limit.percentage }}%</span>
+            </div>
+            <div class="text-sm text-text-secondary">
+              PDV prag
+              <span class="ml-1 font-semibold text-navy">{{ dashboard.limits.vat_threshold.percentage }}%</span>
+            </div>
+          </div>
+        </Card>
+
         <Card v-if="dashboard.onboarding.percentage < 100">
           <div class="flex items-center justify-between">
             <span class="text-sm text-navy">Nalog je {{ dashboard.onboarding.percentage }}% podešen.</span>

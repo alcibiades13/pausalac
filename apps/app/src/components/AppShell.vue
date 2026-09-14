@@ -43,6 +43,13 @@ async function onLogout() {
           >
             Fakture
           </RouterLink>
+          <RouterLink
+            :to="{ name: 'limits' }"
+            class="text-sm text-text-secondary hover:text-navy"
+            active-class="text-navy font-medium"
+          >
+            Limiti
+          </RouterLink>
         </nav>
         <div class="flex items-center gap-4">
           <RouterLink

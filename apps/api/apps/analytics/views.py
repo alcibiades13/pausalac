@@ -1,10 +1,8 @@
 """
 Dashboard aggregation (master prompt §8) — the one place that reads across
-Invoices/Payments/Companies to answer "how's my business doing" in one
-call. Deliberately does NOT include Limits or Next-obligation sections:
-those need the versioned rules engine (§25) and the Tax/Obligation domain
-respectively, neither of which exist yet (Phase 3) — see
-docs/decisions-log.md for the cash-vs-accrual flag this also inherits.
+Invoices/Payments/Companies/Limits to answer "how's my business doing" in
+one call. Deliberately does NOT include a Next-obligation section: that
+needs the Tax/Obligation domain, which doesn't exist yet (Phase 3c).
 """
 
 from datetime import date
@@ -19,7 +17,9 @@ from rest_framework.views import APIView
 
 from apps.companies.onboarding import compute_onboarding_status
 from apps.companies.permissions import HasCompanyPermission
-from apps.invoices.models import FinancialEvent, Invoice
+from apps.invoices.ledger import sum_issued_revenue
+from apps.invoices.models import Invoice
+from apps.limits.services import LimitsService
 
 OUTSTANDING_STATUSES = [
     Invoice.Status.ISSUED,
@@ -38,6 +38,7 @@ class DashboardView(APIView):
         revenue = self._revenue_ytd(company)
         outstanding = self._outstanding(company)
         onboarding = compute_onboarding_status(company)
+        limits = LimitsService.compute_all(company)
 
         attention = []
         if outstanding["overdue_count"]:
@@ -70,12 +71,35 @@ class DashboardView(APIView):
                     "action": {"route": "settings"},
                 }
             )
+        limit_labels = {"pausal_limit": "Paušalni limit", "vat_threshold": "PDV prag"}
+        limits_critical = []
+        limits_warning = []
+        for key, label in limit_labels.items():
+            tracker = limits[key]
+            if tracker["warning_level"] == "critical":
+                limits_critical.append((label, tracker))
+            elif tracker["warning_level"] == "warning":
+                limits_warning.append((label, tracker))
+        for label, tracker in limits_critical + limits_warning:
+            attention.append(
+                {
+                    "type": "limit_warning",
+                    "message": (
+                        f"{label} je na {tracker['percentage']}% (preostalo "
+                        f"{tracker['remaining']} {tracker['currency']})."
+                    ),
+                    "action": {"route": "limits"},
+                }
+            )
 
-        if outstanding["overdue_count"]:
-            business_health = {
-                "status": "critical",
-                "reasons": [f"{outstanding['overdue_count']} faktura(e) kasni sa naplatom."],
-            }
+        if outstanding["overdue_count"] or limits_critical:
+            reasons = []
+            if outstanding["overdue_count"]:
+                reasons.append(f"{outstanding['overdue_count']} faktura(e) kasni sa naplatom.")
+            reasons.extend(
+                f"{label} je na {tracker['percentage']}%." for label, tracker in limits_critical
+            )
+            business_health = {"status": "critical", "reasons": reasons}
         elif attention:
             business_health = {
                 "status": "attention",
@@ -91,31 +115,22 @@ class DashboardView(APIView):
                 "revenue": revenue,
                 "outstanding": outstanding,
                 "onboarding": onboarding,
+                "limits": limits,
             }
         )
 
     @staticmethod
     def _revenue_ytd(company) -> dict:
-        year_start = date(timezone.now().year, 1, 1)
-        events = FinancialEvent.objects.for_company(company).filter(
-            event_type__in=[
-                FinancialEvent.EventType.INVOICE_ISSUED,
-                FinancialEvent.EventType.INVOICE_CANCELLED,
-            ],
-            occurred_at__date__gte=year_start,
-        )
-        issued = events.filter(event_type=FinancialEvent.EventType.INVOICE_ISSUED).aggregate(
-            total=Coalesce(Sum("amount"), Value(Decimal("0.00")))
-        )["total"]
-        cancelled = events.filter(event_type=FinancialEvent.EventType.INVOICE_CANCELLED).aggregate(
-            total=Coalesce(Sum("amount"), Value(Decimal("0.00")))
-        )["total"]
+        today = timezone.now().date()
+        year_start = date(today.year, 1, 1)
+        year_end = date(today.year, 12, 31)
+        ytd = sum_issued_revenue(company, year_start, year_end)
         return {
-            "ytd": issued - cancelled,
+            "ytd": ytd,
             "currency": company.default_currency,
-            # Explicit so nothing downstream mistakes this for the (not yet
-            # built) regulatory limit calculation, which may need to be
-            # cash-basis instead — see docs/decisions-log.md.
+            # Explicit so nothing downstream mistakes this for a Limits
+            # figure, even though both now share the same promet/accrual
+            # basis and the same sum_issued_revenue helper.
             "basis": "invoiced",
         }
 

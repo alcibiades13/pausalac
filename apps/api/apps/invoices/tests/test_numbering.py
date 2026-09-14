@@ -25,6 +25,13 @@ def _draft(company, client_obj):
 
 
 class InvoiceNumberingFormatTests(TransactionTestCase):
+    # TransactionTestCase flushes every table after each test (not just
+    # ones it touched), which would silently wipe migration-seeded
+    # reference data (apps.limits.RegulatoryRule, added Phase 3a) for
+    # the rest of the test session. serialized_rollback restores the
+    # post-migration snapshot after each flush instead of leaving it empty.
+    serialized_rollback = True
+
     def test_format_is_inv_year_seq(self):
         company = Company.objects.create(name="Firma A")
         client_obj = Client.objects.create(company=company, name="Klijent A")
@@ -58,6 +65,9 @@ class InvoiceNumberingConcurrencyTests(TransactionTestCase):
     pattern is the standard Django-documented approach, but this is worth
     re-confirming against the real Postgres compose service too.
     """
+
+    # See InvoiceNumberingFormatTests above for why this is needed.
+    serialized_rollback = True
 
     def test_concurrent_number_assignment_produces_no_duplicates(self):
         company = Company.objects.create(name="Firma A")
