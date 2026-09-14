@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Button, Card, Alert, Input, MoneyDisplay } from '@pausalac/ui'
 import {
   getInvoice,
@@ -9,21 +9,32 @@ import {
   invoicePdfUrl,
   type Invoice,
 } from '@/services/invoices'
-import { canTransitionTo } from '@/lib/invoiceStatus'
+import { listPayments, recordPayment, type Payment } from '@/services/payments'
+import { canTransitionTo, isPayable } from '@/lib/invoiceStatus'
 import { ApiError } from '@/lib/api'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
 
 const props = defineProps<{ id: string }>()
 
 const invoice = ref<Invoice | null>(null)
+const payments = ref<Payment[]>([])
 const loadStatus = ref<'loading' | 'ready' | 'error'>('loading')
 const errorMessage = ref('')
 const actionLoading = ref<'issue' | 'cancel' | null>(null)
+
+const totalPaid = computed(() =>
+  payments.value.reduce((sum, p) => sum + Number(p.amount), 0),
+)
+const remainingBalance = computed(() =>
+  invoice.value ? Math.max(Number(invoice.value.total) - totalPaid.value, 0) : 0,
+)
 
 async function load() {
   loadStatus.value = 'loading'
   try {
     invoice.value = await getInvoice(props.id)
+    const page = await listPayments({ invoice: props.id })
+    payments.value = page.results
     loadStatus.value = 'ready'
   } catch (error) {
     errorMessage.value =
@@ -93,6 +104,54 @@ async function onSend() {
   }
 }
 
+// --- record payment -------------------------------------------------------
+
+const showPaymentForm = ref(false)
+const paymentAmount = ref('')
+const paymentDate = ref('')
+const paymentMethod = ref<'bank_transfer' | 'cash' | 'other'>('bank_transfer')
+const paymentNotes = ref('')
+const recordingPayment = ref(false)
+const paymentError = ref('')
+// One key per form session, not per request — a retried submission (e.g.
+// a flaky connection, or a genuine double-click before the button
+// disables) reuses it, and the backend recognizes the replay instead of
+// recording a second payment (master prompt §62).
+let paymentIdempotencyKey = ''
+
+function openPaymentForm() {
+  paymentAmount.value = remainingBalance.value.toFixed(2)
+  paymentDate.value = new Date().toISOString().slice(0, 10)
+  paymentMethod.value = 'bank_transfer'
+  paymentNotes.value = ''
+  paymentError.value = ''
+  paymentIdempotencyKey = crypto.randomUUID()
+  showPaymentForm.value = true
+}
+
+async function onRecordPayment() {
+  if (!invoice.value) return
+  recordingPayment.value = true
+  paymentError.value = ''
+  try {
+    await recordPayment({
+      invoice: invoice.value.id,
+      amount: paymentAmount.value,
+      paid_at: paymentDate.value,
+      method: paymentMethod.value,
+      notes: paymentNotes.value,
+      idempotency_key: paymentIdempotencyKey,
+    })
+    showPaymentForm.value = false
+    await load()
+  } catch (error) {
+    paymentError.value =
+      error instanceof ApiError ? error.message : 'Uplata nije mogla da se evidentira.'
+  } finally {
+    recordingPayment.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -159,6 +218,53 @@ onMounted(load)
         <p class="text-sm text-text-secondary">{{ invoice.notes }}</p>
       </Card>
 
+      <Card v-if="payments.length || isPayable(invoice.status) || invoice.status === 'paid'">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="text-base font-semibold text-navy">Uplate</h2>
+          <p v-if="isPayable(invoice.status)" class="text-sm text-text-secondary">
+            Preostalo: <MoneyDisplay :amount="remainingBalance" :currency="invoice.currency" />
+          </p>
+        </div>
+        <ul v-if="payments.length" class="flex flex-col divide-y divide-border">
+          <li v-for="payment in payments" :key="payment.id" class="flex items-center justify-between py-2 text-sm">
+            <div>
+              <p class="text-navy">{{ payment.paid_at }}</p>
+              <p class="text-text-secondary">
+                {{ payment.method === 'bank_transfer' ? 'Uplata na račun' : payment.method === 'cash' ? 'Gotovina' : 'Ostalo' }}
+              </p>
+            </div>
+            <MoneyDisplay :amount="payment.amount" :currency="payment.currency" />
+          </li>
+        </ul>
+        <p v-else class="text-sm text-text-secondary">Još nema evidentiranih uplata.</p>
+      </Card>
+
+      <Card v-if="showPaymentForm">
+        <h2 class="mb-3 text-base font-semibold text-navy">Evidentiraj uplatu</h2>
+        <form class="flex flex-col gap-4" @submit.prevent="onRecordPayment">
+          <Alert v-if="paymentError" variant="danger">{{ paymentError }}</Alert>
+          <Input v-model="paymentAmount" type="number" label="Iznos" required />
+          <Input v-model="paymentDate" type="date" label="Datum uplate" required />
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-navy" for="payment-method">Način uplate</label>
+            <select
+              id="payment-method"
+              v-model="paymentMethod"
+              class="rounded-lg border border-border bg-white px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              <option value="bank_transfer">Uplata na račun</option>
+              <option value="cash">Gotovina</option>
+              <option value="other">Ostalo</option>
+            </select>
+          </div>
+          <Input v-model="paymentNotes" label="Napomena (opciono)" />
+          <div class="flex gap-3">
+            <Button type="submit" :loading="recordingPayment">Sačuvaj uplatu</Button>
+            <Button type="button" variant="ghost" @click="showPaymentForm = false">Otkaži</Button>
+          </div>
+        </form>
+      </Card>
+
       <Alert v-if="sendConfirmation" variant="success">{{ sendConfirmation }}</Alert>
 
       <Card v-if="showSendForm">
@@ -198,6 +304,14 @@ onMounted(load)
         </Button>
         <Button v-if="invoice.status === 'issued'" :disabled="showSendForm" @click="openSendForm">
           Pošalji fakturu
+        </Button>
+        <Button
+          v-if="isPayable(invoice.status)"
+          variant="secondary"
+          :disabled="showPaymentForm"
+          @click="openPaymentForm"
+        >
+          Evidentiraj uplatu
         </Button>
         <Button
           v-if="canTransitionTo(invoice.status, 'cancelled')"

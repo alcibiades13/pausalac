@@ -29,6 +29,8 @@ ALL_PERMISSIONS: set[str] = {
     # primer") and Clients is now a real protected resource.
     "view_clients",
     "manage_clients",
+    # Added in Phase 2e: same reasoning, for the new apps.payments domain.
+    "record_payment",
 }
 
 ROLE_PERMISSIONS: dict[str, set[str]] = {
@@ -43,6 +45,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         "view_audit",
         "view_clients",
         "manage_clients",
+        "record_payment",
     },
     Role.ACCOUNTANT: {
         "view_financial_data",

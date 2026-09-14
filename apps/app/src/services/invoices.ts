@@ -35,6 +35,7 @@ export interface Invoice {
   notes: string
   issued_at: string | null
   sent_at: string | null
+  paid_at: string | null
   cancelled_at: string | null
   created_at: string
   updated_at: string

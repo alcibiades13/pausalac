@@ -25,8 +25,9 @@ export const STATUS_VARIANTS: Record<InvoiceStatus, 'success' | 'warning' | 'dan
 /**
  * Mirrors apps/invoices/services.py::TRANSITIONS on the backend — kept in
  * sync by hand (small, stable map) so the UI never offers a button the API
- * would reject with a 400. viewed/partially_paid/paid/overdue join this
- * once tracking and payments (2e+) exist to drive them.
+ * would reject with a 400. PARTIALLY_PAID/PAID have no entry on purpose —
+ * voiding an invoice with money already against it needs a refund/
+ * correction concept the master prompt explicitly defers (§96).
  */
 const TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
   draft: ['issued', 'cancelled'],
@@ -35,10 +36,22 @@ const TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
   viewed: [],
   partially_paid: [],
   paid: [],
-  overdue: [],
+  overdue: ['cancelled'],
   cancelled: [],
 }
 
 export function canTransitionTo(status: InvoiceStatus, target: InvoiceStatus): boolean {
   return TRANSITIONS[status].includes(target)
+}
+
+/**
+ * Mirrors apps/invoices/services.py::PAYABLE_STATUSES — which statuses can
+ * receive a recorded payment. Distinct from TRANSITIONS since the
+ * resulting status (partially_paid vs. paid) is computed from the amount,
+ * not a fixed target.
+ */
+export const PAYABLE_STATUSES: InvoiceStatus[] = ['issued', 'sent', 'partially_paid', 'overdue']
+
+export function isPayable(status: InvoiceStatus): boolean {
+  return PAYABLE_STATUSES.includes(status)
 }

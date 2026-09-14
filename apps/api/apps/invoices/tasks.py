@@ -52,3 +52,11 @@ def send_invoice_email_task(
     except User.DoesNotExist:
         actor = None
     InvoiceService.mark_sent(invoice, actor=actor)
+
+
+@shared_task
+def mark_overdue_invoices_task() -> int:
+    """Celery Beat schedule: config/celery.py. Same function the
+    `check_overdue_invoices` management command calls for manual/testing
+    use — logic lives once in InvoiceService.mark_overdue_all."""
+    return InvoiceService.mark_overdue_all()

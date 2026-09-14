@@ -17,18 +17,33 @@ from .numbering import assign_invoice_number
 
 Status = Invoice.Status
 
-# VIEWED/PARTIALLY_PAID/PAID/OVERDUE join this map once tracking and
-# payments (2e+) exist to drive them — the enum and DB constraint already
-# allow for it (apps/invoices/models.py), only this map and its callers
-# grow then. A sent invoice can still be cancelled (voiding something the
-# client already received is a normal real-world case), same as an
-# issued-but-not-yet-sent one.
+# VIEWED joins this once view-tracking exists to drive it. A sent (or
+# overdue) invoice can still be cancelled — voiding something the client
+# already received, or that just hasn't been paid by its due date, is a
+# normal real-world case, same as an issued-but-not-yet-sent one.
+# PARTIALLY_PAID/PAID have no entry here on purpose: once money is
+# attached to an invoice, voiding it needs a refund/correction concept
+# (master prompt §96 explicitly defers this) — not silently allowed.
 TRANSITIONS: dict[str, set[str]] = {
     Status.DRAFT: {Status.ISSUED, Status.CANCELLED},
     Status.ISSUED: {Status.CANCELLED, Status.SENT},
     Status.SENT: {Status.CANCELLED},
+    Status.OVERDUE: {Status.CANCELLED},
     Status.CANCELLED: set(),
 }
+
+# Statuses a payment can be recorded against (apps.payments.services).
+# Distinct from TRANSITIONS above because the resulting status (PARTIALLY_
+# PAID vs. PAID) is computed from the payment amount, not a fixed target —
+# this is just the eligibility check, not a transition map entry.
+PAYABLE_STATUSES: set[str] = {Status.ISSUED, Status.SENT, Status.PARTIALLY_PAID, Status.OVERDUE}
+
+# Statuses the overdue sweep (mark_overdue_all) will flip once due_date
+# has passed. PARTIALLY_PAID is included — master prompt §11's flat status
+# enum has no combined "overdue-and-partially-paid" state; a partial
+# payment already on the invoice is preserved (only status/timestamps
+# change), a new payment afterward resolves it via PAYABLE_STATUSES above.
+OVERDUE_ELIGIBLE_STATUSES: set[str] = {Status.ISSUED, Status.SENT, Status.PARTIALLY_PAID}
 
 
 class InvalidTransitionError(Exception):
@@ -196,3 +211,34 @@ class InvoiceService:
             new_value={"status": invoice.status},
         )
         return invoice
+
+    @staticmethod
+    def mark_overdue_all() -> int:
+        """
+        System-triggered bulk sweep (master prompt §61: "overdue checks" as
+        a named background job) — called from
+        apps.invoices.tasks.mark_overdue_invoices_task (Celery Beat) and
+        the `check_overdue_invoices` management command, never duplicated
+        between the two. No FinancialEvent: this is a status/timestamp
+        change only, not a cash or revenue event.
+        """
+        candidates = Invoice.objects.filter(
+            status__in=OVERDUE_ELIGIBLE_STATUSES, due_date__lt=timezone.now().date()
+        )
+        count = 0
+        for invoice in candidates:
+            old_status = invoice.status
+            invoice.status = Status.OVERDUE
+            invoice.save(update_fields=["status", "updated_at"])
+            AuditService.log(
+                actor=None,
+                company=invoice.company,
+                entity_type="invoice",
+                entity_id=invoice.id,
+                action="marked_overdue",
+                old_value={"status": old_status},
+                new_value={"status": invoice.status},
+                source="celery",
+            )
+            count += 1
+        return count

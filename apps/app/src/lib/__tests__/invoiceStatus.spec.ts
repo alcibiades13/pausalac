@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { canTransitionTo } from '../invoiceStatus'
+import { canTransitionTo, isPayable } from '../invoiceStatus'
 
 describe('canTransitionTo', () => {
   it('allows draft to issued', () => {
@@ -31,7 +31,31 @@ describe('canTransitionTo', () => {
     expect(canTransitionTo('sent', 'cancelled')).toBe(true)
   })
 
-  it('does not yet allow sent to paid (Phase 2e)', () => {
+  it('does not transition sent directly to paid — payment recording resolves that, not TRANSITIONS', () => {
     expect(canTransitionTo('sent', 'paid')).toBe(false)
+  })
+
+  it('allows an overdue invoice to still be cancelled', () => {
+    expect(canTransitionTo('overdue', 'cancelled')).toBe(true)
+  })
+
+  it('does not allow cancelling a partially paid or fully paid invoice', () => {
+    expect(canTransitionTo('partially_paid', 'cancelled')).toBe(false)
+    expect(canTransitionTo('paid', 'cancelled')).toBe(false)
+  })
+})
+
+describe('isPayable', () => {
+  it('is true for issued, sent, partially_paid, and overdue', () => {
+    expect(isPayable('issued')).toBe(true)
+    expect(isPayable('sent')).toBe(true)
+    expect(isPayable('partially_paid')).toBe(true)
+    expect(isPayable('overdue')).toBe(true)
+  })
+
+  it('is false for draft, paid, and cancelled', () => {
+    expect(isPayable('draft')).toBe(false)
+    expect(isPayable('paid')).toBe(false)
+    expect(isPayable('cancelled')).toBe(false)
   })
 })
