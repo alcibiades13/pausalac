@@ -10,6 +10,7 @@ const ICON_BY_TYPE: Record<string, string> = {
   onboarding_incomplete: '⚙️',
   limit_warning: '📈',
   tax_obligation_overdue: '🧾',
+  tax_resolution_missing_document: '📎',
 }
 </script>
 

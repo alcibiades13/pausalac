@@ -1,6 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -57,16 +58,76 @@ class DashboardTests(TestCase):
         self.assertIn("vat_threshold", body["limits"])
         self.assertIsNone(body["next_obligation"])
 
-    def test_pending_obligation_appears_as_next_obligation_without_affecting_health(self):
-        from datetime import timedelta
+    def test_tax_resolution_without_document_produces_attention_entry(self):
+        from datetime import date
         from decimal import Decimal as D
 
         from apps.taxes.services import TaxService
         from apps.taxes.testing import seed_test_rates
 
         seed_test_rates()
-        future_month = (timezone.now().date().replace(day=1) + timedelta(days=60)).replace(day=1)
         TaxService.create_resolution(
+            self.company,
+            effective_from=date(2026, 1, 1),
+            effective_until=date(2026, 1, 31),
+            tax_base=D("100000.00"),
+            income_tax_amount=D("10000.00"),
+            pio_amount=D("24000.00"),
+            health_amount=D("10300.00"),
+            unemployment_amount=D("750.00"),
+        )
+
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["business_health"]["status"], "attention")
+        types = [item["type"] for item in body["attention"]]
+        self.assertIn("tax_resolution_missing_document", types)
+
+    def test_linking_a_document_clears_the_attention_entry(self):
+        from datetime import date
+        from decimal import Decimal as D
+
+        from apps.documents.services import DocumentService
+        from apps.taxes.services import TaxService
+        from apps.taxes.testing import seed_test_rates
+
+        seed_test_rates()
+        resolution = TaxService.create_resolution(
+            self.company,
+            effective_from=date(2026, 1, 1),
+            effective_until=date(2026, 1, 31),
+            tax_base=D("100000.00"),
+            income_tax_amount=D("10000.00"),
+            pio_amount=D("24000.00"),
+            health_amount=D("10300.00"),
+            unemployment_amount=D("750.00"),
+        )
+        DocumentService.upload(
+            self.company,
+            uploaded_by=self.owner,
+            category="tax_resolution",
+            title="Rešenje",
+            description="",
+            file_obj=SimpleUploadedFile("r.pdf", b"%PDF-1.4", content_type="application/pdf"),
+            tax_resolution=resolution,
+        )
+
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        types = [item["type"] for item in body["attention"]]
+        self.assertNotIn("tax_resolution_missing_document", types)
+
+    def test_pending_obligation_appears_as_next_obligation_without_affecting_health(self):
+        from datetime import timedelta
+        from decimal import Decimal as D
+
+        from apps.documents.services import DocumentService
+        from apps.taxes.services import TaxService
+        from apps.taxes.testing import seed_test_rates
+
+        seed_test_rates()
+        future_month = (timezone.now().date().replace(day=1) + timedelta(days=60)).replace(day=1)
+        resolution = TaxService.create_resolution(
             self.company,
             effective_from=future_month,
             effective_until=future_month,
@@ -75,6 +136,18 @@ class DashboardTests(TestCase):
             pio_amount=D("24000.00"),
             health_amount=D("10300.00"),
             unemployment_amount=D("750.00"),
+        )
+        # Document attached so this test isolates "does a pending
+        # obligation affect health" from the separate missing-document
+        # attention source (apps.documents, Phase 3e).
+        DocumentService.upload(
+            self.company,
+            uploaded_by=self.owner,
+            category="tax_resolution",
+            title="Rešenje",
+            description="",
+            file_obj=SimpleUploadedFile("r.pdf", b"%PDF-1.4", content_type="application/pdf"),
+            tax_resolution=resolution,
         )
         response = self.client.get(self.url, **self.headers)
         body = response.json()

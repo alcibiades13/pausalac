@@ -65,8 +65,14 @@ export function buildApiUrl(
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const { body, companyId, params, headers, method = 'GET', ...rest } = options
 
+  const isFormData = body instanceof FormData
+
   const requestHeaders = new Headers(headers)
-  requestHeaders.set('Content-Type', 'application/json')
+  // A FormData body (file upload) must let the browser set its own
+  // multipart boundary — forcing application/json here would break it.
+  if (!isFormData) {
+    requestHeaders.set('Content-Type', 'application/json')
+  }
   requestHeaders.set('Accept', 'application/json')
   if (companyId !== undefined) {
     requestHeaders.set('X-Company-Id', String(companyId))
@@ -85,7 +91,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     method,
     headers: requestHeaders,
     credentials: 'include',
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
 
   if (response.status === 204) {

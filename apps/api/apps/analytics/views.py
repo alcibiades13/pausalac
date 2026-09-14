@@ -19,7 +19,7 @@ from apps.companies.permissions import HasCompanyPermission
 from apps.invoices.ledger import sum_issued_revenue
 from apps.invoices.models import Invoice
 from apps.limits.services import LimitsService
-from apps.taxes.models import TaxObligation
+from apps.taxes.models import TaxObligation, TaxResolution
 
 OUTSTANDING_STATUSES = [
     Invoice.Status.ISSUED,
@@ -72,6 +72,20 @@ class DashboardView(APIView):
                     "action": {"route": "settings"},
                 }
             )
+        missing_document_count = (
+            TaxResolution.objects.for_company(company).filter(documents__isnull=True).count()
+        )
+        if missing_document_count:
+            attention.append(
+                {
+                    "type": "tax_resolution_missing_document",
+                    "message": (
+                        f"{missing_document_count} poresko(a) rešenje(a) nema priložen dokument."
+                    ),
+                    "action": {"route": "documents"},
+                }
+            )
+
         limit_labels = {"pausal_limit": "Paušalni limit", "vat_threshold": "PDV prag"}
         limits_critical = []
         limits_warning = []

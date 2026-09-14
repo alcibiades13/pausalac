@@ -113,6 +113,11 @@ const router = createRouter({
           name: 'notifications',
           component: () => import('@/views/NotificationsView.vue'),
         },
+        {
+          path: 'dokumenti',
+          name: 'documents',
+          component: () => import('@/views/DocumentsView.vue'),
+        },
       ],
     },
   ],

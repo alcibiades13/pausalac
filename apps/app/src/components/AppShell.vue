@@ -18,6 +18,7 @@ const NAV_LINKS = [
   { name: 'limits', label: 'Limiti' },
   { name: 'kpo', label: 'KPO' },
   { name: 'obligations', label: 'Obaveze' },
+  { name: 'documents', label: 'Dokumenti' },
 ]
 
 const menuOpen = ref(false)

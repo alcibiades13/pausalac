@@ -21,6 +21,7 @@ api_v1_patterns = [
     path("kpo/", include("apps.kpo.urls")),
     path("taxes/", include("apps.taxes.urls")),
     path("notifications/", include("apps.notifications.urls")),
+    path("documents/", include("apps.documents.urls")),
     path("analytics/", include("apps.analytics.urls")),
     path("audit/", include("apps.audit.urls")),
 ]

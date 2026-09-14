@@ -56,6 +56,23 @@ services:
       timeout: 5s
       retries: 10
 
+  # One-shot init: creates the app's bucket automatically so `docker
+  # compose up` alone is enough for a fresh clone/CI — Phase 3e (Documents)
+  # found this bucket had been configured since Phase 1a but never
+  # actually created anywhere, since file upload was never exercised
+  # until now. Exits after running; `mb --ignore-existing` makes reruns
+  # (already-existing bucket) a harmless no-op.
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${AWS_ACCESS_KEY_ID:-pausalac} ${AWS_SECRET_ACCESS_KEY:-pausalac_local_secret} &&
+      mc mb --ignore-existing local/${AWS_STORAGE_BUCKET_NAME:-pausalac-documents}
+      "
+
   mailhog:
     image: mailhog/mailhog:latest
     restart: unless-stopped
