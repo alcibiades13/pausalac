@@ -25,6 +25,23 @@ const NAV_LINKS = [
 const menuOpen = ref(false)
 const unreadCount = ref(0)
 
+// Deliberately not `class="..." active-class="..."`: RouterLink appends
+// active-class alongside the base class rather than replacing it, and
+// `text-text-secondary`/`text-primary` are equal-specificity utilities —
+// Tailwind happens to emit `.text-text-secondary` after `.text-primary`
+// in the compiled stylesheet, so the "active" color silently lost the
+// cascade and only font-weight ever visibly changed. A background pill
+// (mutually exclusive classes, never both colors on the element at once)
+// both fixes that and reads as a much clearer active indicator.
+function navLinkClass(routeName: string, mobile = false): string {
+  const isActive = route.name === routeName
+  const padding = mobile ? 'px-2 py-2.5' : 'px-3 py-1.5'
+  if (isActive) {
+    return `rounded-lg ${padding} text-sm font-medium bg-primary/10 text-primary`
+  }
+  return `rounded-lg ${padding} text-sm text-text-secondary hover:bg-background hover:text-primary`
+}
+
 // A user who belongs to more than one company (typically an accounting
 // org's staff member — Phase 4a) needs a way to change which one is
 // active; a typical single-company paušalac never sees this at all.
@@ -64,7 +81,7 @@ async function onLogout() {
 <template>
   <div class="min-h-screen bg-background">
     <header class="sticky top-0 z-10 bg-surface shadow-[0_1px_2px_rgba(23,32,51,0.04),0_4px_16px_-8px_rgba(23,32,51,0.10)]">
-      <div class="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
+      <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         <span class="flex min-w-0 items-center gap-2">
           <span
             class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-primary to-primary-dark"
@@ -85,23 +102,18 @@ async function onLogout() {
         </span>
 
         <!-- Desktop/tablet nav: hidden below sm, a plain row from sm up. -->
-        <nav class="hidden items-center gap-5 sm:flex">
+        <nav class="hidden items-center gap-1 sm:flex">
           <RouterLink
             v-for="link in NAV_LINKS"
             :key="link.name"
             :to="{ name: link.name }"
-            class="text-sm text-text-secondary hover:text-primary"
-            active-class="font-medium text-primary"
+            :class="navLinkClass(link.name)"
           >
             {{ link.label }}
           </RouterLink>
         </nav>
-        <div class="hidden items-center gap-4 sm:flex">
-          <RouterLink
-            :to="{ name: 'settings' }"
-            class="text-sm text-text-secondary hover:text-primary"
-            active-class="font-medium text-primary"
-          >
+        <div class="hidden items-center gap-2 sm:flex">
+          <RouterLink :to="{ name: 'settings' }" :class="navLinkClass('settings')">
             Podešavanja
           </RouterLink>
           <Button variant="ghost" @click="onLogout">Odjavi se</Button>
@@ -153,16 +165,11 @@ async function onLogout() {
           v-for="link in NAV_LINKS"
           :key="link.name"
           :to="{ name: link.name }"
-          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-primary"
-          active-class="font-medium text-primary"
+          :class="navLinkClass(link.name, true)"
         >
           {{ link.label }}
         </RouterLink>
-        <RouterLink
-          :to="{ name: 'settings' }"
-          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-primary"
-          active-class="font-medium text-primary"
-        >
+        <RouterLink :to="{ name: 'settings' }" :class="navLinkClass('settings', true)">
           Podešavanja
         </RouterLink>
         <button
@@ -174,7 +181,7 @@ async function onLogout() {
         </button>
       </nav>
     </header>
-    <main class="mx-auto max-w-4xl px-4 py-8">
+    <main class="mx-auto max-w-5xl px-4 py-8">
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">
           <component :is="Component" />

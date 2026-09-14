@@ -68,7 +68,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div class="mx-auto max-w-2xl">
     <h1 class="mb-6 text-xl font-semibold text-navy">
       {{ isEditing ? 'Izmeni klijenta' : 'Novi klijent' }}
     </h1>

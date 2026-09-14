@@ -43,7 +43,7 @@ async function onSave() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-lg flex-col gap-6">
+  <div class="mx-auto flex max-w-2xl flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">Podešavanja</h1>
 
     <Card>

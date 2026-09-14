@@ -126,7 +126,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl">
+  <div>
     <h1 class="mb-6 text-xl font-semibold text-navy">
       {{ isEditing ? 'Izmeni fakturu' : 'Nova faktura' }}
     </h1>
