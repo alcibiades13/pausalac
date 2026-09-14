@@ -159,7 +159,7 @@ async function onInviteClient() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">Računovodstvena agencija</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
@@ -178,9 +178,11 @@ async function onInviteClient() {
       </p>
       <form class="flex flex-col gap-4" @submit.prevent="onCreateOrganization">
         <Alert v-if="createError" variant="danger">{{ createError }}</Alert>
-        <Input v-model="createForm.name" label="Naziv agencije" required />
-        <Input v-model="createForm.contact_email" type="email" label="Kontakt email" />
-        <Input v-model="createForm.pib" label="PIB (opciono)" />
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Input v-model="createForm.name" label="Naziv agencije" required />
+          <Input v-model="createForm.contact_email" type="email" label="Kontakt email" />
+          <Input v-model="createForm.pib" label="PIB (opciono)" />
+        </div>
         <div>
           <Button type="submit" :loading="creating">Osnuj agenciju</Button>
         </div>
@@ -204,7 +206,7 @@ async function onInviteClient() {
               type="email"
               label="Email zaposlenog"
               required
-              class="flex-1"
+              class="flex-1 sm:max-w-xs"
             />
             <Select v-model="staffForm.role" label="Uloga" :options="STAFF_ROLE_OPTIONS" />
             <Button type="submit" :loading="addingStaff">Dodaj</Button>
@@ -245,7 +247,7 @@ async function onInviteClient() {
             v-model="connectionForm.company_pib"
             label="PIB klijenta"
             required
-            class="flex-1"
+            class="flex-1 sm:max-w-xs"
           />
           <Select
             v-model="connectionForm.granted_role"

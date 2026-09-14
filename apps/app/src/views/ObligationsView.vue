@@ -96,7 +96,7 @@ async function onCreateResolution() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">Obaveze</h1>
 
     <Card>
@@ -117,14 +117,13 @@ async function onCreateResolution() {
           </ul>
         </Alert>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Input v-model="form.effective_from" type="date" label="Važi od" required />
           <Input v-model="form.effective_until" type="date" label="Važi do" required />
+          <Input v-model="form.tax_base" type="number" label="Poreska osnovica" required />
         </div>
 
-        <Input v-model="form.tax_base" type="number" label="Poreska osnovica" required />
-
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div class="flex flex-col gap-1">
             <Input v-model="form.income_tax_amount" type="number" label="Porez na prihod" required />
             <p class="text-xs text-text-secondary">{{ WHY_INCOME_TAX }}</p>

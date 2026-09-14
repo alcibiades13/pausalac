@@ -79,7 +79,7 @@ async function onRevoke(id: number) {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">Moj računovođa</h1>
 
     <Alert v-if="status === 'error'" variant="danger">

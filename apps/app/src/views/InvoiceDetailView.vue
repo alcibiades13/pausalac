@@ -156,7 +156,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <Alert v-if="loadStatus === 'error'" variant="danger">{{ errorMessage }}</Alert>
 
     <Card v-else-if="loadStatus === 'loading'">
@@ -243,21 +243,25 @@ onMounted(load)
         <h2 class="mb-3 text-base font-semibold text-navy">Evidentiraj uplatu</h2>
         <form class="flex flex-col gap-4" @submit.prevent="onRecordPayment">
           <Alert v-if="paymentError" variant="danger">{{ paymentError }}</Alert>
-          <Input v-model="paymentAmount" type="number" label="Iznos" required />
-          <Input v-model="paymentDate" type="date" label="Datum uplate" required />
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-navy" for="payment-method">Način uplate</label>
-            <select
-              id="payment-method"
-              v-model="paymentMethod"
-              class="rounded-lg border border-border bg-white px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
-            >
-              <option value="bank_transfer">Uplata na račun</option>
-              <option value="cash">Gotovina</option>
-              <option value="other">Ostalo</option>
-            </select>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input v-model="paymentAmount" type="number" label="Iznos" required />
+            <Input v-model="paymentDate" type="date" label="Datum uplate" required />
           </div>
-          <Input v-model="paymentNotes" label="Napomena (opciono)" />
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-navy" for="payment-method">Način uplate</label>
+              <select
+                id="payment-method"
+                v-model="paymentMethod"
+                class="rounded-lg border border-border bg-white px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                <option value="bank_transfer">Uplata na račun</option>
+                <option value="cash">Gotovina</option>
+                <option value="other">Ostalo</option>
+              </select>
+            </div>
+            <Input v-model="paymentNotes" label="Napomena (opciono)" />
+          </div>
           <div class="flex gap-3">
             <Button type="submit" :loading="recordingPayment">Sačuvaj uplatu</Button>
             <Button type="button" variant="ghost" @click="showPaymentForm = false">Otkaži</Button>

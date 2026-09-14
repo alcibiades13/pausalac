@@ -43,7 +43,7 @@ async function onSave() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">Podešavanja</h1>
 
     <Card>
@@ -51,13 +51,15 @@ async function onSave() {
       <form class="flex flex-col gap-4" @submit.prevent="onSave">
         <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
         <Alert v-if="saved" variant="success">Sačuvano.</Alert>
-        <Input v-model="companyForm.pib" label="PIB" :disabled="saving" />
-        <Input
-          v-model="companyForm.bank_account"
-          label="Račun za uplate"
-          hint="Prikazuje se na fakturama kao podatak za plaćanje."
-          :disabled="saving"
-        />
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Input v-model="companyForm.pib" label="PIB" :disabled="saving" />
+          <Input
+            v-model="companyForm.bank_account"
+            label="Račun za uplate"
+            hint="Prikazuje se na fakturama kao podatak za plaćanje."
+            :disabled="saving"
+          />
+        </div>
         <div>
           <Button type="submit" :loading="saving">Sačuvaj</Button>
         </div>

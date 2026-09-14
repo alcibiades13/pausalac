@@ -44,7 +44,7 @@ async function onSimulate() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">Limiti</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
@@ -57,33 +57,36 @@ async function onSimulate() {
     </Card>
 
     <template v-else-if="limits">
-      <Card>
-        <LimitTracker label="Paušalni limit" :tracker="limits.pausal_limit" />
-      </Card>
-      <Card>
-        <LimitTracker label="PDV prag" :tracker="limits.vat_threshold" />
-      </Card>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Card>
+          <LimitTracker label="Paušalni limit" :tracker="limits.pausal_limit" />
+        </Card>
+        <Card>
+          <LimitTracker label="PDV prag" :tracker="limits.vat_threshold" />
+        </Card>
+      </div>
 
       <Card>
         <h2 class="mb-1 text-base font-semibold text-navy">Simulacija — ništa se ne čuva</h2>
         <p class="mb-4 text-sm text-text-secondary">
           Unesi iznos hipotetičke fakture da vidiš kako bi uticala na oba limita.
         </p>
-        <form class="flex flex-col gap-4" @submit.prevent="onSimulate">
-          <Alert v-if="simulateError" variant="danger">{{ simulateError }}</Alert>
+        <form class="flex flex-col gap-4 sm:flex-row sm:items-end" @submit.prevent="onSimulate">
           <Input
             v-model="hypotheticalAmount"
             label="Iznos hipotetičke fakture"
             placeholder="800000.00"
             required
             :disabled="simulating"
+            class="sm:max-w-xs"
           />
           <div>
             <Button type="submit" :loading="simulating">Simuliraj</Button>
           </div>
         </form>
+        <Alert v-if="simulateError" variant="danger" class="mt-4">{{ simulateError }}</Alert>
 
-        <div v-if="simulation" class="mt-6 flex flex-col gap-6">
+        <div v-if="simulation" class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <p class="mb-2 text-sm font-medium text-text-secondary">Pre</p>
             <LimitTracker label="Paušalni limit" :tracker="simulation.before.pausal_limit" />

@@ -127,23 +127,23 @@ async function onUpload() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">Dokumenti</h1>
 
     <Card>
       <h2 class="mb-1 text-base font-semibold text-navy">Otpremi dokument</h2>
       <form class="flex flex-col gap-4" @submit.prevent="onUpload">
         <Alert v-if="uploadError" variant="danger">{{ uploadError }}</Alert>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Select v-model="form.category" label="Kategorija" :options="CATEGORY_OPTIONS" required />
           <Select
             v-model="form.tax_resolution"
             label="Povezano poresko rešenje"
             :options="taxResolutionOptions"
           />
+          <Input v-model="form.title" label="Naziv" required />
+          <Input v-model="form.description" label="Opis (opciono)" />
         </div>
-        <Input v-model="form.title" label="Naziv" required />
-        <Input v-model="form.description" label="Opis (opciono)" />
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium text-navy" for="doc-file">Fajl</label>
           <input
