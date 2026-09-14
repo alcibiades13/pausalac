@@ -15,9 +15,10 @@ withDefaults(
 )
 
 const variantClasses: Record<string, string> = {
-  primary: 'bg-primary text-white hover:bg-primary/90 focus-visible:outline-primary',
+  primary:
+    'bg-gradient-to-br from-primary to-primary-dark text-white shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 focus-visible:outline-primary',
   secondary:
-    'bg-white text-navy border border-border hover:bg-background focus-visible:outline-primary',
+    'bg-surface text-navy border border-border hover:bg-background focus-visible:outline-primary',
   ghost: 'bg-transparent text-navy hover:bg-background focus-visible:outline-primary',
   danger: 'bg-danger text-white hover:bg-danger/90 focus-visible:outline-danger',
 }
@@ -29,8 +30,8 @@ const variantClasses: Record<string, string> = {
     :disabled="disabled || loading"
     :class="[
       'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium',
-      'transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
-      'disabled:cursor-not-allowed disabled:opacity-60',
+      'transition-all active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+      'disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100',
       variantClasses[variant],
     ]"
   >

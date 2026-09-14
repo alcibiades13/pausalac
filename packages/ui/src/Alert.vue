@@ -17,7 +17,7 @@ const variantClasses: Record<string, string> = {
 </script>
 
 <template>
-  <div role="alert" :class="['rounded-lg border px-4 py-3 text-sm', variantClasses[variant]]">
+  <div role="alert" :class="['rounded-xl border px-4 py-3 text-sm', variantClasses[variant]]">
     <slot />
   </div>
 </template>

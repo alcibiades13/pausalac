@@ -50,10 +50,16 @@ async function onLogout() {
 
 <template>
   <div class="min-h-screen bg-background">
-    <header class="border-b border-border bg-white">
+    <header class="sticky top-0 z-10 bg-surface shadow-[0_1px_2px_rgba(23,32,51,0.04),0_4px_16px_-8px_rgba(23,32,51,0.10)]">
       <div class="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
-        <span class="truncate font-semibold text-navy">
-          {{ company.currentCompany?.name ?? 'Pausalac' }}
+        <span class="flex items-center gap-2 truncate">
+          <span
+            class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-primary to-primary-dark"
+            aria-hidden="true"
+          />
+          <span class="truncate font-display text-base font-semibold text-navy">
+            {{ company.currentCompany?.name ?? 'Pausalac' }}
+          </span>
         </span>
 
         <!-- Desktop/tablet nav: hidden below sm, a plain row from sm up. -->
@@ -62,8 +68,8 @@ async function onLogout() {
             v-for="link in NAV_LINKS"
             :key="link.name"
             :to="{ name: link.name }"
-            class="text-sm text-text-secondary hover:text-navy"
-            active-class="text-navy font-medium"
+            class="text-sm text-text-secondary hover:text-primary"
+            active-class="font-medium text-primary"
           >
             {{ link.label }}
           </RouterLink>
@@ -71,8 +77,8 @@ async function onLogout() {
         <div class="hidden items-center gap-4 sm:flex">
           <RouterLink
             :to="{ name: 'settings' }"
-            class="text-sm text-text-secondary hover:text-navy"
-            active-class="text-navy font-medium"
+            class="text-sm text-text-secondary hover:text-primary"
+            active-class="font-medium text-primary"
           >
             Podešavanja
           </RouterLink>
@@ -95,7 +101,7 @@ async function onLogout() {
           </svg>
           <span
             v-if="unreadCount > 0"
-            class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-medium text-white"
+            class="absolute right-1 top-1 flex h-4 min-w-4 animate-pulse items-center justify-center rounded-full bg-danger px-1 text-[10px] font-medium text-white"
           >
             {{ unreadCount > 9 ? '9+' : unreadCount }}
           </span>
@@ -125,15 +131,15 @@ async function onLogout() {
           v-for="link in NAV_LINKS"
           :key="link.name"
           :to="{ name: link.name }"
-          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-navy"
-          active-class="text-navy font-medium"
+          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-primary"
+          active-class="font-medium text-primary"
         >
           {{ link.label }}
         </RouterLink>
         <RouterLink
           :to="{ name: 'settings' }"
-          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-navy"
-          active-class="text-navy font-medium"
+          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-primary"
+          active-class="font-medium text-primary"
         >
           Podešavanja
         </RouterLink>
@@ -147,7 +153,11 @@ async function onLogout() {
       </nav>
     </header>
     <main class="mx-auto max-w-4xl px-4 py-8">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </main>
   </div>
 </template>

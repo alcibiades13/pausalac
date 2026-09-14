@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Card, Alert, EmptyState, Input, MoneyDisplay, Badge } from '@pausalac/ui'
+import { Card, Alert, EmptyState, Input, MoneyDisplay, Badge, Skeleton } from '@pausalac/ui'
 import { listKpoEntries, kpoExportPdfUrl, kpoExportXlsxUrl, type KPOEntry } from '@/services/kpo'
 import { useCompanyStore } from '@/stores/company'
 import { ApiError } from '@/lib/api'
@@ -53,7 +53,7 @@ watch([dateFrom, dateTo], load)
     </Alert>
 
     <Card v-else-if="status === 'loading'">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <Card v-else-if="entries.length === 0">
@@ -77,7 +77,7 @@ watch([dateFrom, dateTo], load)
         </thead>
         <tbody>
           <tr v-for="entry in entries" :key="entry.id" class="border-b border-border">
-            <td class="py-2 pr-3">{{ entry.sequence_number }}</td>
+            <td class="py-2 pr-3 font-mono">{{ entry.sequence_number }}</td>
             <td class="py-2 pr-3">{{ entry.entry_date }}</td>
             <td class="py-2 pr-3">
               {{ entry.description }}

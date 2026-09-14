@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Card, Input, Select, Alert } from '@pausalac/ui'
+import { Button, Card, Input, Select, Alert, Skeleton } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import {
   createInvoice,
@@ -132,7 +132,7 @@ async function onSubmit() {
     </h1>
 
     <Card v-if="loading">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <Card v-else>

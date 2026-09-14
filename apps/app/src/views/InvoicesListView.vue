@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { Button, Card, Alert, EmptyState, MoneyDisplay } from '@pausalac/ui'
+import { Button, Card, Alert, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import { listInvoices, type Invoice, type InvoiceStatus } from '@/services/invoices'
 import { STATUS_LABELS } from '@/lib/invoiceStatus'
 import { ApiError } from '@/lib/api'
@@ -57,7 +57,7 @@ watch(statusFilter, load)
     </Alert>
 
     <Card v-else-if="status === 'loading'">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <Card v-else-if="invoices.length === 0">
@@ -78,10 +78,10 @@ watch(statusFilter, load)
         <li v-for="invoice in invoices" :key="invoice.id" class="py-3">
           <RouterLink
             :to="{ name: 'invoice-detail', params: { id: invoice.id } }"
-            class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
+            class="-mx-2 flex flex-col gap-1 rounded-lg px-2 py-1 hover:bg-background sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <p class="font-medium text-navy">
+              <p class="font-mono font-medium text-navy">
                 {{ invoice.invoice_number ?? `Nacrt #${invoice.id}` }}
               </p>
               <p class="text-sm text-text-secondary">{{ invoice.client_name }}</p>

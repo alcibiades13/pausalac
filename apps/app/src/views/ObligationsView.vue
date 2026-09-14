@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Button, Card, Input, Alert, Badge, EmptyState, MoneyDisplay } from '@pausalac/ui'
+import { Button, Card, Input, Alert, Badge, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import {
   createTaxResolution,
   listTaxObligations,
@@ -158,7 +158,7 @@ async function onCreateResolution() {
       </Alert>
 
       <Card v-else-if="status === 'loading'">
-        <p class="text-sm text-text-secondary">Učitavanje...</p>
+        <Skeleton :count="3" />
       </Card>
 
       <Card v-else-if="obligations.length === 0">

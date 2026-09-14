@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Card, Input, Alert } from '@pausalac/ui'
+import { Button, Card, Input, Alert, Skeleton } from '@pausalac/ui'
 import { createClient, getClient, updateClient, type ClientPayload } from '@/services/clients'
 import { ApiError } from '@/lib/api'
 
@@ -73,7 +73,7 @@ async function onSubmit() {
       {{ isEditing ? 'Izmeni klijenta' : 'Novi klijent' }}
     </h1>
     <Card>
-      <p v-if="loading" class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton v-if="loading" :count="3" />
       <form v-else class="flex flex-col gap-4" @submit.prevent="onSubmit">
         <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 

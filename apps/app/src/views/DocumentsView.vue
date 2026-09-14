@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Button, Card, Input, Select, Alert, EmptyState, Badge } from '@pausalac/ui'
+import { Button, Card, Input, Select, Alert, EmptyState, Badge, Skeleton } from '@pausalac/ui'
 import {
   listDocuments,
   uploadDocument,
@@ -172,7 +172,7 @@ async function onUpload() {
     </Alert>
 
     <Card v-else-if="status === 'loading'">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <Card v-else-if="documents.length === 0">

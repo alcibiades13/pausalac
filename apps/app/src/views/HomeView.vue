@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Button, Card, Input, Alert, MoneyDisplay, EmptyState } from '@pausalac/ui'
+import { Button, Card, Input, Alert, MoneyDisplay, EmptyState, Skeleton } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
 import { createCompany } from '@/services/companies'
@@ -106,7 +106,7 @@ onMounted(loadDashboard)
       </Alert>
 
       <Card v-else-if="dashboardStatus === 'loading'">
-        <p class="text-sm text-text-secondary">Učitavanje...</p>
+        <Skeleton :count="3" />
       </Card>
 
       <template v-else-if="dashboard">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Button, Card, Alert, Input, MoneyDisplay } from '@pausalac/ui'
+import { Button, Card, Alert, Input, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import {
   getInvoice,
   issueInvoice,
@@ -160,13 +160,13 @@ onMounted(load)
     <Alert v-if="loadStatus === 'error'" variant="danger">{{ errorMessage }}</Alert>
 
     <Card v-else-if="loadStatus === 'loading'">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <template v-else-if="invoice">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-semibold text-navy">
+          <h1 class="font-mono text-xl font-semibold text-navy">
             {{ invoice.invoice_number ?? `Nacrt #${invoice.id}` }}
           </h1>
           <p class="text-sm text-text-secondary">{{ invoice.client_name }}</p>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Button, Card, Alert, EmptyState } from '@pausalac/ui'
+import { Button, Card, Alert, EmptyState, Skeleton } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import { ApiError } from '@/lib/api'
 
@@ -39,7 +39,7 @@ onMounted(load)
     </Alert>
 
     <Card v-else-if="status === 'loading'">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <Card v-else-if="clients.length === 0">
@@ -60,7 +60,7 @@ onMounted(load)
         <li v-for="c in clients" :key="c.id" class="py-3">
           <RouterLink
             :to="{ name: 'client-edit', params: { id: c.id } }"
-            class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
+            class="-mx-2 flex flex-col gap-1 rounded-lg px-2 py-1 hover:bg-background sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p class="font-medium text-navy">{{ c.name }}</p>

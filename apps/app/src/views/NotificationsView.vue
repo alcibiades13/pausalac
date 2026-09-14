@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Card, Alert, EmptyState, Badge } from '@pausalac/ui'
+import { Card, Alert, EmptyState, Badge, Skeleton } from '@pausalac/ui'
 import {
   listNotifications,
   markNotificationRead,
@@ -60,7 +60,7 @@ async function onMarkRead(notification: AppNotification) {
     </Alert>
 
     <Card v-else-if="status === 'loading'">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <Card v-else-if="notifications.length === 0">

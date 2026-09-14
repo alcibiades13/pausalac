@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Button, Card, Input, Alert } from '@pausalac/ui'
+import { Button, Card, Input, Alert, Skeleton } from '@pausalac/ui'
 import { getLimits, simulateLimits, type Limits, type LimitsSimulation } from '@/services/limits'
 import { ApiError } from '@/lib/api'
 import LimitTracker from '@/components/LimitTracker.vue'
@@ -53,7 +53,7 @@ async function onSimulate() {
     </Alert>
 
     <Card v-else-if="status === 'loading'">
-      <p class="text-sm text-text-secondary">Učitavanje...</p>
+      <Skeleton :count="3" />
     </Card>
 
     <template v-else-if="limits">

@@ -26,5 +26,5 @@ const formatted = computed(() => {
 </script>
 
 <template>
-  <span>{{ formatted }}</span>
+  <span class="tabular-nums">{{ formatted }}</span>
 </template>
