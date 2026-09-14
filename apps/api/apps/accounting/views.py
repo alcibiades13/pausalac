@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from apps.companies.permissions import HasActiveCompany, HasCompanyPermission
 
+from .dashboard import compute_client_portfolio, summarize_portfolio
 from .models import AccountingConnection, AccountingOrganization, AccountingOrganizationMembership
 from .serializers import (
     AccountingConnectionCreateSerializer,
@@ -76,7 +77,7 @@ class AccountingOrganizationViewSet(
             return [permissions.IsAuthenticated(), IsOrgMember()]
         if self.action in ("staff", "remove_staff", "connections") and self.request.method != "GET":
             return [permissions.IsAuthenticated(), IsOrgAdmin()]
-        if self.action == "connections":
+        if self.action in ("connections", "dashboard"):
             return [permissions.IsAuthenticated(), IsOrgMember()]
         return [permissions.IsAuthenticated()]
 
@@ -118,6 +119,48 @@ class AccountingOrganizationViewSet(
             return Response(OrganizationConnectionSerializer(connection).data, status=201)
         connections = organization.connections.select_related("company").all()
         return Response(OrganizationConnectionSerializer(connections, many=True).data)
+
+    # A small fixed set of sortable fields (§92: tables need sorting) —
+    # not arbitrary-field ordering, which this computed-in-Python list
+    # (not a queryset) has no generic infrastructure for.
+    _ORDERING_KEYS = {
+        "name": lambda row: row["company_name"].lower(),
+        "-name": lambda row: row["company_name"].lower(),
+        "revenue": lambda row: row["revenue_ytd"],
+        "-revenue": lambda row: row["revenue_ytd"],
+    }
+
+    @action(detail=True, methods=["get"])
+    def dashboard(self, request, pk=None, *args, **kwargs):
+        """
+        Accountant client-portfolio view (master prompt §28/§29). Every
+        figure is computed once for the whole portfolio in
+        apps.accounting.dashboard.compute_client_portfolio — filtering/
+        sorting/pagination below all operate on that already-computed
+        list, not on a fresh per-row query.
+        """
+        organization = self.get_object()
+        portfolio = compute_client_portfolio(organization)
+        summary = summarize_portfolio(portfolio)
+
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            portfolio = [row for row in portfolio if row["status"] == status_filter]
+        search = request.query_params.get("search")
+        if search:
+            needle = search.lower()
+            portfolio = [row for row in portfolio if needle in row["company_name"].lower()]
+
+        ordering = request.query_params.get("ordering", "name")
+        key = self._ORDERING_KEYS.get(ordering, self._ORDERING_KEYS["name"])
+        portfolio.sort(key=key, reverse=ordering.startswith("-"))
+
+        page = self.paginate_queryset(portfolio)
+        if page is not None:
+            response = self.get_paginated_response(page)
+            response.data["summary"] = summary
+            return response
+        return Response({"summary": summary, "results": portfolio})
 
 
 class ClientConnectionViewSet(viewsets.ReadOnlyModelViewSet):

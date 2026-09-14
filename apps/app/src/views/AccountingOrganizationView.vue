@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { Button, Card, Input, Select, Alert, Badge, EmptyState, Skeleton } from '@pausalac/ui'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { Button, Card, Input, Select, Alert, Badge, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import {
   listOrganizations,
   createOrganization,
@@ -9,13 +10,21 @@ import {
   removeOrgStaff,
   listOrgConnections,
   createOrgConnection,
+  getClientPortfolio,
   type AccountingOrganization,
   type OrgStaffMembership,
   type OrganizationConnection,
+  type ClientPortfolioRow,
+  type PortfolioSummary,
+  type PortfolioStatus,
   type GrantedRole,
   type OrgStaffRole,
 } from '@/services/accounting'
+import { useCompanyStore } from '@/stores/company'
 import { ApiError } from '@/lib/api'
+
+const router = useRouter()
+const company = useCompanyStore()
 
 const STAFF_ROLE_OPTIONS: { value: OrgStaffRole; label: string }[] = [
   { value: 'staff', label: 'Zaposleni' },
@@ -40,6 +49,34 @@ const CONNECTION_STATUS_VARIANTS: Record<
   declined: 'danger',
   revoked: 'danger',
 }
+const PORTFOLIO_STATUS_LABELS: Record<PortfolioStatus, string> = {
+  ok: 'OK',
+  attention: 'Pažnja',
+  critical: 'Kritično',
+}
+const PORTFOLIO_STATUS_VARIANTS: Record<PortfolioStatus, 'success' | 'warning' | 'danger'> = {
+  ok: 'success',
+  attention: 'warning',
+  critical: 'danger',
+}
+const LIMIT_VARIANTS: Record<string, 'neutral' | 'warning' | 'danger'> = {
+  ok: 'neutral',
+  attention: 'warning',
+  warning: 'warning',
+  critical: 'danger',
+}
+const PORTFOLIO_STATUS_FILTER_OPTIONS: { value: PortfolioStatus | ''; label: string }[] = [
+  { value: '', label: 'Svi statusi' },
+  { value: 'ok', label: 'OK' },
+  { value: 'attention', label: 'Pažnja' },
+  { value: 'critical', label: 'Kritično' },
+]
+const PORTFOLIO_ORDERING_OPTIONS: { value: 'name' | '-name' | 'revenue' | '-revenue'; label: string }[] = [
+  { value: 'name', label: 'Naziv (A-Š)' },
+  { value: '-name', label: 'Naziv (Š-A)' },
+  { value: '-revenue', label: 'Prihod (opadajuće)' },
+  { value: 'revenue', label: 'Prihod (rastuće)' },
+]
 
 // --- organization: load-or-create ---------------------------------------
 
@@ -54,7 +91,7 @@ async function loadOrganization() {
     organization.value = page.results[0] ?? null
     status.value = 'ready'
     if (organization.value) {
-      await Promise.all([loadStaff(), loadConnections()])
+      await Promise.all([loadStaff(), loadConnections(), loadPortfolio()])
     }
   } catch (error) {
     errorMessage.value =
@@ -128,6 +165,10 @@ async function onRemoveStaff(membershipId: number) {
 // --- client connections ---------------------------------------------------
 
 const connections = ref<OrganizationConnection[]>([])
+// The portfolio table below covers active connections in a much richer
+// way — this list is only the leftovers (pending/declined/revoked) so
+// the existing "did my invite go through" visibility isn't lost.
+const pendingConnections = computed(() => connections.value.filter((c) => c.status !== 'active'))
 
 async function loadConnections() {
   if (!organization.value) return
@@ -155,6 +196,69 @@ async function onInviteClient() {
   } finally {
     invitingClient.value = false
   }
+}
+
+// --- client portfolio (master prompt §28/§29) ------------------------------
+
+const portfolioRows = ref<ClientPortfolioRow[]>([])
+const portfolioSummary = ref<PortfolioSummary>({ total: 0, ok: 0, attention: 0, critical: 0 })
+const portfolioStatus = ref<'loading' | 'ready' | 'error'>('loading')
+const portfolioErrorMessage = ref('')
+const portfolioHasNext = ref(false)
+const portfolioHasPrevious = ref(false)
+const portfolioPage = ref(1)
+const portfolioSearch = ref('')
+const portfolioStatusFilter = ref<PortfolioStatus | ''>('')
+const portfolioOrdering = ref<'name' | '-name' | 'revenue' | '-revenue'>('name')
+
+async function loadPortfolio() {
+  if (!organization.value) return
+  portfolioStatus.value = 'loading'
+  try {
+    const page = await getClientPortfolio(organization.value.id, {
+      status: portfolioStatusFilter.value || undefined,
+      search: portfolioSearch.value || undefined,
+      ordering: portfolioOrdering.value,
+      page: portfolioPage.value,
+    })
+    portfolioRows.value = page.results
+    portfolioSummary.value = page.summary
+    portfolioHasNext.value = page.next !== null
+    portfolioHasPrevious.value = page.previous !== null
+    portfolioStatus.value = 'ready'
+  } catch (error) {
+    portfolioErrorMessage.value =
+      error instanceof ApiError
+        ? error.message
+        : 'Ne možemo trenutno da učitamo pregled klijenata.'
+    portfolioStatus.value = 'error'
+  }
+}
+
+watch([portfolioSearch, portfolioStatusFilter, portfolioOrdering], () => {
+  portfolioPage.value = 1
+  loadPortfolio()
+})
+
+function onPrevPortfolioPage() {
+  if (portfolioPage.value <= 1) return
+  portfolioPage.value -= 1
+  loadPortfolio()
+}
+
+function onNextPortfolioPage() {
+  if (!portfolioHasNext.value) return
+  portfolioPage.value += 1
+  loadPortfolio()
+}
+
+// "Klik na klijenta otvara detaljan pregled" (§29) — reuses the existing
+// company switcher instead of a new detail page: switching + landing on
+// Home puts the accountant on that client's own real dashboard, with
+// numbers that always match what the client themselves sees.
+async function onOpenClient(companyId: number) {
+  company.setCurrentCompany(companyId)
+  await router.push({ name: 'home' })
 }
 </script>
 
@@ -258,22 +362,143 @@ async function onInviteClient() {
         </form>
         <Alert v-if="connectionError" variant="danger" class="mb-3">{{ connectionError }}</Alert>
 
-        <EmptyState v-if="connections.length === 0" title="Još nema povezanih klijenata." />
-        <ul v-else class="flex flex-col divide-y divide-border">
-          <li
-            v-for="connection in connections"
-            :key="connection.id"
-            class="flex items-center justify-between py-2"
-          >
-            <div>
-              <p class="text-sm text-navy">{{ connection.company_name }}</p>
-              <p class="text-xs text-text-secondary">{{ connection.company_pib }}</p>
-            </div>
-            <Badge :variant="CONNECTION_STATUS_VARIANTS[connection.status]">
-              {{ CONNECTION_STATUS_LABELS[connection.status] }}
-            </Badge>
-          </li>
-        </ul>
+        <div v-if="pendingConnections.length" class="mb-6">
+          <h3 class="mb-2 text-sm font-medium text-text-secondary">Na čekanju</h3>
+          <ul class="flex flex-col divide-y divide-border">
+            <li
+              v-for="connection in pendingConnections"
+              :key="connection.id"
+              class="flex items-center justify-between py-2"
+            >
+              <div>
+                <p class="text-sm text-navy">{{ connection.company_name }}</p>
+                <p class="text-xs text-text-secondary">{{ connection.company_pib }}</p>
+              </div>
+              <Badge :variant="CONNECTION_STATUS_VARIANTS[connection.status]">
+                {{ CONNECTION_STATUS_LABELS[connection.status] }}
+              </Badge>
+            </li>
+          </ul>
+        </div>
+
+        <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div class="rounded-lg bg-background p-3">
+            <p class="text-xs text-text-secondary">Ukupno</p>
+            <p class="text-xl font-semibold text-navy">{{ portfolioSummary.total }}</p>
+          </div>
+          <div class="rounded-lg bg-background p-3">
+            <p class="text-xs text-text-secondary">OK</p>
+            <p class="text-xl font-semibold text-success">{{ portfolioSummary.ok }}</p>
+          </div>
+          <div class="rounded-lg bg-background p-3">
+            <p class="text-xs text-text-secondary">Pažnja</p>
+            <p class="text-xl font-semibold text-warning">{{ portfolioSummary.attention }}</p>
+          </div>
+          <div class="rounded-lg bg-background p-3">
+            <p class="text-xs text-text-secondary">Kritično</p>
+            <p class="text-xl font-semibold text-danger">{{ portfolioSummary.critical }}</p>
+          </div>
+        </div>
+
+        <div class="mb-3 flex flex-wrap items-end gap-3">
+          <Input v-model="portfolioSearch" label="Pretraga" placeholder="Naziv klijenta..." />
+          <Select
+            v-model="portfolioStatusFilter"
+            label="Status"
+            :options="PORTFOLIO_STATUS_FILTER_OPTIONS"
+          />
+          <Select
+            v-model="portfolioOrdering"
+            label="Sortiraj po"
+            :options="PORTFOLIO_ORDERING_OPTIONS"
+          />
+        </div>
+
+        <Alert v-if="portfolioStatus === 'error'" variant="danger">
+          {{ portfolioErrorMessage }}
+          <button class="ml-2 underline" @click="loadPortfolio">Pokušaj ponovo</button>
+        </Alert>
+
+        <Skeleton v-else-if="portfolioStatus === 'loading'" :count="3" />
+
+        <EmptyState
+          v-else-if="portfolioRows.length === 0"
+          title="Nema aktivnih klijenata."
+          description="Kada klijent prihvati zahtev za povezivanje, pojaviće se ovde."
+        />
+
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
+                <th class="py-2 pr-3">Klijent</th>
+                <th class="py-2 pr-3">Status</th>
+                <th class="py-2 pr-3 text-right">Prihod (YTD)</th>
+                <th class="py-2 pr-3">Limiti</th>
+                <th class="py-2 pr-3">Sledeća obaveza</th>
+                <th class="py-2 pr-3 text-right">Kašnjenja</th>
+                <th class="py-2 pr-3 text-right">Nedostaju dok.</th>
+                <th class="py-2 pr-3">Integracije</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in portfolioRows"
+                :key="row.company_id"
+                class="cursor-pointer border-b border-border hover:bg-background"
+                @click="onOpenClient(row.company_id)"
+              >
+                <td class="py-2 pr-3">
+                  <p class="font-medium text-navy">{{ row.company_name }}</p>
+                  <p class="text-xs text-text-secondary">{{ row.company_pib }}</p>
+                </td>
+                <td class="py-2 pr-3">
+                  <Badge :variant="PORTFOLIO_STATUS_VARIANTS[row.status]">
+                    {{ PORTFOLIO_STATUS_LABELS[row.status] }}
+                  </Badge>
+                </td>
+                <td class="py-2 pr-3 text-right">
+                  <MoneyDisplay :amount="row.revenue_ytd" :currency="row.currency" />
+                </td>
+                <td class="py-2 pr-3">
+                  <div class="flex gap-1">
+                    <Badge :variant="LIMIT_VARIANTS[row.pausal_limit.warning_level ?? 'ok']">
+                      Paušal {{ row.pausal_limit.percentage ?? '—' }}%
+                    </Badge>
+                    <Badge :variant="LIMIT_VARIANTS[row.vat_threshold.warning_level ?? 'ok']">
+                      PDV {{ row.vat_threshold.percentage ?? '—' }}%
+                    </Badge>
+                  </div>
+                </td>
+                <td class="py-2 pr-3" :class="row.next_obligation_overdue ? 'text-danger' : 'text-navy'">
+                  {{ row.next_obligation_due ?? '—' }}
+                </td>
+                <td class="py-2 pr-3 text-right">{{ row.overdue_invoice_count }}</td>
+                <td class="py-2 pr-3 text-right">{{ row.missing_document_count }}</td>
+                <td class="py-2 pr-3 text-text-secondary">{{ row.integration_errors ?? '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mt-3 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              class="text-sm text-primary hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
+              :disabled="!portfolioHasPrevious"
+              @click="onPrevPortfolioPage"
+            >
+              Prethodna
+            </button>
+            <button
+              type="button"
+              class="text-sm text-primary hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
+              :disabled="!portfolioHasNext"
+              @click="onNextPortfolioPage"
+            >
+              Sledeća
+            </button>
+          </div>
+        </div>
       </Card>
     </template>
   </div>

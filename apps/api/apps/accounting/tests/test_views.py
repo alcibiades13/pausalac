@@ -1,8 +1,14 @@
+from datetime import date, timedelta
+from decimal import Decimal
+
 from django.test import TestCase
 from django.urls import reverse
 
 from apps.accounts.models import User
+from apps.clients.models import Client
 from apps.companies.models import Company, Membership
+from apps.invoices.models import Invoice
+from apps.limits.testing import seed_test_rules
 from apps.notifications.models import Notification
 
 from ..models import AccountingOrganizationMembership
@@ -253,3 +259,111 @@ class AccountingConnectionFlowTests(TestCase):
         )
         response = self.client.get(url)
         self.assertEqual(response.json(), [])
+
+
+class AccountingDashboardViewTests(TestCase):
+    def setUp(self):
+        seed_test_rules()
+        self.admin = User.objects.create_user(email="admin@agencija.rs", password="s3cr3t-pass")
+        self.staff = User.objects.create_user(email="staff@agencija.rs", password="s3cr3t-pass")
+        self.org = AccountingService.create_organization(self.admin, name="Agencija A")
+        self.url = reverse(
+            "accounting-organization-dashboard", kwargs={"version": "v1", "pk": self.org.id}
+        )
+
+        self.company_ok = self._connect_company("Firma OK", "444444441")
+        self.company_critical = self._connect_company("Firma Critical", "444444442")
+        client = Client.objects.create(company=self.company_critical, name="Klijent")
+        Invoice.objects.create(
+            company=self.company_critical,
+            client=client,
+            status=Invoice.Status.OVERDUE,
+            issue_date=date.today(),
+            due_date=date.today() - timedelta(days=5),
+            service_date=date.today(),
+            total=Decimal("10000.00"),
+        )
+
+    def _connect_company(self, name: str, pib: str) -> Company:
+        company = Company.objects.create(name=name, pib=pib)
+        owner = User.objects.create_user(email=f"owner-{pib}@firma.rs", password="s3cr3t-pass")
+        Membership.objects.create(user=owner, company=company)
+        connection = AccountingService.create_connection(
+            self.org, company_pib=company.pib, granted_role="accountant", actor=self.admin
+        )
+        AccountingService.accept_connection(connection, actor=owner)
+        return company
+
+    def test_admin_sees_summary_and_rows(self):
+        self.client.login(username="admin@agencija.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["summary"], {"total": 2, "ok": 1, "attention": 0, "critical": 1})
+        self.assertEqual(body["count"], 2)
+        names = {row["company_name"] for row in body["results"]}
+        self.assertEqual(names, {"Firma OK", "Firma Critical"})
+
+    def test_plain_staff_member_can_also_view(self):
+        AccountingService.add_staff(
+            self.org, email=self.staff.email, role="staff", actor=self.admin
+        )
+        self.client.login(username="staff@agencija.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_non_member_forbidden(self):
+        User.objects.create_user(email="outsider@x.rs", password="s3cr3t-pass")
+        self.client.login(username="outsider@x.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_status_filter(self):
+        self.client.login(username="admin@agencija.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url, {"status": "critical"})
+        body = response.json()
+        self.assertEqual(body["count"], 1)
+        self.assertEqual(body["results"][0]["company_name"], "Firma Critical")
+        # Summary always reflects the whole portfolio, not the filtered page.
+        self.assertEqual(body["summary"]["total"], 2)
+
+    def test_search_filter(self):
+        self.client.login(username="admin@agencija.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url, {"search": "crit"})
+        body = response.json()
+        self.assertEqual(body["count"], 1)
+        self.assertEqual(body["results"][0]["company_name"], "Firma Critical")
+
+    def test_ordering(self):
+        self.client.login(username="admin@agencija.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url, {"ordering": "-name"})
+        names = [row["company_name"] for row in response.json()["results"]]
+        self.assertEqual(names, ["Firma OK", "Firma Critical"])
+
+    def test_pagination(self):
+        self.client.login(username="admin@agencija.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url, {"page_size": 1})
+        body = response.json()
+        self.assertEqual(len(body["results"]), 1)
+        self.assertIsNotNone(body["next"])
+
+    def test_revoked_connection_not_in_dashboard(self):
+        connection = self.org.connections.get(company=self.company_ok)
+        AccountingService.revoke_connection(connection, actor=self.admin)
+        self.client.login(username="admin@agencija.rs", password="s3cr3t-pass")
+        response = self.client.get(self.url)
+        body = response.json()
+        self.assertEqual(body["count"], 1)
+        self.assertEqual(body["summary"]["total"], 1)
+
+    def test_tenant_isolation_across_organizations(self):
+        other_admin = User.objects.create_user(email="other@agencija-b.rs", password="s3cr3t-pass")
+        other_org = AccountingService.create_organization(other_admin, name="Agencija B")
+        self.client.login(username="other@agencija-b.rs", password="s3cr3t-pass")
+        url = reverse(
+            "accounting-organization-dashboard", kwargs={"version": "v1", "pk": other_org.id}
+        )
+        response = self.client.get(url)
+        self.assertEqual(
+            response.json()["summary"], {"total": 0, "ok": 0, "attention": 0, "critical": 0}
+        )

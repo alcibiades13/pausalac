@@ -82,6 +82,15 @@ def _build_tracker(
 
 class LimitsService:
     @staticmethod
+    def summarize(current: Decimal, threshold: Decimal) -> dict:
+        """Percentage/warning-tier math only — no query. Lets other
+        aggregations (apps.accounting.dashboard's cross-client portfolio)
+        reuse the exact same tiering logic as `_build_tracker` without a
+        second copy of the rounding/threshold rules."""
+        percentage = _percentage(current, threshold)
+        return {"percentage": percentage, "warning_level": _warning_level(percentage)}
+
+    @staticmethod
     def compute_pausal_limit(company, as_of: date | None = None) -> dict:
         as_of = as_of or date.today()
         period_start = date(as_of.year, 1, 1)
