@@ -23,7 +23,15 @@ describe('canTransitionTo', () => {
     expect(canTransitionTo('cancelled', 'issued')).toBe(false)
   })
 
-  it('does not yet allow issued to sent (Phase 2d)', () => {
-    expect(canTransitionTo('issued', 'sent')).toBe(false)
+  it('allows issued to sent (Phase 2d)', () => {
+    expect(canTransitionTo('issued', 'sent')).toBe(true)
+  })
+
+  it('allows a sent invoice to still be cancelled', () => {
+    expect(canTransitionTo('sent', 'cancelled')).toBe(true)
+  })
+
+  it('does not yet allow sent to paid (Phase 2e)', () => {
+    expect(canTransitionTo('sent', 'paid')).toBe(false)
   })
 })

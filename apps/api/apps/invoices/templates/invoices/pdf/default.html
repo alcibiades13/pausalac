@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 2cm; }
+  body {
+    font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif;
+    color: #172033;
+    font-size: 11pt;
+  }
+  .header { display: flex; justify-content: space-between; margin-bottom: 28px; }
+  .header .title { font-size: 20pt; font-weight: bold; color: #172033; }
+  .header .draft-tag {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #f7f8fa;
+    color: #64748b;
+    font-size: 9pt;
+  }
+  .parties { display: flex; justify-content: space-between; margin-bottom: 24px; }
+  .parties .block { width: 48%; }
+  .parties h3 {
+    margin: 0 0 4px 0;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+  }
+  .parties p { margin: 0; line-height: 1.4; }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding: 12px 0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .meta .item { font-size: 9pt; color: #64748b; }
+  .meta .item strong { display: block; font-size: 11pt; color: #172033; font-weight: normal; }
+  table.items { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  table.items th {
+    text-align: left;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 8px 4px;
+  }
+  table.items td { padding: 8px 4px; border-bottom: 1px solid #e2e8f0; }
+  table.items td.num, table.items th.num { text-align: right; }
+  .total-row { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .total-row .box { text-align: right; }
+  .total-row .label { font-size: 9pt; color: #64748b; }
+  .total-row .amount { font-size: 16pt; font-weight: bold; color: #172033; }
+  .payment-info {
+    margin-top: 32px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 9pt;
+    color: #64748b;
+  }
+  .notes { margin-top: 16px; font-size: 9pt; color: #64748b; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">{{ invoice.invoice_number|default:"Faktura" }}</div>
+      {% if is_draft %}<span class="draft-tag">NACRT — nije još izdata</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="block">
+      <h3>Izdavalac</h3>
+      <p><strong>{{ company.name }}</strong></p>
+      {% if company.legal_name %}<p>{{ company.legal_name }}</p>{% endif %}
+      {% if company.address %}<p>{{ company.address }}{% if company.city %}, {{ company.city }}{% endif %}</p>{% endif %}
+      {% if company.pib %}<p>PIB: {{ company.pib }}</p>{% endif %}
+    </div>
+    <div class="block">
+      <h3>Klijent</h3>
+      <p><strong>{{ client.name }}</strong></p>
+      {% if client.address %}<p>{{ client.address }}</p>{% endif %}
+      {% if client.tax_id %}<p>PIB/MB: {{ client.tax_id }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="meta">
+    <div class="item">Datum izdavanja<strong>{{ invoice.issue_date|date:"d.m.Y." }}</strong></div>
+    <div class="item">Datum prometa<strong>{{ invoice.service_date|date:"d.m.Y." }}</strong></div>
+    <div class="item">Rok plaćanja<strong>{{ invoice.due_date|date:"d.m.Y." }}</strong></div>
+  </div>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th>Opis</th>
+        <th class="num">Količina</th>
+        <th class="num">Cena</th>
+        <th class="num">Ukupno</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.description }}</td>
+        <td class="num">{{ item.quantity }}</td>
+        <td class="num">{{ item.unit_price }}</td>
+        <td class="num">{{ item.line_total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="total-row">
+    <div class="box">
+      <div class="label">Ukupno za uplatu</div>
+      <div class="amount">{{ total_formatted }} {{ invoice.currency }}</div>
+    </div>
+  </div>
+
+  {% if company.bank_account %}
+  <div class="payment-info">
+    Uplatu izvršiti na račun: {{ company.bank_account }} ({{ company.name }})
+  </div>
+  {% endif %}
+
+  {% if invoice.notes %}
+  <div class="notes">{{ invoice.notes }}</div>
+  {% endif %}
+</body>
+</html>

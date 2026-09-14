@@ -14,6 +14,7 @@ class InvoiceLineItemSerializer(serializers.ModelSerializer):
 class InvoiceSerializer(serializers.ModelSerializer):
     items = InvoiceLineItemSerializer(many=True, required=False)
     client_name = serializers.CharField(source="client.name", read_only=True)
+    client_email = serializers.CharField(source="client.email", read_only=True)
 
     class Meta:
         model = Invoice
@@ -21,6 +22,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "id",
             "client",
             "client_name",
+            "client_email",
             "invoice_number",
             "status",
             "issue_date",
@@ -30,6 +32,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "total",
             "notes",
             "issued_at",
+            "sent_at",
             "cancelled_at",
             "created_at",
             "updated_at",
@@ -41,6 +44,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "status",
             "total",
             "issued_at",
+            "sent_at",
             "cancelled_at",
             "created_at",
             "updated_at",

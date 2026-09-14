@@ -1,3 +1,4 @@
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -171,3 +172,126 @@ class InvoiceRbacTests(TestCase):
         cancel_url = reverse("invoice-cancel", kwargs={"version": "v1", "pk": invoice_id})
         cancel_response = self.client.post(cancel_url, **self.headers)
         self.assertEqual(cancel_response.status_code, 403)
+
+
+class InvoicePdfTests(TestCase):
+    """
+    apps/invoices/views.py::InvoiceViewSet.pdf deliberately bypasses the
+    X-Company-Id header mechanism (a plain <a href> download can't set a
+    custom header) — resolves tenancy from the invoice's own company
+    instead, mirroring CompanyViewSet's own-id addressing.
+    """
+
+    def setUp(self):
+        self.owner_a = User.objects.create_user(email="a@pausalac.rs", password="s3cr3t-pass")
+        self.owner_b = User.objects.create_user(email="b@pausalac.rs", password="s3cr3t-pass")
+        self.company_a = Company.objects.create(name="Firma A")
+        self.company_b = Company.objects.create(name="Firma B")
+        self.client_a = Client.objects.create(company=self.company_a, name="Klijent A")
+        Membership.objects.create(user=self.owner_a, company=self.company_a)
+        Membership.objects.create(user=self.owner_b, company=self.company_b)
+
+        self.client.login(username="a@pausalac.rs", password="s3cr3t-pass")
+        create_response = self.client.post(
+            reverse("invoice-list", kwargs={"version": "v1"}),
+            {
+                "client": self.client_a.id,
+                **_dates(),
+                "items": [{"description": "X", "quantity": "1", "unit_price": "1"}],
+            },
+            content_type="application/json",
+            HTTP_X_COMPANY_ID=str(self.company_a.id),
+        )
+        self.invoice_id = create_response.json()["id"]
+        self.client.logout()
+
+    def test_owner_can_download_pdf_without_company_header(self):
+        self.client.login(username="a@pausalac.rs", password="s3cr3t-pass")
+        url = reverse("invoice-pdf", kwargs={"version": "v1", "pk": self.invoice_id})
+        response = self.client.get(url)  # no X-Company-Id header on purpose
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF"))
+
+    def test_other_companys_member_cannot_download_pdf(self):
+        self.client.login(username="b@pausalac.rs", password="s3cr3t-pass")
+        url = reverse("invoice-pdf", kwargs={"version": "v1", "pk": self.invoice_id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_pdf_requires_authentication(self):
+        url = reverse("invoice-pdf", kwargs={"version": "v1", "pk": self.invoice_id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+
+class InvoiceSendTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        self.company = Company.objects.create(name="Firma A")
+        self.client_with_email = Client.objects.create(
+            company=self.company, name="Klijent A", email="klijent@primer.rs"
+        )
+        self.client_without_email = Client.objects.create(company=self.company, name="Klijent B")
+        Membership.objects.create(user=self.owner, company=self.company)
+        self.client.login(username="owner@pausalac.rs", password="s3cr3t-pass")
+        self.headers = {"HTTP_X_COMPANY_ID": str(self.company.id)}
+
+    def _create_and_issue(self, client_obj):
+        create_response = self.client.post(
+            reverse("invoice-list", kwargs={"version": "v1"}),
+            {
+                "client": client_obj.id,
+                **_dates(),
+                "items": [{"description": "X", "quantity": "1", "unit_price": "1000"}],
+            },
+            content_type="application/json",
+            **self.headers,
+        )
+        invoice_id = create_response.json()["id"]
+        self.client.post(
+            reverse("invoice-issue", kwargs={"version": "v1", "pk": invoice_id}), **self.headers
+        )
+        return invoice_id
+
+    def test_cannot_send_a_draft(self):
+        create_response = self.client.post(
+            reverse("invoice-list", kwargs={"version": "v1"}),
+            {
+                "client": self.client_with_email.id,
+                **_dates(),
+                "items": [{"description": "X", "quantity": "1", "unit_price": "1"}],
+            },
+            content_type="application/json",
+            **self.headers,
+        )
+        invoice_id = create_response.json()["id"]
+        url = reverse("invoice-send", kwargs={"version": "v1", "pk": invoice_id})
+        response = self.client.post(url, **self.headers)
+        self.assertEqual(response.status_code, 400)
+
+    def test_sending_without_a_client_email_requires_an_override(self):
+        invoice_id = self._create_and_issue(self.client_without_email)
+        url = reverse("invoice-send", kwargs={"version": "v1", "pk": invoice_id})
+        response = self.client.post(url, **self.headers)
+        self.assertEqual(response.status_code, 400)
+
+    def test_send_queues_email_and_eventually_marks_sent(self):
+        invoice_id = self._create_and_issue(self.client_with_email)
+        url = reverse("invoice-send", kwargs={"version": "v1", "pk": invoice_id})
+        response = self.client.post(
+            url, {"message": "Hvala na saradnji!"}, content_type="application/json", **self.headers
+        )
+        self.assertEqual(response.status_code, 202)
+
+        # CELERY_TASK_ALWAYS_EAGER (config/settings/test.py) runs the task
+        # synchronously, so by the time the response above returns, the
+        # send -> mark_sent chain has already completed.
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["klijent@primer.rs"])
+        self.assertEqual(len(mail.outbox[0].attachments), 1)
+        self.assertIn("Hvala na saradnji!", mail.outbox[0].body)
+
+        detail_url = reverse("invoice-detail", kwargs={"version": "v1", "pk": invoice_id})
+        detail = self.client.get(detail_url, **self.headers).json()
+        self.assertEqual(detail["status"], "sent")

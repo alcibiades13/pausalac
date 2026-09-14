@@ -108,6 +108,30 @@ class InvoiceServiceIssueCancelTests(TestCase):
         with self.assertRaises(InvalidTransitionError):
             InvoiceService.cancel(self.invoice, actor=self.user)
 
+    def test_cannot_mark_draft_as_sent(self):
+        with self.assertRaises(InvalidTransitionError):
+            InvoiceService.mark_sent(self.invoice, actor=self.user)
+
+    def test_mark_sent_on_issued_invoice(self):
+        InvoiceService.issue(self.invoice, actor=self.user)
+        invoice = InvoiceService.mark_sent(self.invoice, actor=self.user)
+        self.assertEqual(invoice.status, Invoice.Status.SENT)
+        self.assertIsNotNone(invoice.sent_at)
+        # Sending doesn't affect revenue — no new FinancialEvent beyond
+        # the original issue (Phase 2b's ledger-is-revenue-only decision).
+        self.assertEqual(FinancialEvent.objects.filter(invoice=invoice).count(), 1)
+
+    def test_can_still_cancel_a_sent_invoice_and_it_reverses_the_original_issue(self):
+        InvoiceService.issue(self.invoice, actor=self.user)
+        InvoiceService.mark_sent(self.invoice, actor=self.user)
+        invoice = InvoiceService.cancel(self.invoice, actor=self.user)
+        self.assertEqual(invoice.status, Invoice.Status.CANCELLED)
+        events = list(FinancialEvent.objects.filter(invoice=invoice).order_by("id"))
+        self.assertEqual([e.event_type for e in events], [
+            FinancialEvent.EventType.INVOICE_ISSUED,
+            FinancialEvent.EventType.INVOICE_CANCELLED,
+        ])
+
     def test_cannot_edit_once_issued(self):
         InvoiceService.issue(self.invoice, actor=self.user)
         with self.assertRaises(InvalidTransitionError):

@@ -1,12 +1,16 @@
+from django.http import HttpResponse
 from rest_framework import exceptions, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.companies.models import Membership
 from apps.companies.permissions import HasCompanyPermission
 
 from .models import Invoice
+from .pdf import render_invoice_pdf
 from .serializers import InvoiceSerializer
 from .services import InvalidTransitionError, InvoiceService
+from .tasks import send_invoice_email_task
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
@@ -14,8 +18,13 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     Tenant-scoped via the X-Company-Id header (apps.companies.permissions),
     same mechanism as apps.clients. Editing is DRAFT-only (enforced in
     InvoiceService.update_draft); status changes only happen through the
-    issue/cancel actions, never a generic PATCH of `status` (master
+    issue/cancel/send actions, never a generic PATCH of `status` (master
     prompt §11).
+
+    The `pdf` action is the one exception to the header-based scoping:
+    a plain <a href> download can't set a custom header, so it resolves
+    tenancy from the invoice's own company instead — same idea as
+    CompanyViewSet addressing Company directly by id (apps/companies/views.py).
     """
 
     serializer_class = InvoiceSerializer
@@ -25,6 +34,8 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     ordering_fields = ["issue_date", "due_date", "created_at"]
 
     def get_permissions(self):
+        if self.action == "pdf":
+            return [permissions.IsAuthenticated()]
         codename = {
             "list": "view_financial_data",
             "retrieve": "view_financial_data",
@@ -32,16 +43,22 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             "update": "edit_invoice",
             "partial_update": "edit_invoice",
             "issue": "edit_invoice",
+            "send": "edit_invoice",
             "cancel": "cancel_invoice",
         }[self.action]
         return [permissions.IsAuthenticated(), HasCompanyPermission(codename)()]
 
     def get_queryset(self):
-        return (
-            Invoice.objects.for_company(self.request.company)
-            .select_related("client")
-            .prefetch_related("items")
-        )
+        base = Invoice.objects.select_related("client", "company").prefetch_related("items")
+        if self.action == "pdf":
+            user = self.request.user
+            if user.is_superuser:
+                return base
+            return base.filter(
+                company__memberships__user=user,
+                company__memberships__status=Membership.Status.ACTIVE,
+            ).distinct()
+        return base.for_company(self.request.company)
 
     @action(detail=True, methods=["post"])
     def issue(self, request, pk=None, *args, **kwargs):
@@ -60,3 +77,30 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         except InvalidTransitionError as exc:
             raise exceptions.ValidationError(str(exc)) from exc
         return Response(self.get_serializer(invoice).data)
+
+    @action(detail=True, methods=["get"])
+    def pdf(self, request, pk=None, *args, **kwargs):
+        invoice = self.get_object()
+        if not request.user.has_company_permission(invoice.company, "view_financial_data"):
+            raise exceptions.PermissionDenied("Nemate dozvolu da vidite ovu fakturu.")
+        pdf_bytes = render_invoice_pdf(invoice)
+        filename = invoice.invoice_number or f"nacrt-{invoice.id}"
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="{filename}.pdf"'
+        return response
+
+    @action(detail=True, methods=["post"])
+    def send(self, request, pk=None, *args, **kwargs):
+        invoice = self.get_object()
+        if invoice.status != Invoice.Status.ISSUED:
+            raise exceptions.ValidationError(
+                "Samo izdata faktura može da se pošalje klijentu."
+            )
+        recipient_email = request.data.get("recipient_email") or invoice.client.email
+        if not recipient_email:
+            raise exceptions.ValidationError(
+                {"recipient_email": "Klijent nema email adresu — unesi je ručno."}
+            )
+        message = request.data.get("message", "")
+        send_invoice_email_task.delay(invoice.id, recipient_email, message, request.user.id)
+        return Response({"detail": "Faktura se šalje."}, status=202)

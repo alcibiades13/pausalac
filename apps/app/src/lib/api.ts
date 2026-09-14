@@ -43,6 +43,25 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   params?: Record<string, string | number | boolean | undefined>
 }
 
+/**
+ * Builds a full API URL for cases that aren't a `fetch()` call — e.g. a
+ * plain `<a href>` PDF download, which (unlike apiFetch) can't set a
+ * custom X-Company-Id header, so the endpoints it points at resolve
+ * tenancy another way (apps/invoices/views.py::InvoiceViewSet.pdf).
+ */
+export function buildApiUrl(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): string {
+  let url = `${API_BASE_URL}/${API_VERSION}/${path.replace(/^\//, '')}`
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value !== undefined) query.set(key, String(value))
+  }
+  if ([...query].length > 0) url += `?${query.toString()}`
+  return url
+}
+
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const { body, companyId, params, headers, method = 'GET', ...rest } = options
 
@@ -59,12 +78,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     }
   }
 
-  let url = `${API_BASE_URL}/${API_VERSION}/${path.replace(/^\//, '')}`
-  const query = new URLSearchParams()
-  for (const [key, value] of Object.entries(params ?? {})) {
-    if (value !== undefined) query.set(key, String(value))
-  }
-  if ([...query].length > 0) url += `?${query.toString()}`
+  const url = buildApiUrl(path, params)
 
   const response = await fetch(url, {
     ...rest,

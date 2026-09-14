@@ -17,13 +17,16 @@ from .numbering import assign_invoice_number
 
 Status = Invoice.Status
 
-# Only the transitions reachable this phase. SENT/VIEWED/PARTIALLY_PAID/
-# PAID/OVERDUE join this map in 2c/2d once email, tracking, and payments
-# exist to drive them — the enum and DB constraint already allow for it
-# (apps/invoices/models.py), only this map and its callers grow then.
+# VIEWED/PARTIALLY_PAID/PAID/OVERDUE join this map once tracking and
+# payments (2e+) exist to drive them — the enum and DB constraint already
+# allow for it (apps/invoices/models.py), only this map and its callers
+# grow then. A sent invoice can still be cancelled (voiding something the
+# client already received is a normal real-world case), same as an
+# issued-but-not-yet-sent one.
 TRANSITIONS: dict[str, set[str]] = {
     Status.DRAFT: {Status.ISSUED, Status.CANCELLED},
-    Status.ISSUED: {Status.CANCELLED},
+    Status.ISSUED: {Status.CANCELLED, Status.SENT},
+    Status.SENT: {Status.CANCELLED},
     Status.CANCELLED: set(),
 }
 
@@ -130,13 +133,17 @@ class InvoiceService:
                 f"Faktura u statusu '{invoice.status}' ne može da se stornira."
             )
 
-        was_issued = invoice.status == Status.ISSUED
+        # Whether revenue was ever recognized for this invoice — true for
+        # ISSUED and anything downstream of it (SENT, ...), not just the
+        # literal current status, so cancelling a *sent* invoice still
+        # reverses the original issue event correctly.
+        was_ever_issued = invoice.issued_at is not None
         old_status = invoice.status
         invoice.status = Status.CANCELLED
         invoice.cancelled_at = timezone.now()
         invoice.save(update_fields=["status", "cancelled_at", "updated_at"])
 
-        if was_issued:
+        if was_ever_issued:
             # A cancelled draft never counted toward anything — only
             # reverse the ledger impact of an invoice that was actually
             # issued (master prompt §97: inclusion/exclusion must be explicit).
@@ -153,6 +160,38 @@ class InvoiceService:
             entity_type="invoice",
             entity_id=invoice.id,
             action="cancelled",
+            old_value={"status": old_status},
+            new_value={"status": invoice.status},
+        )
+        return invoice
+
+    @staticmethod
+    @transaction.atomic
+    def mark_sent(invoice: Invoice, actor) -> Invoice:
+        """
+        Called from apps.invoices.tasks.send_invoice_email_task only after
+        the email actually sends — never eagerly from the view — so the
+        status can never claim "sent" for something delivery failed on.
+        No FinancialEvent: sending doesn't change revenue (Phase 2b's
+        ledger-is-revenue-only decision), so this is audit-trail-only,
+        the same treatment INVOICE_CREATED got.
+        """
+        if Status.SENT not in TRANSITIONS.get(invoice.status, set()):
+            raise InvalidTransitionError(
+                f"Faktura u statusu '{invoice.status}' ne može da se označi kao poslata."
+            )
+
+        old_status = invoice.status
+        invoice.status = Status.SENT
+        invoice.sent_at = timezone.now()
+        invoice.save(update_fields=["status", "sent_at", "updated_at"])
+
+        AuditService.log(
+            actor=actor,
+            company=invoice.company,
+            entity_type="invoice",
+            entity_id=invoice.id,
+            action="sent",
             old_value={"status": old_status},
             new_value={"status": invoice.status},
         )

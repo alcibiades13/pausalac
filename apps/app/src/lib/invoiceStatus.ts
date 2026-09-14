@@ -25,13 +25,13 @@ export const STATUS_VARIANTS: Record<InvoiceStatus, 'success' | 'warning' | 'dan
 /**
  * Mirrors apps/invoices/services.py::TRANSITIONS on the backend — kept in
  * sync by hand (small, stable map) so the UI never offers a button the API
- * would reject with a 400. Only draft/issued/cancelled are reachable until
- * Phase 2d adds email/payments.
+ * would reject with a 400. viewed/partially_paid/paid/overdue join this
+ * once tracking and payments (2e+) exist to drive them.
  */
 const TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
   draft: ['issued', 'cancelled'],
-  issued: ['cancelled'],
-  sent: [],
+  issued: ['cancelled', 'sent'],
+  sent: ['cancelled'],
   viewed: [],
   partially_paid: [],
   paid: [],

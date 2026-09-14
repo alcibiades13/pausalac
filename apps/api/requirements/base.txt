@@ -14,3 +14,6 @@ redis~=5.1
 
 # Object storage (S3-compatible; MinIO locally)
 django-storages[s3]~=1.14
+
+# PDF generation (invoice PDFs — apps/invoices/pdf.py)
+weasyprint~=70.0

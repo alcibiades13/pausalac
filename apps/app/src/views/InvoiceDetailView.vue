@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Button, Card, Alert, MoneyDisplay } from '@pausalac/ui'
-import { getInvoice, issueInvoice, cancelInvoice, type Invoice } from '@/services/invoices'
+import { Button, Card, Alert, Input, MoneyDisplay } from '@pausalac/ui'
+import {
+  getInvoice,
+  issueInvoice,
+  cancelInvoice,
+  sendInvoice,
+  invoicePdfUrl,
+  type Invoice,
+} from '@/services/invoices'
 import { canTransitionTo } from '@/lib/invoiceStatus'
 import { ApiError } from '@/lib/api'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
@@ -46,6 +53,43 @@ async function onCancel() {
     errorMessage.value = error instanceof ApiError ? error.message : 'Faktura nije mogla da se stornira.'
   } finally {
     actionLoading.value = null
+  }
+}
+
+// --- send ----------------------------------------------------------------
+
+const showSendForm = ref(false)
+const recipientEmail = ref('')
+const sendMessage = ref('')
+const sending = ref(false)
+const sendError = ref('')
+const sendConfirmation = ref('')
+
+function openSendForm() {
+  recipientEmail.value = invoice.value?.client_email ?? ''
+  sendMessage.value = ''
+  sendError.value = ''
+  sendConfirmation.value = ''
+  showSendForm.value = true
+}
+
+async function onSend() {
+  if (!invoice.value) return
+  sending.value = true
+  sendError.value = ''
+  try {
+    await sendInvoice(invoice.value.id, { recipientEmail: recipientEmail.value, message: sendMessage.value })
+    sendConfirmation.value = 'Faktura se šalje — status će se ažurirati za par trenutaka.'
+    showSendForm.value = false
+    // The status flips to "sent" only once the email actually goes out
+    // (apps/invoices/tasks.py) — refetch shortly after instead of
+    // assuming success immediately.
+    setTimeout(load, 1500)
+  } catch (error) {
+    sendError.value =
+      error instanceof ApiError ? error.message : 'Faktura nije mogla da se pošalje.'
+  } finally {
+    sending.value = false
   }
 }
 
@@ -115,7 +159,33 @@ onMounted(load)
         <p class="text-sm text-text-secondary">{{ invoice.notes }}</p>
       </Card>
 
-      <div class="flex gap-3">
+      <Alert v-if="sendConfirmation" variant="success">{{ sendConfirmation }}</Alert>
+
+      <Card v-if="showSendForm">
+        <h2 class="mb-3 text-base font-semibold text-navy">Pošalji fakturu</h2>
+        <form class="flex flex-col gap-4" @submit.prevent="onSend">
+          <Alert v-if="sendError" variant="danger">{{ sendError }}</Alert>
+          <Input v-model="recipientEmail" type="email" label="Email klijenta" required />
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-navy" for="send-message">Poruka (opciono)</label>
+            <textarea
+              id="send-message"
+              v-model="sendMessage"
+              rows="3"
+              class="rounded-lg border border-border bg-white px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+          <div class="flex gap-3">
+            <Button type="submit" :loading="sending">Pošalji</Button>
+            <Button type="button" variant="ghost" @click="showSendForm = false">Otkaži</Button>
+          </div>
+        </form>
+      </Card>
+
+      <div class="flex flex-wrap gap-3">
+        <a :href="invoicePdfUrl(invoice.id)" target="_blank" rel="noopener">
+          <Button variant="secondary">Preuzmi PDF</Button>
+        </a>
         <RouterLink v-if="invoice.status === 'draft'" :to="{ name: 'invoice-edit', params: { id: invoice.id } }">
           <Button variant="secondary">Izmeni</Button>
         </RouterLink>
@@ -125,6 +195,9 @@ onMounted(load)
           @click="onIssue"
         >
           Izdaj fakturu
+        </Button>
+        <Button v-if="invoice.status === 'issued'" :disabled="showSendForm" @click="openSendForm">
+          Pošalji fakturu
         </Button>
         <Button
           v-if="canTransitionTo(invoice.status, 'cancelled')"
