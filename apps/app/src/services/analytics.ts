@@ -2,6 +2,7 @@ import { apiFetch } from '@/lib/api'
 import { useCompanyStore } from '@/stores/company'
 import type { OnboardingStatus } from '@/services/companies'
 import type { Limits } from '@/services/limits'
+import type { ObligationStatus } from '@/services/taxes'
 
 export type BusinessHealthStatus = 'ok' | 'attention' | 'critical'
 
@@ -24,6 +25,13 @@ export interface Dashboard {
   }
   onboarding: OnboardingStatus
   limits: Limits
+  next_obligation: {
+    period_start: string
+    due_date: string
+    total_amount: string
+    currency: string
+    status: ObligationStatus
+  } | null
 }
 
 function currentCompanyId(): number {

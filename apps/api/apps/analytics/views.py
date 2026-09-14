@@ -1,8 +1,7 @@
 """
 Dashboard aggregation (master prompt §8) — the one place that reads across
-Invoices/Payments/Companies/Limits to answer "how's my business doing" in
-one call. Deliberately does NOT include a Next-obligation section: that
-needs the Tax/Obligation domain, which doesn't exist yet (Phase 3c).
+Invoices/Payments/Companies/Limits/Taxes to answer "how's my business
+doing" in one call.
 """
 
 from datetime import date
@@ -20,6 +19,7 @@ from apps.companies.permissions import HasCompanyPermission
 from apps.invoices.ledger import sum_issued_revenue
 from apps.invoices.models import Invoice
 from apps.limits.services import LimitsService
+from apps.taxes.models import TaxObligation
 
 OUTSTANDING_STATUSES = [
     Invoice.Status.ISSUED,
@@ -39,6 +39,7 @@ class DashboardView(APIView):
         outstanding = self._outstanding(company)
         onboarding = compute_onboarding_status(company)
         limits = LimitsService.compute_all(company)
+        next_obligation = self._next_obligation(company)
 
         attention = []
         if outstanding["overdue_count"]:
@@ -92,13 +93,28 @@ class DashboardView(APIView):
                 }
             )
 
-        if outstanding["overdue_count"] or limits_critical:
+        obligation_overdue = next_obligation is not None and next_obligation["status"] == "overdue"
+        if obligation_overdue:
+            attention.append(
+                {
+                    "type": "tax_obligation_overdue",
+                    "message": (
+                        f"Poreska obaveza za {next_obligation['period_start']} kasni "
+                        f"({next_obligation['total_amount']} {company.default_currency})."
+                    ),
+                    "action": {"route": "obligations"},
+                }
+            )
+
+        if outstanding["overdue_count"] or limits_critical or obligation_overdue:
             reasons = []
             if outstanding["overdue_count"]:
                 reasons.append(f"{outstanding['overdue_count']} faktura(e) kasni sa naplatom.")
             reasons.extend(
                 f"{label} je na {tracker['percentage']}%." for label, tracker in limits_critical
             )
+            if obligation_overdue:
+                reasons.append("Poreska obaveza kasni.")
             business_health = {"status": "critical", "reasons": reasons}
         elif attention:
             business_health = {
@@ -116,6 +132,7 @@ class DashboardView(APIView):
                 "outstanding": outstanding,
                 "onboarding": onboarding,
                 "limits": limits,
+                "next_obligation": next_obligation,
             }
         )
 
@@ -132,6 +149,24 @@ class DashboardView(APIView):
             # figure, even though both now share the same promet/accrual
             # basis and the same sum_issued_revenue helper.
             "basis": "invoiced",
+        }
+
+    @staticmethod
+    def _next_obligation(company) -> dict | None:
+        obligation = (
+            TaxObligation.objects.for_company(company)
+            .filter(status__in=[TaxObligation.Status.PENDING, TaxObligation.Status.OVERDUE])
+            .order_by("due_date")
+            .first()
+        )
+        if obligation is None:
+            return None
+        return {
+            "period_start": obligation.period_start.isoformat(),
+            "due_date": obligation.due_date.isoformat(),
+            "total_amount": obligation.total_amount,
+            "currency": company.default_currency,
+            "status": obligation.status,
         }
 
     @staticmethod

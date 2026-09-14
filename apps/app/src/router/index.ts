@@ -103,6 +103,11 @@ const router = createRouter({
           name: 'kpo',
           component: () => import('@/views/KPOListView.vue'),
         },
+        {
+          path: 'obaveze',
+          name: 'obligations',
+          component: () => import('@/views/ObligationsView.vue'),
+        },
       ],
     },
   ],

@@ -55,6 +55,61 @@ class DashboardTests(TestCase):
         self.assertIn("limits", body)
         self.assertIn("pausal_limit", body["limits"])
         self.assertIn("vat_threshold", body["limits"])
+        self.assertIsNone(body["next_obligation"])
+
+    def test_pending_obligation_appears_as_next_obligation_without_affecting_health(self):
+        from datetime import timedelta
+        from decimal import Decimal as D
+
+        from apps.taxes.services import TaxService
+        from apps.taxes.testing import seed_test_rates
+
+        seed_test_rates()
+        future_month = (timezone.now().date().replace(day=1) + timedelta(days=60)).replace(day=1)
+        TaxService.create_resolution(
+            self.company,
+            effective_from=future_month,
+            effective_until=future_month,
+            tax_base=D("100000.00"),
+            income_tax_amount=D("10000.00"),
+            pio_amount=D("24000.00"),
+            health_amount=D("10300.00"),
+            unemployment_amount=D("750.00"),
+        )
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertIsNotNone(body["next_obligation"])
+        self.assertEqual(body["next_obligation"]["status"], "pending")
+        self.assertEqual(Decimal(body["next_obligation"]["total_amount"]), Decimal("45050.00"))
+        self.assertEqual(body["business_health"]["status"], "ok")
+
+    def test_overdue_obligation_flips_health_to_critical(self):
+        from datetime import date
+        from decimal import Decimal as D
+
+        from apps.taxes.services import TaxService
+        from apps.taxes.testing import seed_test_rates
+
+        seed_test_rates()
+        past_month = date(timezone.now().year - 1, 1, 1)
+        TaxService.create_resolution(
+            self.company,
+            effective_from=past_month,
+            effective_until=past_month,
+            tax_base=D("100000.00"),
+            income_tax_amount=D("10000.00"),
+            pio_amount=D("24000.00"),
+            health_amount=D("10300.00"),
+            unemployment_amount=D("750.00"),
+        )
+        TaxService.mark_overdue_all()
+
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["next_obligation"]["status"], "overdue")
+        self.assertEqual(body["business_health"]["status"], "critical")
+        types = [item["type"] for item in body["attention"]]
+        self.assertIn("tax_obligation_overdue", types)
 
     def test_limit_at_warning_level_produces_attention_without_being_critical(self):
         # 5,100,000 / 6,000,000 = 85% -> "warning", not "critical".

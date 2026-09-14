@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Button } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
@@ -7,6 +8,24 @@ import { useCompanyStore } from '@/stores/company'
 const auth = useAuthStore()
 const company = useCompanyStore()
 const router = useRouter()
+const route = useRoute()
+
+const NAV_LINKS = [
+  { name: 'home', label: 'Početna' },
+  { name: 'clients', label: 'Klijenti' },
+  { name: 'invoices', label: 'Fakture' },
+  { name: 'limits', label: 'Limiti' },
+  { name: 'kpo', label: 'KPO' },
+  { name: 'obligations', label: 'Obaveze' },
+]
+
+const menuOpen = ref(false)
+watch(
+  () => route.fullPath,
+  () => {
+    menuOpen.value = false
+  },
+)
 
 async function onLogout() {
   await auth.logout()
@@ -17,48 +36,24 @@ async function onLogout() {
 <template>
   <div class="min-h-screen bg-background">
     <header class="border-b border-border bg-white">
-      <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <nav class="flex items-center gap-6">
-          <span class="font-semibold text-navy">
-            {{ company.currentCompany?.name ?? 'Pausalac' }}
-          </span>
+      <div class="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
+        <span class="truncate font-semibold text-navy">
+          {{ company.currentCompany?.name ?? 'Pausalac' }}
+        </span>
+
+        <!-- Desktop/tablet nav: hidden below sm, a plain row from sm up. -->
+        <nav class="hidden items-center gap-5 sm:flex">
           <RouterLink
-            :to="{ name: 'home' }"
+            v-for="link in NAV_LINKS"
+            :key="link.name"
+            :to="{ name: link.name }"
             class="text-sm text-text-secondary hover:text-navy"
             active-class="text-navy font-medium"
           >
-            Početna
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'clients' }"
-            class="text-sm text-text-secondary hover:text-navy"
-            active-class="text-navy font-medium"
-          >
-            Klijenti
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'invoices' }"
-            class="text-sm text-text-secondary hover:text-navy"
-            active-class="text-navy font-medium"
-          >
-            Fakture
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'limits' }"
-            class="text-sm text-text-secondary hover:text-navy"
-            active-class="text-navy font-medium"
-          >
-            Limiti
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'kpo' }"
-            class="text-sm text-text-secondary hover:text-navy"
-            active-class="text-navy font-medium"
-          >
-            KPO
+            {{ link.label }}
           </RouterLink>
         </nav>
-        <div class="flex items-center gap-4">
+        <div class="hidden items-center gap-4 sm:flex">
           <RouterLink
             :to="{ name: 'settings' }"
             class="text-sm text-text-secondary hover:text-navy"
@@ -68,7 +63,51 @@ async function onLogout() {
           </RouterLink>
           <Button variant="ghost" @click="onLogout">Odjavi se</Button>
         </div>
+
+        <!-- Mobile: a single hamburger toggle instead of cramming every
+             link into the header row (mobile-first — never let the nav
+             force the header to grow or wrap). -->
+        <button
+          type="button"
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-navy hover:bg-background sm:hidden"
+          :aria-expanded="menuOpen"
+          aria-label="Meni"
+          @click="menuOpen = !menuOpen"
+        >
+          <svg v-if="!menuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
       </div>
+
+      <nav v-if="menuOpen" class="flex flex-col border-t border-border px-4 py-2 sm:hidden">
+        <RouterLink
+          v-for="link in NAV_LINKS"
+          :key="link.name"
+          :to="{ name: link.name }"
+          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-navy"
+          active-class="text-navy font-medium"
+        >
+          {{ link.label }}
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'settings' }"
+          class="rounded-lg px-2 py-2.5 text-sm text-text-secondary hover:bg-background hover:text-navy"
+          active-class="text-navy font-medium"
+        >
+          Podešavanja
+        </RouterLink>
+        <button
+          type="button"
+          class="rounded-lg px-2 py-2.5 text-left text-sm text-text-secondary hover:bg-background hover:text-navy"
+          @click="onLogout"
+        >
+          Odjavi se
+        </button>
+      </nav>
     </header>
     <main class="mx-auto max-w-4xl px-4 py-8">
       <RouterView />

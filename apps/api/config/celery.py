@@ -27,4 +27,8 @@ app.conf.beat_schedule = {
         "task": "apps.invoices.tasks.mark_overdue_invoices_task",
         "schedule": crontab(minute=0),  # hourly
     },
+    "mark-overdue-tax-obligations": {
+        "task": "apps.taxes.tasks.mark_overdue_tax_obligations_task",
+        "schedule": crontab(minute=0),  # hourly
+    },
 }

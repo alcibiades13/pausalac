@@ -20,6 +20,7 @@ const router = createRouter({
     { path: '/podesavanja', name: 'settings', component: { template: '<div/>' } },
     { path: '/fakture', name: 'invoices', component: { template: '<div/>' } },
     { path: '/limiti', name: 'limits', component: { template: '<div/>' } },
+    { path: '/obaveze', name: 'obligations', component: { template: '<div/>' } },
   ],
 })
 
@@ -103,6 +104,7 @@ describe('HomeView (dashboard)', () => {
       outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
+      next_obligation: null,
     })
     const wrapper = mountHome()
     await flushPromises()
@@ -124,6 +126,7 @@ describe('HomeView (dashboard)', () => {
       outstanding: { count: 1, total: '1000.00', currency: 'RSD', overdue_count: 1, overdue_total: '1000.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
+      next_obligation: null,
     })
     const wrapper = mountHome()
     await flushPromises()
@@ -139,6 +142,7 @@ describe('HomeView (dashboard)', () => {
       outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
       onboarding: { completed: [], missing: [], percentage: 100 },
       limits: limitsFixture(),
+      next_obligation: null,
     })
     const wrapper = mountHome()
     await flushPromises()
@@ -153,12 +157,57 @@ describe('HomeView (dashboard)', () => {
       outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
+      next_obligation: null,
     })
     const wrapper = mountHome()
     await flushPromises()
     expect(wrapper.text()).toContain('Limiti')
     expect(wrapper.text()).toContain('47%')
     expect(wrapper.text()).toContain('12%')
+  })
+
+  it('shows the next obligation card when one exists, flagging overdue', async () => {
+    vi.mocked(getDashboard).mockResolvedValue({
+      business_health: { status: 'critical', reasons: ['Poreska obaveza kasni.'] },
+      attention: [
+        {
+          type: 'tax_obligation_overdue',
+          message: 'Poreska obaveza za 2026-01-01 kasni (45050.00 RSD).',
+          action: { route: 'obligations' },
+        },
+      ],
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
+      limits: limitsFixture(),
+      next_obligation: {
+        period_start: '2026-01-01',
+        due_date: '2026-02-16',
+        total_amount: '45050.00',
+        currency: 'RSD',
+        status: 'overdue',
+      },
+    })
+    const wrapper = mountHome()
+    await flushPromises()
+    expect(wrapper.text()).toContain('Sledeća obaveza')
+    expect(wrapper.text()).toContain('45.050,00 RSD')
+    expect(wrapper.text()).toContain('kasni')
+  })
+
+  it('shows a no-obligations message when next_obligation is null', async () => {
+    vi.mocked(getDashboard).mockResolvedValue({
+      business_health: { status: 'ok', reasons: [] },
+      attention: [],
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
+      limits: limitsFixture(),
+      next_obligation: null,
+    })
+    const wrapper = mountHome()
+    await flushPromises()
+    expect(wrapper.text()).toContain('Nema predstojećih obaveza.')
   })
 
   it('shows an error state with a retry option when loading fails', async () => {

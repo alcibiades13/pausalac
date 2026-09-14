@@ -152,6 +152,28 @@ onMounted(loadDashboard)
 
         <Card>
           <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-navy">Sledeća obaveza</span>
+            <RouterLink :to="{ name: 'obligations' }" class="text-sm text-primary hover:underline">
+              Detaljno →
+            </RouterLink>
+          </div>
+          <template v-if="dashboard.next_obligation">
+            <p class="mt-1 text-2xl font-semibold text-navy">
+              <MoneyDisplay
+                :amount="dashboard.next_obligation.total_amount"
+                :currency="dashboard.next_obligation.currency"
+              />
+            </p>
+            <p class="mt-1 text-sm" :class="dashboard.next_obligation.status === 'overdue' ? 'text-danger' : 'text-text-secondary'">
+              Rok: {{ dashboard.next_obligation.due_date }}
+              <span v-if="dashboard.next_obligation.status === 'overdue'">— kasni</span>
+            </p>
+          </template>
+          <p v-else class="mt-1 text-sm text-text-secondary">Nema predstojećih obaveza.</p>
+        </Card>
+
+        <Card>
+          <div class="flex items-center justify-between">
             <span class="text-sm font-medium text-navy">Limiti</span>
             <RouterLink :to="{ name: 'limits' }" class="text-sm text-primary hover:underline">
               Detaljno →
