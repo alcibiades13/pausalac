@@ -12,3 +12,11 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # settings point at real S3/MinIO, which tests must never depend on.
 # In-memory storage keeps file-upload tests fast and isolated.
 STORAGES = {**STORAGES, "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"}}
+
+# Phase 6a's rate limiting (config/settings/base.py) is cache-backed —
+# base settings point at real Redis, which throttle *counters* must never
+# accumulate against between test runs (dozens of test files call
+# register/login in setUp(), which would eventually exceed the "auth"
+# scope's 10/min against a real, persistent counter and produce flaky
+# 429s). LocMemCache is process-local and starts fresh every run.
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}

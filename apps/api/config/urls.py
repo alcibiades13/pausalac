@@ -9,7 +9,7 @@ docs/implementation-plan.md, Phase 1b vs. later phases).
 from django.contrib import admin
 from django.urls import include, path
 
-from .health import health
+from .health import health, ready
 
 api_v1_patterns = [
     path("auth/", include("apps.accounts.urls")),
@@ -31,6 +31,7 @@ api_v1_patterns = [
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("health", health, name="health"),
+    path("health/ready", ready, name="health-ready"),
     # `version` is captured once here for DRF's URLPathVersioning
     # (REST_FRAMEWORK["DEFAULT_VERSIONING_CLASS"]) and applies to every
     # nested include below.

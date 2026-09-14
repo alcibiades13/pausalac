@@ -161,6 +161,35 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSION": "v1",
     "ALLOWED_VERSIONS": ["v1"],
     "EXCEPTION_HANDLER": "config.exceptions.api_exception_handler",
+    # Rate limiting (master prompt §48) — backed by the already-running
+    # Redis via Django's cache framework (CACHES["default"], set below),
+    # no new infra. `auth` is a tighter scope applied explicitly to
+    # register/login (apps/accounts/views.py) — the actual abuse targets
+    # — everything else gets the general per-user/per-IP rate.
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "auth": "10/min",
+        "user": "300/min",
+        "anon": "60/min",
+    },
+}
+
+# ScopedRateThrottle only applies where a view sets `throttle_scope` — views
+# without one aren't affected by the "auth" rate above, only by the default
+# User/Anon rates.
+#
+# REDIS_URL (db 0) has been reserved in .env.example since Phase 1a but had
+# no real consumer until now — Celery already owns db 1 (CELERY_BROKER_URL
+# below); this is the first actual use of the general-purpose Redis slot.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("REDIS_URL", default="redis://localhost:6380/0"),
+    }
 }
 
 # --- CORS --------------------------------------------------------------------
@@ -233,3 +262,77 @@ FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 # regulatory fact, so it's a single constant to change later, not
 # something to block Phase 5 on. See docs/decisions-log.md.
 SUBSCRIPTION_TRIAL_DAYS = env.int("SUBSCRIPTION_TRIAL_DAYS", default=14)
+
+# --- Logging (master prompt §68) ------------------------------------------------
+# Structured (JSON) output — every line is greppable/ingestible by a log
+# aggregator instead of freeform text. Doesn't change *what* gets logged,
+# only *how* — existing `logger.warning(...)`/etc. calls throughout the
+# codebase (invoices/notifications/subscriptions tasks, audit context) are
+# unaffected.
+
+
+class JsonFormatter:
+    """Minimal dependency-free JSON log formatter — the log volume here
+    doesn't justify adding python-json-logger as a dependency for what's a
+    ~15-line class."""
+
+    def __init__(self):
+        import logging
+
+        self._base = logging.Formatter()
+
+    def format(self, record):
+        import json
+        import logging
+
+        payload = {
+            "timestamp": self._base.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            payload["exc_info"] = self._base.formatException(record.exc_info)
+        # Anything passed via `logger.info(..., extra={...})` rides along.
+        reserved = set(vars(logging.LogRecord("", 0, "", 0, "", (), None)))
+        for key, value in vars(record).items():
+            if key not in reserved and key not in payload:
+                payload[key] = value
+        return json.dumps(payload, default=str)
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {"()": "config.settings.base.JsonFormatter"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "json"},
+    },
+    # Third-party libraries (WeasyPrint, etc.) default to WARNING so their
+    # internal INFO-level chatter doesn't drown out application logs — only
+    # `django.*` and the app's own `pausalac.*` namespace (apps/*/tasks.py's
+    # existing `logging.getLogger("pausalac.<domain>")` convention) run at
+    # LOG_LEVEL.
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "pausalac": {
+            "handlers": ["console"],
+            "level": env("LOG_LEVEL", default="INFO"),
+            "propagate": False,
+        },
+    },
+}
+
+# --- Error tracking (master prompt §48/§68) -------------------------------------
+# Wired but inert without a DSN — same "architecture seam, not a fake
+# integration" treatment as SEF/fiscalization (Company.uses_sef is a real
+# field; the integration behind it isn't). No account is required to run
+# this app; set SENTRY_DSN once one exists.
+SENTRY_DSN = env("SENTRY_DSN", default="")
+if SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(dsn=SENTRY_DSN, send_default_pii=False, traces_sample_rate=0.1)

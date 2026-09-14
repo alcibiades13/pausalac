@@ -12,6 +12,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+from apps.analytics.tracking import track_event
 from apps.audit.services import AuditService
 
 from .models import Plan, Subscription
@@ -28,12 +29,14 @@ class SubscriptionService:
         check elsewhere — see has_active_access, which deliberately fails
         open instead of auto-provisioning, so other domains' tests never
         need a subscription fixture just because this app exists."""
-        subscription, _ = Subscription.objects.get_or_create(
+        subscription, created = Subscription.objects.get_or_create(
             company=company,
             defaults={
                 "trial_ends_at": timezone.now() + timedelta(days=settings.SUBSCRIPTION_TRIAL_DAYS)
             },
         )
+        if created:
+            track_event("trial_started", company=company)
         return subscription
 
     @staticmethod
@@ -82,6 +85,16 @@ class SubscriptionService:
             old_value={"status": old_status},
             new_value={"status": subscription.status, "plan": plan.identifier},
         )
+        if old_status == Subscription.Status.TRIALING:
+            # Only a genuine trial->paid transition is "trial_converted"
+            # (master prompt §73) — reactivating from cancelled/expired
+            # isn't a trial conversion.
+            track_event(
+                "trial_converted",
+                user=actor,
+                company=subscription.company,
+                plan=plan.identifier,
+            )
         return subscription
 
     @staticmethod

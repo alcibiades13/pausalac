@@ -40,6 +40,12 @@ class DocumentService:
             action="uploaded",
             new_value={"category": document.category, "title": document.title},
         )
+        # Lazy import — apps.analytics sits after apps.documents in DOMAIN_APPS.
+        from apps.analytics.tracking import track_event
+
+        track_event(
+            "document_uploaded", user=uploaded_by, company=company, category=document.category
+        )
         return document
 
     @staticmethod

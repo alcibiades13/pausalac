@@ -20,3 +20,6 @@ weasyprint~=70.0
 
 # Excel generation (KPO export — apps/kpo/excel.py)
 openpyxl~=3.1
+
+# Error tracking (config/settings/base.py — inert without SENTRY_DSN)
+sentry-sdk~=2.17

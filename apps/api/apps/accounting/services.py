@@ -15,6 +15,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from apps.accounts.models import User
+from apps.analytics.tracking import track_event
 from apps.audit.services import AuditService
 from apps.companies.models import Company, Membership
 
@@ -196,6 +197,12 @@ class AccountingService:
             action="accepted",
             old_value={"status": old_status},
             new_value={"status": connection.status},
+        )
+        track_event(
+            "accountant_connected",
+            user=actor,
+            company=connection.company,
+            organization_id=connection.organization_id,
         )
         return connection
 

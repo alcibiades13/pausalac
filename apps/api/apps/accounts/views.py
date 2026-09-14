@@ -44,6 +44,10 @@ class RegisterView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
+    # The tighter "auth" rate (REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"],
+    # config/settings/base.py) — the actual abuse target for spam
+    # registrations (master prompt §48).
+    throttle_scope = "auth"
 
     def post(self, request, *args, **kwargs):
         serializer = RegisterSerializer(data=request.data)
@@ -60,6 +64,13 @@ class RegisterView(APIView):
             action="registered",
             source="api",
         )
+        # Lazy import — apps.analytics sits after apps.accounts in
+        # DOMAIN_APPS. `signup_started` (master prompt §73) has no natural
+        # one-shot backend trigger (it's a frontend page-load event) and
+        # is deliberately not fired anywhere — only the completed event.
+        from apps.analytics.tracking import track_event
+
+        track_event("signup_completed", user=user)
         return Response(MeSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
@@ -95,6 +106,8 @@ class ResendVerificationView(APIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    # Brute-force protection (master prompt §48) — see RegisterView.
+    throttle_scope = "auth"
 
     def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
@@ -130,6 +143,28 @@ class MeView(APIView):
         return Response(MeSerializer(request.user).data)
 
 
+class DeactivateAccountView(APIView):
+    """
+    Self-service account deactivation (master prompt §106: a real
+    mechanism, but "do not implement arbitrary destructive deletion" —
+    this is a soft deactivation, never a hard delete. Companies/invoices/
+    documents/audit logs the user owns are left completely untouched;
+    only the User row's own `is_active` flips and the session ends. See
+    docs/data-retention.md for the full policy this implements, including
+    why reactivation is deliberately not self-service this phase.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        AuditService.log(actor=user, entity_type="user", entity_id=user.id, action="deactivated")
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class PasswordResetRequestView(APIView):
     """
     Always returns 200 regardless of whether the email is registered
@@ -137,6 +172,8 @@ class PasswordResetRequestView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
+    # Email-spam protection (master prompt §48) — see RegisterView.
+    throttle_scope = "auth"
 
     def post(self, request, *args, **kwargs):
         serializer = PasswordResetRequestSerializer(data=request.data)

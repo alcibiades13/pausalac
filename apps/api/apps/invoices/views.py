@@ -71,6 +71,21 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             ).distinct()
         return base.for_company(self.request.company)
 
+    def perform_create(self, serializer):
+        invoice = serializer.save()
+        # Lazy import — apps.analytics sits after apps.invoices in
+        # DOMAIN_APPS. "invoice_created" (master prompt §73) fires here,
+        # at draft creation — not `issue`, which isn't one of §73's named
+        # events (drafts vastly outnumber final issues in practice).
+        from apps.analytics.tracking import track_event
+
+        track_event(
+            "invoice_created",
+            user=self.request.user,
+            company=self.request.company,
+            invoice_id=invoice.id,
+        )
+
     @action(detail=True, methods=["post"])
     def issue(self, request, pk=None, *args, **kwargs):
         invoice = self.get_object()

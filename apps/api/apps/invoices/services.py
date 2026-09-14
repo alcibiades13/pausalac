@@ -221,6 +221,12 @@ class InvoiceService:
             old_value={"status": old_status},
             new_value={"status": invoice.status},
         )
+        # Lazy import — apps.analytics sits after apps.invoices in DOMAIN_APPS.
+        from apps.analytics.tracking import track_event
+
+        track_event(
+            "invoice_sent", user=actor, company=invoice.company, invoice_id=invoice.id
+        )
         return invoice
 
     @staticmethod
@@ -271,5 +277,8 @@ class InvoiceService:
                 action_route="invoices",
                 action_query={"status": "overdue"},
             )
+            from apps.analytics.tracking import track_event  # lazy — see above
+
+            track_event("invoice_overdue", company=invoice.company, invoice_id=invoice.id)
             count += 1
         return count

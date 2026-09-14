@@ -20,14 +20,17 @@ pausalac/
     app/      # Vue 3 + TS + Vite — autentifikovana aplikacija za korisnike
     web/      # Nuxt 4 — javni marketing/landing sajt
   packages/
-    ui/       # (rezervisano) deljene Vue komponente
+    ui/       # deljene Vue komponente (Button/Input/Card/Badge/MoneyDisplay/...)
     config/   # deljeni design tokeni (Tailwind v4 @theme) i tsconfig baza
   docs/       # implementacioni plan, decisions log, arhivirani izvorni dokumenti
 ```
 
-**Status:** auth/tenant/RBAC/audit backend, dizajn-sistem primitivi, auth
-ekrani i Klijenti domen su gotovi (Phase 2a). Fakture, KPO, limiti, plaćanja,
-pravi dashboard dolaze u sledećim fazama — videti `docs/implementation-plan.md`.
+**Status:** Faze 0–5 su gotove — auth/tenant/RBAC/audit, klijenti, fakture
+(PDF/email/plaćanja), KPO, limiti, poreske obaveze, notifikacije, dokumenti,
+accountant platforma (organizacije/portfolio dashboard) i subscriptions/trial
+sve rade end-to-end. Faza 6 (QA/hardening) je u toku — videti
+`docs/implementation-plan.md` za tačan status svake faze i
+`docs/decisions-log.md` za sve odluke/poznata ograničenja.
 
 ## Preduslovi
 
@@ -80,6 +83,8 @@ Marketing sajt (`apps/web`, trenutno prazan skeleton) nije uključen u
 posebno kad zatreba: `pnpm dev:web` — http://localhost:3000.
 
 Pokretanje backend testova: `pytest` (iz `apps/api`, sa aktivnim venv-om).
+Frontend testovi: `pnpm --filter @pausalac/app test:unit`. E2E (Playwright,
+protiv realnog stacka): `pnpm --filter @pausalac/app test:e2e`.
 
 ## Konvencije
 

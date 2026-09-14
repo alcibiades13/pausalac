@@ -36,6 +36,10 @@ class ClientViewSet(viewsets.ModelViewSet):
             action="created",
             new_value=ClientSerializer(client).data,
         )
+        # Lazy import — apps.analytics sits after apps.clients in DOMAIN_APPS.
+        from apps.analytics.tracking import track_event
+
+        track_event("client_created", user=self.request.user, company=self.request.company)
 
     def perform_update(self, serializer):
         old_value = ClientSerializer(serializer.instance).data

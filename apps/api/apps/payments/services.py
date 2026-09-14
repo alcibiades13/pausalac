@@ -97,4 +97,11 @@ class PaymentService:
             old_value={"status": old_status},
             new_value={"status": invoice.status, "payment_id": payment.id, "amount": str(amount)},
         )
+        if invoice.status == Invoice.Status.PAID:
+            # Lazy import — apps.analytics sits after apps.payments in
+            # DOMAIN_APPS. Only the final "fully paid" transition is
+            # "invoice_paid" (master prompt §73) — a partial payment isn't.
+            from apps.analytics.tracking import track_event
+
+            track_event("invoice_paid", user=actor, company=invoice.company, invoice_id=invoice.id)
         return payment
