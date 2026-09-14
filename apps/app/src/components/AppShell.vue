@@ -19,10 +19,23 @@ const NAV_LINKS = [
   { name: 'kpo', label: 'KPO' },
   { name: 'obligations', label: 'Obaveze' },
   { name: 'documents', label: 'Dokumenti' },
+  { name: 'accounting', label: 'Računovođa' },
 ]
 
 const menuOpen = ref(false)
 const unreadCount = ref(0)
+
+// A user who belongs to more than one company (typically an accounting
+// org's staff member — Phase 4a) needs a way to change which one is
+// active; a typical single-company paušalac never sees this at all.
+async function onSwitchCompany(event: Event) {
+  const id = Number((event.target as HTMLSelectElement).value)
+  company.setCurrentCompany(id)
+  // Views don't individually react to a company switch — send the user
+  // back to a known-good screen rather than plumbing reactivity through
+  // every view's own data-loading code.
+  await router.push({ name: 'home' })
+}
 
 async function refreshUnreadCount() {
   try {
@@ -52,12 +65,21 @@ async function onLogout() {
   <div class="min-h-screen bg-background">
     <header class="sticky top-0 z-10 bg-surface shadow-[0_1px_2px_rgba(23,32,51,0.04),0_4px_16px_-8px_rgba(23,32,51,0.10)]">
       <div class="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
-        <span class="flex items-center gap-2 truncate">
+        <span class="flex min-w-0 items-center gap-2">
           <span
             class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-primary to-primary-dark"
             aria-hidden="true"
           />
-          <span class="truncate font-display text-base font-semibold text-navy">
+          <select
+            v-if="company.companies.length > 1"
+            :value="company.currentCompanyId ?? undefined"
+            aria-label="Aktivna kompanija"
+            class="max-w-[9rem] truncate rounded-lg border border-transparent bg-transparent py-0.5 font-display text-base font-semibold text-navy hover:border-border focus:border-primary focus:outline-none sm:max-w-[16rem]"
+            @change="onSwitchCompany"
+          >
+            <option v-for="c in company.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+          <span v-else class="truncate font-display text-base font-semibold text-navy">
             {{ company.currentCompany?.name ?? 'Pausalac' }}
           </span>
         </span>

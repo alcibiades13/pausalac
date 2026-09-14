@@ -54,6 +54,7 @@ DOMAIN_APPS = [
     "apps.documents",
     "apps.notifications",
     "apps.analytics",
+    "apps.accounting",
     "apps.subscriptions",
     "apps.integrations",
     "apps.audit",

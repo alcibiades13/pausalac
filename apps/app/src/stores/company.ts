@@ -10,11 +10,15 @@ const STORAGE_KEY = 'pausalac.currentCompanyId'
  * exactly one company. The persisted id is a per-viewer convenience only
  * (localStorage), never trusted on its own: `currentCompany` always
  * re-validates it against `auth.user.memberships`, the authoritative
- * source. No switcher UI yet (Phase 4's accountant flows will need one).
+ * source. A real switcher (Phase 4a) lets a user with more than one
+ * membership — e.g. an accounting-org staff member — change which one is
+ * active; see the `companies` list and `setCurrentCompany`.
  */
 export const useCompanyStore = defineStore('company', () => {
   const auth = useAuthStore()
   const storedId = ref<number | null>(readStoredId())
+
+  const companies = computed(() => (auth.user?.memberships ?? []).map((m) => m.company))
 
   const currentCompany = computed(() => {
     const memberships = auth.user?.memberships ?? []
@@ -42,5 +46,12 @@ export const useCompanyStore = defineStore('company', () => {
     }
   }
 
-  return { currentCompany, currentCompanyId }
+  /** Switches the active company — validated against the user's own
+   * memberships by `currentCompany`'s fallback, so an invalid id here
+   * just falls back to the first membership rather than breaking. */
+  function setCurrentCompany(id: number) {
+    storedId.value = id
+  }
+
+  return { companies, currentCompany, currentCompanyId, setCurrentCompany }
 })

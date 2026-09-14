@@ -67,4 +67,36 @@ describe('useCompanyStore', () => {
     const company = useCompanyStore()
     expect(company.currentCompany?.name).toBe('Firma A')
   })
+
+  it('lists every company the user has a membership in', () => {
+    const auth = useAuthStore()
+    auth.user = {
+      id: 1,
+      email: 'marko@pausalac.rs',
+      first_name: '',
+      last_name: '',
+      is_email_verified: true,
+      memberships: [membership({ id: 1, name: 'Firma A' }), membership({ id: 2, name: 'Firma B' })],
+    }
+
+    const company = useCompanyStore()
+    expect(company.companies.map((c) => c.name)).toEqual(['Firma A', 'Firma B'])
+  })
+
+  it('switches the active company via setCurrentCompany', () => {
+    const auth = useAuthStore()
+    auth.user = {
+      id: 1,
+      email: 'marko@pausalac.rs',
+      first_name: '',
+      last_name: '',
+      is_email_verified: true,
+      memberships: [membership({ id: 1, name: 'Firma A' }), membership({ id: 2, name: 'Firma B' })],
+    }
+
+    const company = useCompanyStore()
+    company.setCurrentCompany(2)
+    expect(company.currentCompany?.name).toBe('Firma B')
+    expect(company.currentCompanyId).toBe(2)
+  })
 })

@@ -63,5 +63,16 @@ async function onSave() {
         </div>
       </form>
     </Card>
+
+    <Card>
+      <h2 class="mb-1 text-base font-semibold text-navy">Računovodstvena agencija</h2>
+      <p class="mb-3 text-sm text-text-secondary">
+        Vodiš računovodstvenu agenciju? Ovde možeš da je registruješ, dodaš zaposlene i povežeš
+        se sa klijentima.
+      </p>
+      <RouterLink :to="{ name: 'accounting-organization' }">
+        <Button variant="secondary">Otvori</Button>
+      </RouterLink>
+    </Card>
   </div>
 </template>

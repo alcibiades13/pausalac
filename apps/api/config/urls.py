@@ -23,6 +23,7 @@ api_v1_patterns = [
     path("notifications/", include("apps.notifications.urls")),
     path("documents/", include("apps.documents.urls")),
     path("analytics/", include("apps.analytics.urls")),
+    path("accounting/", include("apps.accounting.urls")),
     path("audit/", include("apps.audit.urls")),
 ]
 

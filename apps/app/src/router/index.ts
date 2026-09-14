@@ -118,6 +118,16 @@ const router = createRouter({
           name: 'documents',
           component: () => import('@/views/DocumentsView.vue'),
         },
+        {
+          path: 'racunovodja',
+          name: 'accounting',
+          component: () => import('@/views/AccountingView.vue'),
+        },
+        {
+          path: 'organizacija',
+          name: 'accounting-organization',
+          component: () => import('@/views/AccountingOrganizationView.vue'),
+        },
       ],
     },
   ],
