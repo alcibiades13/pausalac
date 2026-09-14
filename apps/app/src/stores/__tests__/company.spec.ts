@@ -44,6 +44,7 @@ describe('useCompanyStore', () => {
       first_name: '',
       last_name: '',
       is_email_verified: true,
+      is_staff: false,
       memberships: [membership({ id: 1, name: 'Firma A' }), membership({ id: 2, name: 'Firma B' })],
     }
 
@@ -61,6 +62,7 @@ describe('useCompanyStore', () => {
       first_name: '',
       last_name: '',
       is_email_verified: true,
+      is_staff: false,
       memberships: [membership({ id: 1, name: 'Firma A' })],
     }
 
@@ -76,6 +78,7 @@ describe('useCompanyStore', () => {
       first_name: '',
       last_name: '',
       is_email_verified: true,
+      is_staff: false,
       memberships: [membership({ id: 1, name: 'Firma A' }), membership({ id: 2, name: 'Firma B' })],
     }
 
@@ -91,6 +94,7 @@ describe('useCompanyStore', () => {
       first_name: '',
       last_name: '',
       is_email_verified: true,
+      is_staff: false,
       memberships: [membership({ id: 1, name: 'Firma A' }), membership({ id: 2, name: 'Firma B' })],
     }
 

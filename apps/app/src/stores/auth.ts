@@ -31,6 +31,10 @@ export interface Me {
   first_name: string
   last_name: string
   is_email_verified: boolean
+  /** UI-visibility signal only (master prompt §67, Phase 6b) — whether to
+   * show the Admin entry point at all. The real gate is always the
+   * backend's own IsAdminUser/IsSuperUser checks. */
+  is_staff: boolean
   memberships: Membership[]
 }
 

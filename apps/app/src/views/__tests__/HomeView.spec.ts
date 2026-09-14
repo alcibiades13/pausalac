@@ -86,6 +86,7 @@ function mountHome() {
     first_name: 'Marko',
     last_name: '',
     is_email_verified: true,
+    is_staff: false,
     memberships: [membership()],
   }
   return mount(HomeView, { global: { plugins: [pinia, router] } })

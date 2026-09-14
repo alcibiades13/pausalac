@@ -26,6 +26,10 @@ api_v1_patterns = [
     path("accounting/", include("apps.accounting.urls")),
     path("subscriptions/", include("apps.subscriptions.urls")),
     path("audit/", include("apps.audit.urls")),
+    # In-app admin panel (master prompt §67, Phase 6b) — /api/v1/admin/...,
+    # distinct from Django's own admin site mounted at the root /admin/
+    # below (no path collision, and Django admin isn't going away).
+    path("admin/", include("apps.admin_panel.urls")),
 ]
 
 urlpatterns = [

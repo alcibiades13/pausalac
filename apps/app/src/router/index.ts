@@ -5,6 +5,9 @@ declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
     guestOnly?: boolean
+    /** Client-side UX only (hide/redirect) — the real gate is always the
+     * backend's IsAdminUser/IsSuperUser (master prompt §67, Phase 6b). */
+    requiresStaff?: boolean
   }
 }
 
@@ -135,6 +138,69 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/admin',
+      component: () => import('@/components/AdminShell.vue'),
+      meta: { requiresAuth: true, requiresStaff: true },
+      children: [
+        { path: '', redirect: { name: 'admin-users' } },
+        {
+          path: 'korisnici',
+          name: 'admin-users',
+          component: () => import('@/views/admin/AdminUsersView.vue'),
+        },
+        {
+          path: 'kompanije',
+          name: 'admin-companies',
+          component: () => import('@/views/admin/AdminCompaniesView.vue'),
+        },
+        {
+          path: 'pretplate',
+          name: 'admin-subscriptions',
+          component: () => import('@/views/admin/AdminSubscriptionsView.vue'),
+        },
+        {
+          path: 'planovi',
+          name: 'admin-plans',
+          component: () => import('@/views/admin/AdminPlansView.vue'),
+        },
+        {
+          path: 'fakture',
+          name: 'admin-invoices',
+          component: () => import('@/views/admin/AdminInvoicesView.vue'),
+        },
+        {
+          path: 'dokumenti',
+          name: 'admin-documents',
+          component: () => import('@/views/admin/AdminDocumentsView.vue'),
+        },
+        {
+          path: 'poreske-obaveze',
+          name: 'admin-tax-obligations',
+          component: () => import('@/views/admin/AdminTaxObligationsView.vue'),
+        },
+        {
+          path: 'pravila',
+          name: 'admin-rules',
+          component: () => import('@/views/admin/AdminRulesView.vue'),
+        },
+        {
+          path: 'obavestenja',
+          name: 'admin-notifications',
+          component: () => import('@/views/admin/AdminNotificationsView.vue'),
+        },
+        {
+          path: 'audit-log',
+          name: 'admin-audit-log',
+          component: () => import('@/views/admin/AdminAuditLogView.vue'),
+        },
+        {
+          path: 'integracije',
+          name: 'admin-integrations',
+          component: () => import('@/views/admin/AdminIntegrationsView.vue'),
+        },
+      ],
+    },
   ],
 })
 
@@ -148,6 +214,9 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
   if (to.meta.guestOnly && auth.isAuthenticated) {
+    return { name: 'home' }
+  }
+  if (to.meta.requiresStaff && !auth.user?.is_staff) {
     return { name: 'home' }
   }
   return true

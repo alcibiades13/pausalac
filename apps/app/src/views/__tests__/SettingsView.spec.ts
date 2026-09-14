@@ -47,6 +47,7 @@ describe('SettingsView', () => {
       first_name: '',
       last_name: '',
       is_email_verified: true,
+      is_staff: false,
       memberships: [membership()],
     }
     vi.mocked(updateCompany).mockResolvedValue(membership().company)

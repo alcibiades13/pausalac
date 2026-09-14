@@ -43,8 +43,13 @@ class MeSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_email_verified",
+            "is_staff",
             "memberships",
         ]
+        # is_staff is a real writable model field (unlike is_email_verified,
+        # a property) — read-only here so this serializer stays safe if it's
+        # ever reused for a profile-update endpoint (it's output-only today).
+        read_only_fields = ["is_staff"]
 
 
 class EmailVerificationSerializer(serializers.Serializer):

@@ -17,6 +17,7 @@ function authenticatedUser() {
     first_name: '',
     last_name: '',
     is_email_verified: true,
+    is_staff: false,
     memberships: [
       {
         role: 'owner' as const,

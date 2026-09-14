@@ -58,6 +58,7 @@ DOMAIN_APPS = [
     "apps.subscriptions",
     "apps.integrations",
     "apps.audit",
+    "apps.admin_panel",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DOMAIN_APPS

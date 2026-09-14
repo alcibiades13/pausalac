@@ -86,5 +86,16 @@ async function onSave() {
         <Button variant="secondary">Otvori</Button>
       </RouterLink>
     </Card>
+
+    <Card v-if="auth.user?.is_staff">
+      <h2 class="mb-1 text-base font-semibold text-navy">System Admin</h2>
+      <p class="mb-3 text-sm text-text-secondary">
+        Korisnici, kompanije, pretplate, planovi, regulatorna pravila i drugi administratorski
+        alati (master prompt §67).
+      </p>
+      <RouterLink :to="{ name: 'admin-users' }">
+        <Button variant="secondary">Otvori</Button>
+      </RouterLink>
+    </Card>
   </div>
 </template>
