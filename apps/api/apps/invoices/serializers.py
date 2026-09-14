@@ -7,7 +7,15 @@ from .services import InvalidTransitionError, InvoiceService
 class InvoiceLineItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceLineItem
-        fields = ["id", "description", "quantity", "unit_price", "line_total", "position"]
+        fields = [
+            "id",
+            "description",
+            "item_type",
+            "quantity",
+            "unit_price",
+            "line_total",
+            "position",
+        ]
         read_only_fields = ["id", "line_total", "position"]
 
 

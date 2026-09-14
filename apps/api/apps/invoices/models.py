@@ -98,8 +98,17 @@ class Invoice(models.Model):
 
 
 class InvoiceLineItem(models.Model):
+    class ItemType(models.TextChoices):
+        SERVICE = "service", "Usluga"
+        PRODUCT = "product", "Proizvod"
+
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="items")
     description = models.CharField(max_length=255)
+    # KPO (Phase 3b) needs this split — kolona 3 (prihod od prodaje
+    # proizvoda) vs kolona 4 (prihod od izvršenih usluga). Defaults to
+    # SERVICE, matching what every line item created before this field
+    # existed implicitly represented.
+    item_type = models.CharField(max_length=10, choices=ItemType.choices, default=ItemType.SERVICE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("1.00"))
     unit_price = models.DecimalField(max_digits=14, decimal_places=2)
     line_total = models.DecimalField(max_digits=14, decimal_places=2)

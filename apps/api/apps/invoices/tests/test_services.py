@@ -6,7 +6,7 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.clients.models import Client
 from apps.companies.models import Company
-from apps.invoices.models import FinancialEvent, Invoice
+from apps.invoices.models import FinancialEvent, Invoice, InvoiceLineItem
 from apps.invoices.services import InvalidTransitionError, InvoiceService
 
 
@@ -39,6 +39,29 @@ class InvoiceServiceCreateTests(TestCase):
         self.assertEqual(invoice.items.count(), 2)
         self.assertEqual(invoice.status, Invoice.Status.DRAFT)
         self.assertIsNone(invoice.invoice_number)
+
+    def test_line_item_type_defaults_to_service_and_is_stored_when_given(self):
+        today = timezone.now().date()
+        invoice = InvoiceService.create_draft(
+            company=self.company,
+            client=self.client_obj,
+            issue_date=today,
+            due_date=today,
+            service_date=today,
+            notes="",
+            line_items=[
+                {"description": "Konsalting", "quantity": "1", "unit_price": "1000.00"},
+                {
+                    "description": "Widget",
+                    "item_type": "product",
+                    "quantity": "1",
+                    "unit_price": "500.00",
+                },
+            ],
+        )
+        items = list(invoice.items.order_by("position"))
+        self.assertEqual(items[0].item_type, InvoiceLineItem.ItemType.SERVICE)
+        self.assertEqual(items[1].item_type, InvoiceLineItem.ItemType.PRODUCT)
 
     def test_create_draft_defaults_currency_from_company(self):
         today = timezone.now().date()
@@ -127,10 +150,13 @@ class InvoiceServiceIssueCancelTests(TestCase):
         invoice = InvoiceService.cancel(self.invoice, actor=self.user)
         self.assertEqual(invoice.status, Invoice.Status.CANCELLED)
         events = list(FinancialEvent.objects.filter(invoice=invoice).order_by("id"))
-        self.assertEqual([e.event_type for e in events], [
-            FinancialEvent.EventType.INVOICE_ISSUED,
-            FinancialEvent.EventType.INVOICE_CANCELLED,
-        ])
+        self.assertEqual(
+            [e.event_type for e in events],
+            [
+                FinancialEvent.EventType.INVOICE_ISSUED,
+                FinancialEvent.EventType.INVOICE_CANCELLED,
+            ],
+        )
 
     def test_cannot_edit_once_issued(self):
         InvoiceService.issue(self.invoice, actor=self.user)

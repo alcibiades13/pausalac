@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4 landscape; margin: 2cm; }
+  body {
+    font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif;
+    color: #172033;
+    font-size: 10pt;
+  }
+  .title { font-size: 16pt; font-weight: bold; margin-bottom: 16px; }
+  .header-block { margin-bottom: 20px; }
+  .header-block .row { display: flex; }
+  .header-block .item { width: 33%; font-size: 9pt; color: #64748b; }
+  .header-block .item strong { display: block; font-size: 10pt; color: #172033; font-weight: normal; }
+  table.entries { width: 100%; border-collapse: collapse; }
+  table.entries th {
+    text-align: left;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 6px 4px;
+  }
+  table.entries td { padding: 6px 4px; border-bottom: 1px solid #e2e8f0; }
+  table.entries td.num, table.entries th.num { text-align: right; }
+</style>
+</head>
+<body>
+  <div class="title">KPO — Poslovna knjiga o ostvarenom prometu paušalno oporezovanih obveznika</div>
+
+  <div class="header-block">
+    <div class="row">
+      <div class="item">Firma-radnja<strong>{{ company.name }}</strong></div>
+      <div class="item">PIB<strong>{{ company.pib|default:"—" }}</strong></div>
+      <div class="item">Šifra delatnosti<strong>{{ company.activity_code|default:"—" }}</strong></div>
+    </div>
+    <div class="row">
+      <div class="item">Sedište<strong>{{ company.address|default:"—" }}{% if company.city %}, {{ company.city }}{% endif %}</strong></div>
+      <div class="item">Obveznik<strong>{{ company.legal_name|default:company.name }}</strong></div>
+    </div>
+  </div>
+
+  <table class="entries">
+    <thead>
+      <tr>
+        <th>Redni broj</th>
+        <th>Datum</th>
+        <th>Opis</th>
+        <th class="num">Proizvodi</th>
+        <th class="num">Usluge</th>
+        <th class="num">Ukupno</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+      <tr>
+        <td>{{ entry.sequence_number }}</td>
+        <td>{{ entry.entry_date|date:"d.m.Y." }}</td>
+        <td>{{ entry.description }}</td>
+        <td class="num">{{ entry.product_revenue }}</td>
+        <td class="num">{{ entry.service_revenue }}</td>
+        <td class="num">{{ entry.total_revenue }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

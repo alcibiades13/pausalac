@@ -50,6 +50,13 @@ async function onLogout() {
           >
             Limiti
           </RouterLink>
+          <RouterLink
+            :to="{ name: 'kpo' }"
+            class="text-sm text-text-secondary hover:text-navy"
+            active-class="text-navy font-medium"
+          >
+            KPO
+          </RouterLink>
         </nav>
         <div class="flex items-center gap-4">
           <RouterLink

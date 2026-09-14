@@ -98,6 +98,11 @@ const router = createRouter({
           name: 'limits',
           component: () => import('@/views/LimitsView.vue'),
         },
+        {
+          path: 'kpo',
+          name: 'kpo',
+          component: () => import('@/views/KPOListView.vue'),
+        },
       ],
     },
   ],

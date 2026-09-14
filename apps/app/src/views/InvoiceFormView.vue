@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Card, Input, Alert } from '@pausalac/ui'
+import { Button, Card, Input, Select, Alert } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import {
   createInvoice,
@@ -31,8 +31,13 @@ const form = ref<InvoiceDraftPayload>({
   due_date: addDays(todayIsoDate(), 15),
   service_date: todayIsoDate(),
   notes: '',
-  items: [{ description: '', quantity: '1', unit_price: '' }],
+  items: [{ description: '', item_type: 'service', quantity: '1', unit_price: '' }],
 })
+
+const ITEM_TYPE_OPTIONS = [
+  { value: 'service', label: 'Usluga' },
+  { value: 'product', label: 'Proizvod' },
+]
 
 const clients = ref<Client[]>([])
 const loading = ref(false)
@@ -41,7 +46,7 @@ const errorMessage = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 
 function addLineItem() {
-  form.value.items.push({ description: '', quantity: '1', unit_price: '' })
+  form.value.items.push({ description: '', item_type: 'service', quantity: '1', unit_price: '' })
 }
 
 function removeLineItem(index: number) {
@@ -77,6 +82,7 @@ onMounted(async () => {
         notes: invoice.notes,
         items: invoice.items.map((item) => ({
           description: item.description,
+          item_type: item.item_type,
           quantity: item.quantity,
           unit_price: item.unit_price,
         })),
@@ -171,13 +177,16 @@ async function onSubmit() {
             :key="index"
             class="grid grid-cols-12 items-end gap-2 border-b border-border pb-3"
           >
-            <div class="col-span-12 sm:col-span-6">
+            <div class="col-span-12 sm:col-span-5">
               <Input v-model="item.description" label="Opis" required :error="fieldErrors[`items.${index}.description`]" />
             </div>
-            <div class="col-span-4 sm:col-span-2">
+            <div class="col-span-6 sm:col-span-2">
+              <Select v-model="item.item_type" label="Vrsta" :options="ITEM_TYPE_OPTIONS" />
+            </div>
+            <div class="col-span-3 sm:col-span-2">
               <Input v-model="item.quantity" type="number" label="Količina" required />
             </div>
-            <div class="col-span-5 sm:col-span-3">
+            <div class="col-span-3 sm:col-span-2">
               <Input v-model="item.unit_price" type="number" label="Cena" required />
             </div>
             <div class="col-span-3 sm:col-span-1">

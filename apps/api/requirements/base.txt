@@ -17,3 +17,6 @@ django-storages[s3]~=1.14
 
 # PDF generation (invoice PDFs — apps/invoices/pdf.py)
 weasyprint~=70.0
+
+# Excel generation (KPO export — apps/kpo/excel.py)
+openpyxl~=3.1

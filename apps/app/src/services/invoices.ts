@@ -11,9 +11,12 @@ export type InvoiceStatus =
   | 'overdue'
   | 'cancelled'
 
+export type InvoiceLineItemType = 'service' | 'product'
+
 export interface InvoiceLineItem {
   id?: number
   description: string
+  item_type: InvoiceLineItemType
   quantity: string
   unit_price: string
   line_total?: string
@@ -48,7 +51,7 @@ export interface InvoiceDraftPayload {
   due_date: string
   service_date: string
   notes: string
-  items: Pick<InvoiceLineItem, 'description' | 'quantity' | 'unit_price'>[]
+  items: Pick<InvoiceLineItem, 'description' | 'item_type' | 'quantity' | 'unit_price'>[]
 }
 
 function currentCompanyId(): number {

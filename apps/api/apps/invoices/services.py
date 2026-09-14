@@ -97,6 +97,7 @@ class InvoiceService:
                 InvoiceLineItem(
                     invoice=invoice,
                     description=li["description"],
+                    item_type=li.get("item_type", InvoiceLineItem.ItemType.SERVICE),
                     quantity=li["quantity"],
                     unit_price=li["unit_price"],
                     line_total=Decimal(li["quantity"]) * Decimal(li["unit_price"]),
@@ -129,6 +130,13 @@ class InvoiceService:
             amount=invoice.total,
             currency=invoice.currency,
         )
+        # Lazy import: apps.kpo depends on apps.invoices (domain-list
+        # order), so a module-level import the other way would invert
+        # that direction. Deliberate, contained exception — same pattern
+        # as CompanyViewSet.onboarding's lazy Client import (Phase 2a).
+        from apps.kpo.services import KPOService
+
+        KPOService.record_issued(invoice)
         AuditService.log(
             actor=actor,
             company=invoice.company,
@@ -169,6 +177,9 @@ class InvoiceService:
                 amount=invoice.total,
                 currency=invoice.currency,
             )
+            from apps.kpo.services import KPOService  # lazy — see issue() above
+
+            KPOService.record_cancelled(invoice)
         AuditService.log(
             actor=actor,
             company=invoice.company,
