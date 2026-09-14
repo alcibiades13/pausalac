@@ -135,6 +135,20 @@ class TaxService:
                 new_value={"status": obligation.status},
                 source="celery",
             )
+            # Lazy import — see the identical exception documented in
+            # InvoiceService.mark_overdue_all (apps/invoices/services.py).
+            from apps.notifications.models import Notification
+            from apps.notifications.services import NotificationService
+
+            NotificationService.notify_company(
+                obligation.company,
+                event_type="tax_obligation_overdue",
+                dedup_key=f"tax_obligation_overdue:{obligation.id}",
+                priority=Notification.Priority.CRITICAL,
+                title="Poreska obaveza kasni",
+                message=f"Poreska obaveza za {obligation.period_start} kasni sa uplatom.",
+                action_route="obligations",
+            )
             count += 1
         return count
 

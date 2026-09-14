@@ -108,6 +108,11 @@ const router = createRouter({
           name: 'obligations',
           component: () => import('@/views/ObligationsView.vue'),
         },
+        {
+          path: 'obavestenja',
+          name: 'notifications',
+          component: () => import('@/views/NotificationsView.vue'),
+        },
       ],
     },
   ],

@@ -1,11 +1,14 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from apps.companies.models import Company
+from apps.accounts.models import User
+from apps.companies.models import Company, Membership
+from apps.notifications.models import Notification
 from apps.taxes.models import TaxObligation
 from apps.taxes.services import TaxService
 from apps.taxes.testing import seed_test_rates
@@ -241,3 +244,50 @@ class MarkPaidTests(TestCase):
         obligation.refresh_from_db()
         self.assertEqual(obligation.status, TaxObligation.Status.PAID)
         self.assertIsNotNone(obligation.paid_at)
+
+
+class MarkOverdueAllNotificationTests(TestCase):
+    def setUp(self):
+        self.company = Company.objects.create(name="Firma A", pib="123456789")
+        self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        Membership.objects.create(user=self.owner, company=self.company)
+        seed_test_rates()
+        self.past_month = date(timezone.now().year - 1, 1, 1)
+
+    def _issue_past_due_obligation(self):
+        TaxService.create_resolution(
+            self.company,
+            effective_from=self.past_month,
+            effective_until=self.past_month,
+            tax_base=Decimal("100000.00"),
+            income_tax_amount=Decimal("10000.00"),
+            pio_amount=Decimal("24000.00"),
+            health_amount=Decimal("10300.00"),
+            unemployment_amount=Decimal("750.00"),
+        )
+
+    def test_creates_critical_in_app_and_email_notification(self):
+        self._issue_past_due_obligation()
+        TaxService.mark_overdue_all()
+
+        notifications = Notification.objects.filter(
+            recipient=self.owner, event_type="tax_obligation_overdue"
+        )
+        self.assertEqual(notifications.count(), 2)
+        channels = set(notifications.values_list("channel", flat=True))
+        self.assertEqual(channels, {Notification.Channel.IN_APP, Notification.Channel.EMAIL})
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Poreska obaveza kasni")
+
+    def test_running_sweep_twice_creates_no_duplicate(self):
+        self._issue_past_due_obligation()
+        TaxService.mark_overdue_all()
+        TaxService.mark_overdue_all()
+
+        self.assertEqual(
+            Notification.objects.filter(
+                recipient=self.owner, event_type="tax_obligation_overdue"
+            ).count(),
+            2,
+        )
+        self.assertEqual(len(mail.outbox), 1)

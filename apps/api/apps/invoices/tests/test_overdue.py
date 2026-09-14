@@ -1,12 +1,15 @@
 from datetime import timedelta
 
+from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 
+from apps.accounts.models import User
 from apps.clients.models import Client
-from apps.companies.models import Company
+from apps.companies.models import Company, Membership
 from apps.invoices.models import Invoice
 from apps.invoices.services import InvoiceService
+from apps.notifications.models import Notification
 
 
 def _draft(company, client_obj, due_date):
@@ -64,3 +67,35 @@ class MarkOverdueAllTests(TestCase):
         invoice.refresh_from_db()
         invoice = InvoiceService.cancel(invoice, actor=None)
         self.assertEqual(invoice.status, Invoice.Status.CANCELLED)
+
+
+class MarkOverdueAllNotificationTests(TestCase):
+    def setUp(self):
+        self.company = Company.objects.create(name="Firma A")
+        self.client_obj = Client.objects.create(company=self.company, name="Klijent A")
+        self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        Membership.objects.create(user=self.owner, company=self.company)
+        self.past = timezone.now().date() - timedelta(days=5)
+
+    def test_creates_one_attention_in_app_notification_and_no_email(self):
+        InvoiceService.issue(_draft(self.company, self.client_obj, self.past), actor=None)
+        InvoiceService.mark_overdue_all()
+
+        notifications = Notification.objects.filter(
+            recipient=self.owner, event_type="invoice_overdue"
+        )
+        self.assertEqual(notifications.count(), 1)
+        notification = notifications.get()
+        self.assertEqual(notification.channel, Notification.Channel.IN_APP)
+        self.assertEqual(notification.priority, Notification.Priority.ATTENTION)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_running_sweep_twice_creates_no_duplicate(self):
+        InvoiceService.issue(_draft(self.company, self.client_obj, self.past), actor=None)
+        InvoiceService.mark_overdue_all()
+        InvoiceService.mark_overdue_all()
+
+        self.assertEqual(
+            Notification.objects.filter(recipient=self.owner, event_type="invoice_overdue").count(),
+            1,
+        )

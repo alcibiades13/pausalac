@@ -251,5 +251,25 @@ class InvoiceService:
                 new_value={"status": invoice.status},
                 source="celery",
             )
+            # Lazy import: notifications sits after invoices in the domain
+            # list, so a module-level import the other way would invert
+            # that direction — same documented exception as the kpo hook
+            # in InvoiceService.issue/cancel.
+            from apps.notifications.models import Notification
+            from apps.notifications.services import NotificationService
+
+            NotificationService.notify_company(
+                invoice.company,
+                event_type="invoice_overdue",
+                dedup_key=f"invoice_overdue:{invoice.id}",
+                priority=Notification.Priority.ATTENTION,
+                title="Faktura kasni",
+                message=(
+                    f"Faktura {invoice.invoice_number} kasni "
+                    f"{(timezone.now().date() - invoice.due_date).days} dana."
+                ),
+                action_route="invoices",
+                action_query={"status": "overdue"},
+            )
             count += 1
         return count
