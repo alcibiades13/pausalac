@@ -73,9 +73,8 @@ Everything beyond Phase 1a (auth, domain models, invoicing, KPO, limits, etc.) i
 | **2c — Invoice creation UX** ✅ | `packages/ui`'s `MoneyDisplay`/`Badge`, `apps/app`'s invoice list (status filter)/create-edit form (dynamic line items)/detail-as-preview with issue/cancel, `InvoiceStatusBadge`. Small backend addition: paginated list endpoints now accept `?page_size=`. See `docs/decisions-log.md`. |
 | **2d — Invoice PDF + email sending** ✅ | WeasyPrint-based PDF template system (`apps/invoices/pdf.py`), `GET /invoices/{id}/pdf/` (tenancy resolved from the invoice itself, not the usual header), `POST /invoices/{id}/send/` + Celery task, `ISSUED → SENT` transition (only after send succeeds). Frontend: download/send actions on `InvoiceDetailView`. See `docs/decisions-log.md`. |
 | **2e — Payments + overdue detection** ✅ | New `apps.payments` domain (idempotent `PaymentService.record_payment`, top-level `/api/v1/payments/`), `PARTIALLY_PAID`/`PAID` derivation, Celery Beat overdue sweep (`InvoiceService.mark_overdue_all`) + management command, payment recording/history UX on `InvoiceDetailView`. ⚠️ Cash-vs-accrual limit-basis question flagged, not resolved — see `docs/decisions-log.md`. |
-| **2f — Real Dashboard** *(next)* | Replaces `HomeView`'s placeholder with the actual business-health dashboard (master prompt §8) |
-| **3 — Compliance** | KPO, Limits (+ rules engine + what-if calculator), Obligations, Notifications, Documents |
-| **3 — Compliance** | KPO, Limits (+ rules engine + what-if calculator), Obligations, Notifications, Documents |
+| **2f — Real Dashboard** ✅ | `apps.analytics.DashboardView` (business health + aggregated attention center + revenue YTD + outstanding-net-of-payments + onboarding bar), `compute_onboarding_status` extracted for shared use, `SettingsView` split off `HomeView` to keep the dashboard calm. Limits/Next-obligation sections deliberately deferred to Phase 3. See `docs/decisions-log.md`. |
+| **3 — Compliance** *(next)* | KPO, Limits (+ rules engine + what-if calculator), Obligations, Notifications, Documents |
 | **4 — Accounting platform** | Accounting organization, client relationships, accountant dashboard, permissions |
 | **5 — Billing** | Trial, Subscriptions, Plans, Entitlements |
 | **6 — QA** | Tests, security review, performance, responsive/mobile pass |

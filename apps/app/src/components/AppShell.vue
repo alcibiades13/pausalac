@@ -44,7 +44,16 @@ async function onLogout() {
             Fakture
           </RouterLink>
         </nav>
-        <Button variant="ghost" @click="onLogout">Odjavi se</Button>
+        <div class="flex items-center gap-4">
+          <RouterLink
+            :to="{ name: 'settings' }"
+            class="text-sm text-text-secondary hover:text-navy"
+            active-class="text-navy font-medium"
+          >
+            Podešavanja
+          </RouterLink>
+          <Button variant="ghost" @click="onLogout">Odjavi se</Button>
+        </div>
       </div>
     </header>
     <main class="mx-auto max-w-4xl px-4 py-8">

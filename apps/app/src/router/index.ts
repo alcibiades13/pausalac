@@ -88,6 +88,11 @@ const router = createRouter({
           component: () => import('@/views/InvoiceDetailView.vue'),
           props: true,
         },
+        {
+          path: 'podesavanja',
+          name: 'settings',
+          component: () => import('@/views/SettingsView.vue'),
+        },
       ],
     },
   ],

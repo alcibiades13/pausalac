@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { Button, Card, Input, Alert } from '@pausalac/ui'
+import { onMounted, ref } from 'vue'
+import { Button, Card, Input, Alert, MoneyDisplay, EmptyState } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
-import { createCompany, updateCompany, getOnboardingStatus, type OnboardingStatus } from '@/services/companies'
+import { createCompany } from '@/services/companies'
+import { getDashboard, type Dashboard } from '@/services/analytics'
 import { ApiError } from '@/lib/api'
+import AttentionItem from '@/components/AttentionItem.vue'
 
 const auth = useAuthStore()
 const company = useCompanyStore()
@@ -42,61 +44,32 @@ async function onCreateCompany() {
   }
 }
 
-// --- onboarding status + company info form -----------------------------
+// --- dashboard -----------------------------------------------------------
 
-const onboarding = ref<OnboardingStatus | null>(null)
+const dashboard = ref<Dashboard | null>(null)
+const dashboardStatus = ref<'loading' | 'ready' | 'error'>('loading')
+const dashboardError = ref('')
 
-const ONBOARDING_LABELS: Record<string, string> = {
-  company: 'Osnovni podaci o firmi (PIB)',
-  bank: 'Račun za uplate',
-  client: 'Prvi klijent',
-  sef: 'SEF povezivanje',
-  tax_document: 'Poresko rešenje',
+const HEALTH_LABELS: Record<string, string> = {
+  ok: '🟢 Sve je u redu',
+  attention: '🟡 Potrebna pažnja',
+  critical: '🔴 Potrebna akcija',
 }
 
-async function loadOnboarding() {
+async function loadDashboard() {
   if (!company.currentCompanyId) return
-  onboarding.value = await getOnboardingStatus(company.currentCompanyId)
-}
-
-const companyForm = ref({ pib: '', bank_account: '' })
-const savingCompanyInfo = ref(false)
-const companyInfoError = ref('')
-const companyInfoSaved = ref(false)
-
-watch(
-  () => company.currentCompany,
-  (c) => {
-    if (c) {
-      companyForm.value = { pib: c.pib ?? '', bank_account: c.bank_account }
-    }
-  },
-  { immediate: true },
-)
-
-async function onSaveCompanyInfo() {
-  if (!company.currentCompanyId) return
-  savingCompanyInfo.value = true
-  companyInfoError.value = ''
-  companyInfoSaved.value = false
+  dashboardStatus.value = 'loading'
   try {
-    await updateCompany(company.currentCompanyId, companyForm.value)
-    await auth.refreshMe()
-    await loadOnboarding()
-    companyInfoSaved.value = true
+    dashboard.value = await getDashboard()
+    dashboardStatus.value = 'ready'
   } catch (error) {
-    companyInfoError.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da sačuvamo podatke.'
-  } finally {
-    savingCompanyInfo.value = false
+    dashboardError.value =
+      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo pregled.'
+    dashboardStatus.value = 'error'
   }
 }
 
-const missingLabels = computed(
-  () => onboarding.value?.missing.map((key) => ONBOARDING_LABELS[key] ?? key) ?? [],
-)
-
-onMounted(loadOnboarding)
+onMounted(loadDashboard)
 </script>
 
 <template>
@@ -117,8 +90,7 @@ onMounted(loadOnboarding)
     <Card v-if="!auth.user?.memberships.length">
       <h2 class="mb-1 text-base font-semibold text-navy">Podesi svoju kompaniju</h2>
       <p class="mb-4 text-sm text-text-secondary">
-        Još nemaš kompaniju u sistemu. Unesi naziv da počneš — ostatak podešavanja (PIB, banka)
-        dolazi odmah ispod.
+        Još nemaš kompaniju u sistemu. Unesi naziv da počneš.
       </p>
       <form class="flex flex-col gap-4" @submit.prevent="onCreateCompany">
         <Alert v-if="createCompanyError" variant="danger">{{ createCompanyError }}</Alert>
@@ -128,41 +100,77 @@ onMounted(loadOnboarding)
     </Card>
 
     <template v-else>
-      <Card v-if="onboarding">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-base font-semibold text-navy">Tvoj nalog je {{ onboarding.percentage }}% podešen</h2>
-        </div>
-        <div class="mb-4 h-2 w-full overflow-hidden rounded-full bg-background">
-          <div class="h-full bg-primary" :style="{ width: `${onboarding.percentage}%` }" />
-        </div>
-        <p v-if="missingLabels.length" class="text-sm text-text-secondary">
-          Još nedostaje: {{ missingLabels.join(', ') }}.
-        </p>
-        <p v-else class="text-sm text-success">Sve je podešeno.</p>
-        <p v-if="onboarding.missing.includes('client')" class="mt-3 text-sm">
-          <RouterLink :to="{ name: 'client-new' }" class="text-primary hover:underline">
-            Dodaj prvog klijenta →
-          </RouterLink>
-        </p>
+      <Alert v-if="dashboardStatus === 'error'" variant="danger">
+        {{ dashboardError }}
+        <button class="ml-2 underline" @click="loadDashboard">Pokušaj ponovo</button>
+      </Alert>
+
+      <Card v-else-if="dashboardStatus === 'loading'">
+        <p class="text-sm text-text-secondary">Učitavanje...</p>
       </Card>
 
-      <Card>
-        <h2 class="mb-3 text-base font-semibold text-navy">Podaci o firmi</h2>
-        <form class="flex flex-col gap-4" @submit.prevent="onSaveCompanyInfo">
-          <Alert v-if="companyInfoError" variant="danger">{{ companyInfoError }}</Alert>
-          <Alert v-if="companyInfoSaved" variant="success">Sačuvano.</Alert>
-          <Input v-model="companyForm.pib" label="PIB" :disabled="savingCompanyInfo" />
-          <Input
-            v-model="companyForm.bank_account"
-            label="Račun za uplate"
-            hint="Koristi se kasnije za podatke o plaćanju na fakturama."
-            :disabled="savingCompanyInfo"
-          />
-          <div>
-            <Button type="submit" :loading="savingCompanyInfo">Sačuvaj</Button>
+      <template v-else-if="dashboard">
+        <Card>
+          <p class="text-lg font-semibold text-navy">
+            {{ HEALTH_LABELS[dashboard.business_health.status] }}
+          </p>
+          <p v-if="dashboard.business_health.reasons.length" class="mt-1 text-sm text-text-secondary">
+            {{ dashboard.business_health.reasons.join(' ') }}
+          </p>
+        </Card>
+
+        <div>
+          <h2 class="mb-2 text-sm font-medium text-text-secondary">Zahteva pažnju</h2>
+          <div v-if="dashboard.attention.length" class="flex flex-col gap-2">
+            <AttentionItem v-for="item in dashboard.attention" :key="item.type" :item="item" />
           </div>
-        </form>
-      </Card>
+          <Card v-else>
+            <EmptyState title="Sve je u redu." description="Trenutno nema stavki koje zahtevaju tvoju pažnju." />
+          </Card>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Card>
+            <p class="text-sm text-text-secondary">Fakturisano ove godine</p>
+            <p class="mt-1 text-2xl font-semibold text-navy">
+              <MoneyDisplay :amount="dashboard.revenue.ytd" :currency="dashboard.revenue.currency" />
+            </p>
+          </Card>
+          <Card>
+            <p class="text-sm text-text-secondary">
+              Neizmireno ({{ dashboard.outstanding.count }})
+            </p>
+            <p class="mt-1 text-2xl font-semibold text-navy">
+              <MoneyDisplay :amount="dashboard.outstanding.total" :currency="dashboard.outstanding.currency" />
+            </p>
+            <p v-if="dashboard.outstanding.overdue_count" class="mt-1 text-sm text-danger">
+              od toga {{ dashboard.outstanding.overdue_count }} kasni
+              (<MoneyDisplay :amount="dashboard.outstanding.overdue_total" :currency="dashboard.outstanding.currency" />)
+            </p>
+          </Card>
+        </div>
+
+        <Card v-if="dashboard.onboarding.percentage < 100">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-navy">Nalog je {{ dashboard.onboarding.percentage }}% podešen.</span>
+            <RouterLink :to="{ name: 'settings' }" class="text-sm text-primary hover:underline">
+              Dovrši podešavanje →
+            </RouterLink>
+          </div>
+          <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-background">
+            <div class="h-full bg-primary" :style="{ width: `${dashboard.onboarding.percentage}%` }" />
+          </div>
+        </Card>
+
+        <div class="flex flex-wrap gap-3">
+          <RouterLink :to="{ name: 'invoice-new' }">
+            <Button>+ Nova faktura</Button>
+          </RouterLink>
+          <RouterLink :to="{ name: 'client-new' }">
+            <Button variant="secondary">+ Novi klijent</Button>
+          </RouterLink>
+        </div>
+      </template>
     </template>
   </div>
 </template>
