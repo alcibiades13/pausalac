@@ -10,6 +10,9 @@ const router = createRouter({
   routes: [
     { path: '/', component: stub },
     { path: '/klijenti', name: 'clients', component: stub },
+    { path: '/limiti', name: 'limits', component: stub },
+    { path: '/kpo', name: 'kpo', component: stub },
+    { path: '/obaveze', name: 'obligations', component: stub },
     { path: '/dokumenti', name: 'documents', component: stub },
     { path: '/racunovodja', name: 'accounting', component: stub },
     { path: '/pretplata', name: 'subscription', component: stub },
@@ -29,6 +32,9 @@ describe('ViseView', () => {
     const hrefs = wrapper.findAll('a').map((a) => a.attributes('href'))
     expect(hrefs).toEqual([
       '/klijenti',
+      '/limiti',
+      '/kpo',
+      '/obaveze',
       '/dokumenti',
       '/racunovodja',
       '/pretplata',

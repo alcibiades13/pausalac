@@ -4,7 +4,11 @@
  * enumerate its contents) — the direct replacement for the mobile
  * hamburger dropdown removed from AppShell.vue in Phase 6d: everything
  * that dropdown used to reach (including logout) lives here now, as a
- * real page instead of an in-flow toggle.
+ * real page instead of an in-flow toggle. Deliberately lists every
+ * secondary destination (including Limiti/KPO/Obaveze, which are also
+ * reachable one tap sooner via the Finansije tab) rather than assuming a
+ * user will discover the Finansije hub on their own — a "more" menu that
+ * doesn't actually have everything defeats its own purpose.
  */
 import { useRouter } from 'vue-router'
 import { Card } from '@pausalac/ui'
@@ -15,6 +19,9 @@ const router = useRouter()
 
 const LINKS = [
   { name: 'clients', label: 'Klijenti' },
+  { name: 'limits', label: 'Limiti' },
+  { name: 'kpo', label: 'KPO' },
+  { name: 'obligations', label: 'Obaveze' },
   { name: 'documents', label: 'Dokumenti' },
   { name: 'accounting', label: 'Računovođa' },
   { name: 'subscription', label: 'Pretplata' },
