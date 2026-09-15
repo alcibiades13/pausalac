@@ -9,6 +9,7 @@ import {
   type AdminMembership,
 } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+import { formatDate } from '@/lib/formatDate'
 
 const companies = ref<AdminCompany[]>([])
 const loading = ref(true)
@@ -28,7 +29,7 @@ const columns: AdminTableColumn<AdminCompany>[] = [
   {
     key: 'created_at',
     label: 'Registrovana',
-    format: (r) => new Date(r.created_at).toLocaleDateString('sr-RS'),
+    format: (r) => formatDate(r.created_at),
   },
 ]
 

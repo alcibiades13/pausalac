@@ -1,10 +1,13 @@
 from rest_framework import permissions, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from apps.audit.services import AuditService
 from apps.companies.permissions import HasCompanyPermission
 
 from .models import Client
-from .serializers import ClientSerializer
+from .serializers import ClientSerializer, ClientSummarySerializer
+from .services import ClientService
 
 
 class ClientViewSet(viewsets.ModelViewSet):
@@ -25,6 +28,14 @@ class ClientViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Client.objects.for_company(self.request.company).order_by("name")
+
+    @action(detail=True, methods=["get"])
+    def summary(self, request, pk=None, *args, **kwargs):
+        """Master prompt §15/blueprint §6.3 client profile totals — see
+        apps.clients.services.ClientService.compute_summary."""
+        client = self.get_object()
+        summary = ClientService.compute_summary(client)
+        return Response(ClientSummarySerializer(summary).data)
 
     def perform_create(self, serializer):
         client = serializer.save(company=self.request.company)

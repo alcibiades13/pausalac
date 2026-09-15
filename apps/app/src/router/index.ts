@@ -65,6 +65,12 @@ const router = createRouter({
         },
         {
           path: 'klijenti/:id',
+          name: 'client-detail',
+          component: () => import('@/views/ClientDetailView.vue'),
+          props: true,
+        },
+        {
+          path: 'klijenti/:id/izmeni',
           name: 'client-edit',
           component: () => import('@/views/ClientFormView.vue'),
           props: true,

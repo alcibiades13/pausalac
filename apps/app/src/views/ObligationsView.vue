@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Button, Card, Input, Alert, Badge, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import {
   createTaxResolution,
@@ -10,8 +11,10 @@ import {
 } from '@/services/taxes'
 import { useCompanyStore } from '@/stores/company'
 import { ApiError } from '@/lib/api'
+import { formatDate } from '@/lib/formatDate'
 
 const company = useCompanyStore()
+const route = useRoute()
 const currency = computed(() => company.currentCompany?.default_currency ?? 'RSD')
 
 const STATUS_LABELS: Record<TaxObligation['status'], string> = {
@@ -35,11 +38,18 @@ const WHY_UNEMPLOYMENT = 'Doprinos za osiguranje za slučaj nezaposlenosti.'
 const obligations = ref<TaxObligation[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 const errorMessage = ref('')
+// Seeded from ?status= on first load (master prompt §115 deep links —
+// e.g. the tax_obligation_overdue notification's "Pogledaj →" link).
+const statusFilter = ref<TaxObligation['status'] | ''>(
+  (route.query.status as TaxObligation['status'] | undefined) ?? '',
+)
 
 async function loadObligations() {
   status.value = 'loading'
   try {
-    obligations.value = (await listTaxObligations()).results
+    obligations.value = (
+      await listTaxObligations({ status: statusFilter.value || undefined })
+    ).results
     status.value = 'ready'
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo obaveze.'
@@ -48,6 +58,7 @@ async function loadObligations() {
 }
 
 onMounted(loadObligations)
+watch(statusFilter, loadObligations)
 
 const markingPaidId = ref<number | null>(null)
 async function onMarkPaid(id: number) {
@@ -149,7 +160,22 @@ async function onCreateResolution() {
     </Card>
 
     <div>
-      <h2 class="mb-2 text-base font-semibold text-navy">Mesečne obaveze</h2>
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-base font-semibold text-navy">Mesečne obaveze</h2>
+        <div class="flex items-center gap-2">
+          <label for="obligation-status-filter" class="text-sm text-text-secondary">Status:</label>
+          <select
+            id="obligation-status-filter"
+            v-model="statusFilter"
+            class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <option value="">Sve</option>
+            <option v-for="[value, label] in Object.entries(STATUS_LABELS)" :key="value" :value="value">
+              {{ label }}
+            </option>
+          </select>
+        </div>
+      </div>
 
       <Alert v-if="status === 'error'" variant="danger">
         {{ errorMessage }}
@@ -180,8 +206,8 @@ async function onCreateResolution() {
           </thead>
           <tbody>
             <tr v-for="obligation in obligations" :key="obligation.id" class="border-b border-border">
-              <td class="py-2 pr-3">{{ obligation.period_start }}</td>
-              <td class="py-2 pr-3">{{ obligation.due_date }}</td>
+              <td class="py-2 pr-3">{{ formatDate(obligation.period_start) }}</td>
+              <td class="py-2 pr-3">{{ formatDate(obligation.due_date) }}</td>
               <td class="py-2 pr-3 text-right">
                 <MoneyDisplay :amount="obligation.total_amount" :currency="currency" />
               </td>

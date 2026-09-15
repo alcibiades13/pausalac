@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Button, Card, Alert, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import { listInvoices, type Invoice, type InvoiceDocumentType, type InvoiceStatus } from '@/services/invoices'
 import { STATUS_LABELS } from '@/lib/invoiceStatus'
@@ -8,11 +9,16 @@ import { ApiError } from '@/lib/api'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
 import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
 
+const route = useRoute()
 const invoices = ref<Invoice[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 const errorMessage = ref('')
-const statusFilter = ref<InvoiceStatus | ''>('')
-const documentTypeFilter = ref<InvoiceDocumentType | ''>('')
+// Seeded from ?status=/?document_type= on first load (master prompt
+// §115 deep links — e.g. the invoice_overdue notification's "Pogledaj →").
+const statusFilter = ref<InvoiceStatus | ''>((route.query.status as InvoiceStatus | undefined) ?? '')
+const documentTypeFilter = ref<InvoiceDocumentType | ''>(
+  (route.query.document_type as InvoiceDocumentType | undefined) ?? '',
+)
 
 const STATUS_OPTIONS = Object.entries(STATUS_LABELS) as [InvoiceStatus, string][]
 const DOCUMENT_TYPE_OPTIONS = Object.entries(DOCUMENT_TYPE_LABELS) as [InvoiceDocumentType, string][]

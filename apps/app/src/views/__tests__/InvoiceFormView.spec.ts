@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { defineComponent } from 'vue'
 import InvoiceFormView from '../InvoiceFormView.vue'
 import { listClients, type Client } from '@/services/clients'
 import { createInvoice, type Invoice } from '@/services/invoices'
@@ -25,7 +26,7 @@ const router = createRouter({
   ],
 })
 
-function client(): Client {
+function client(overrides: Partial<Client> = {}): Client {
   return {
     id: 1,
     client_type: 'company',
@@ -40,6 +41,7 @@ function client(): Client {
     is_active: true,
     created_at: '',
     updated_at: '',
+    ...overrides,
   }
 }
 
@@ -158,5 +160,106 @@ describe('InvoiceFormView', () => {
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()
     expect(createInvoice).toHaveBeenCalledWith(expect.objectContaining({ document_type: 'avans' }))
+  })
+
+  describe('?client= prepopulation (master prompt §94)', () => {
+    beforeEach(async () => {
+      vi.mocked(listClients).mockResolvedValue({
+        count: 2,
+        next: null,
+        previous: null,
+        results: [client({ id: 1, name: 'Klijent A' }), client({ id: 2, name: 'Klijent B' })],
+      })
+    })
+
+    it('preselects the client named in the ?client= query param', async () => {
+      await router.push('/?client=2')
+      vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
+      const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+      await flushPromises()
+
+      const clientSelect = wrapper.find<HTMLSelectElement>('#client')
+      expect(clientSelect.element.value).toBe('2')
+    })
+
+    it('falls back to the first client when ?client= does not match any client', async () => {
+      await router.push('/?client=999')
+      vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
+      const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+      await flushPromises()
+
+      const clientSelect = wrapper.find<HTMLSelectElement>('#client')
+      expect(clientSelect.element.value).toBe('1')
+    })
+
+    it('falls back to the first client when there is no ?client= query param', async () => {
+      await router.push('/')
+      vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
+      const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+      await flushPromises()
+
+      const clientSelect = wrapper.find<HTMLSelectElement>('#client')
+      expect(clientSelect.element.value).toBe('1')
+    })
+  })
+
+  describe('unsaved-changes guard', () => {
+    // A fresh router per test — the guard tests navigate through
+    // router-view (unlike the tests above, which mount InvoiceFormView
+    // directly), so reusing the module-level `router` would leak a
+    // still-mounted, still-dirty component instance across tests.
+    function buildGuardRouter() {
+      return createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          { path: '/fakture', name: 'invoices', component: { template: '<div/>' } },
+          { path: '/fakture/nova', name: 'invoice-new', component: InvoiceFormView },
+          {
+            path: '/fakture/:id',
+            name: 'invoice-detail',
+            component: { template: '<div/>' },
+          },
+          { path: '/klijenti/novi', name: 'client-new', component: { template: '<div/>' } },
+        ],
+      })
+    }
+
+    it('prompts before leaving a dirty form', async () => {
+      const guardRouter = buildGuardRouter()
+      await guardRouter.push('/fakture/nova')
+      await guardRouter.isReady()
+      const RootComponent = defineComponent({ template: '<router-view />' })
+      const wrapper = mount(RootComponent, { global: { plugins: [guardRouter] } })
+      await flushPromises()
+
+      await wrapper.find('input[type="text"]').setValue('Konsalting')
+
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+      await guardRouter.push('/fakture')
+      await flushPromises()
+
+      expect(confirmSpy).toHaveBeenCalled()
+      expect(guardRouter.currentRoute.value.name).toBe('invoice-new')
+      confirmSpy.mockRestore()
+    })
+
+    it('does not prompt when navigating away right after a successful save', async () => {
+      vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
+      const guardRouter = buildGuardRouter()
+      await guardRouter.push('/fakture/nova')
+      await guardRouter.isReady()
+      const RootComponent = defineComponent({ template: '<router-view />' })
+      const wrapper = mount(RootComponent, { global: { plugins: [guardRouter] } })
+      await flushPromises()
+
+      const confirmSpy = vi.spyOn(window, 'confirm')
+      await wrapper.find('input[type="text"]').setValue('Konsalting')
+      await wrapper.find('form').trigger('submit.prevent')
+      await flushPromises()
+
+      expect(confirmSpy).not.toHaveBeenCalled()
+      expect(guardRouter.currentRoute.value.name).toBe('invoice-detail')
+      confirmSpy.mockRestore()
+    })
   })
 })

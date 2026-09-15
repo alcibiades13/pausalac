@@ -399,3 +399,39 @@ class InvoiceSendTests(TestCase):
         detail_url = reverse("invoice-detail", kwargs={"version": "v1", "pk": invoice_id})
         detail = self.client.get(detail_url, **self.headers).json()
         self.assertEqual(detail["status"], "sent")
+
+
+class InvoiceDuplicateApiTests(TestCase):
+    """Master prompt §94 — see apps.invoices.tests.test_duplication for
+    the service-layer behavior; this is just the API-boundary proof."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        self.company = Company.objects.create(name="Firma A")
+        self.client_obj = Client.objects.create(company=self.company, name="Klijent A")
+        Membership.objects.create(user=self.owner, company=self.company)
+        self.client.login(username="owner@pausalac.rs", password="s3cr3t-pass")
+        self.headers = {"HTTP_X_COMPANY_ID": str(self.company.id)}
+
+    def test_duplicate_action_returns_a_new_draft(self):
+        create_response = self.client.post(
+            reverse("invoice-list", kwargs={"version": "v1"}),
+            {
+                "client": self.client_obj.id,
+                **_dates(),
+                "items": [{"description": "X", "quantity": "1", "unit_price": "1000"}],
+            },
+            content_type="application/json",
+            **self.headers,
+        )
+        invoice_id = create_response.json()["id"]
+        issue_url = reverse("invoice-issue", kwargs={"version": "v1", "pk": invoice_id})
+        self.client.post(issue_url, **self.headers)
+
+        duplicate_url = reverse("invoice-duplicate", kwargs={"version": "v1", "pk": invoice_id})
+        response = self.client.post(duplicate_url, **self.headers)
+        self.assertEqual(response.status_code, 201, response.content)
+        body = response.json()
+        self.assertNotEqual(body["id"], invoice_id)
+        self.assertEqual(body["status"], "draft")
+        self.assertEqual(body["total"], "1000.00")

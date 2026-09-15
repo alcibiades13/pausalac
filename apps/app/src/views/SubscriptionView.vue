@@ -11,6 +11,7 @@ import {
   type SubscriptionStatus,
 } from '@/services/subscriptions'
 import { ApiError } from '@/lib/api'
+import { formatDate } from '@/lib/formatDate'
 
 const STATUS_LABELS: Record<SubscriptionStatus, string> = {
   trialing: 'Probni period',
@@ -118,7 +119,7 @@ async function onCancel() {
               <template v-else>Probni period je istekao.</template>
             </p>
             <p v-else-if="subscription.status === 'active' && subscription.current_period_end" class="text-sm text-text-secondary">
-              Sledeće obnavljanje: {{ subscription.current_period_end.slice(0, 10) }}
+              Sledeće obnavljanje: {{ formatDate(subscription.current_period_end) }}
             </p>
             <p v-else-if="subscription.status === 'expired' || subscription.status === 'cancelled'" class="text-sm text-danger">
               Pretplata nije aktivna — izaberi plan da nastaviš da izdaješ fakture.

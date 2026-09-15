@@ -1,12 +1,13 @@
 """
 Email sending is always backgrounded (master prompt §60/§61) — views never
-call `send_mail` directly.
+call `send_mail` directly. Templated via apps.notifications.email.EmailService
+(Phase 6e) — lazy-imported since apps.notifications sits after apps.accounts
+in DOMAIN_APPS.
 """
 
 import logging
 
 from celery import shared_task
-from django.core.mail import send_mail
 
 from .models import User
 from .services import email_verification_link, password_reset_link
@@ -22,15 +23,13 @@ def send_verification_email_task(user_id: int) -> None:
         logger.warning("send_verification_email_task: user %s no longer exists", user_id)
         return
 
-    link = email_verification_link(user)
-    send_mail(
+    from apps.notifications.email import EmailService
+
+    EmailService.send(
+        "verification",
+        {"link": email_verification_link(user)},
+        to=[user.email],
         subject="Potvrdi svoju email adresu — Pausalac",
-        message=(
-            f"Zdravo,\n\nPotvrdi svoju email adresu klikom na link ispod:\n\n{link}\n\n"
-            "Ako nisi ti napravio nalog, slobodno ignoriši ovaj email."
-        ),
-        from_email=None,
-        recipient_list=[user.email],
     )
 
 
@@ -42,14 +41,11 @@ def send_password_reset_email_task(user_id: int) -> None:
         logger.warning("send_password_reset_email_task: user %s no longer exists", user_id)
         return
 
-    link = password_reset_link(user)
-    send_mail(
+    from apps.notifications.email import EmailService
+
+    EmailService.send(
+        "password_reset",
+        {"link": password_reset_link(user)},
+        to=[user.email],
         subject="Resetovanje lozinke — Pausalac",
-        message=(
-            f"Zdravo,\n\nNeko (nadamo se ti) je zatražio resetovanje lozinke. "
-            f"Klikni na link ispod da postaviš novu lozinku:\n\n{link}\n\n"
-            "Ako nisi ti zatražio ovo, slobodno ignoriši ovaj email — tvoja lozinka ostaje ista."
-        ),
-        from_email=None,
-        recipient_list=[user.email],
     )

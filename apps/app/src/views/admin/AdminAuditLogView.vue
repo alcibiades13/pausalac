@@ -4,6 +4,7 @@ import { Alert, Button } from '@pausalac/ui'
 import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
 import { listAdminAuditLog, type AdminAuditLogEntry } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+import { formatDateTime } from '@/lib/formatDate'
 
 const entries = ref<AdminAuditLogEntry[]>([])
 const loading = ref(true)
@@ -16,7 +17,7 @@ const columns: AdminTableColumn<AdminAuditLogEntry>[] = [
   {
     key: 'created_at',
     label: 'Vreme',
-    format: (r) => new Date(r.created_at).toLocaleString('sr-RS'),
+    format: (r) => formatDateTime(r.created_at),
   },
   { key: 'actor_email', label: 'Izvršilac', format: (r) => r.actor_email ?? 'sistem' },
   { key: 'company_name', label: 'Kompanija', format: (r) => r.company_name ?? '—' },

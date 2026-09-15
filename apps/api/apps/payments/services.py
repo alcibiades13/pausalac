@@ -15,6 +15,7 @@ from django.utils import timezone
 
 from apps.audit.services import AuditService
 from apps.invoices.models import FinancialEvent, Invoice
+from apps.invoices.pdf import format_money
 from apps.invoices.services import PAYABLE_STATUSES
 
 from .models import Payment
@@ -108,4 +109,23 @@ class PaymentService:
             from apps.analytics.tracking import track_event
 
             track_event("invoice_paid", user=actor, company=invoice.company, invoice_id=invoice.id)
+
+            # Client-facing payment confirmation (master prompt §107) —
+            # only on the transition to fully PAID, never on a partial
+            # payment. Lazy import — apps.notifications sits after
+            # apps.payments in DOMAIN_APPS.
+            if invoice.client.email:
+                from apps.notifications.email import EmailService
+
+                EmailService.send(
+                    "payment_confirmation",
+                    {
+                        "invoice_number": invoice.invoice_number,
+                        "company_name": invoice.company.name,
+                        "total_formatted": format_money(invoice.total),
+                        "currency": invoice.currency,
+                    },
+                    to=[invoice.client.email],
+                    subject=f"Potvrda uplate — faktura {invoice.invoice_number}",
+                )
         return payment

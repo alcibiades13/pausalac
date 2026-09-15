@@ -12,7 +12,7 @@ from apps.invoices.services import InvoiceService
 from apps.notifications.models import Notification
 
 
-def _draft(company, client_obj, due_date):
+def _draft(company, client_obj, due_date, price="100"):
     today = timezone.now().date()
     return InvoiceService.create_draft(
         company=company,
@@ -21,7 +21,7 @@ def _draft(company, client_obj, due_date):
         due_date=due_date,
         service_date=today,
         notes="",
-        line_items=[{"description": "X", "quantity": "1", "unit_price": "100"}],
+        line_items=[{"description": "X", "quantity": "1", "unit_price": price}],
     )
 
 
@@ -99,3 +99,53 @@ class MarkOverdueAllNotificationTests(TestCase):
             Notification.objects.filter(recipient=self.owner, event_type="invoice_overdue").count(),
             1,
         )
+
+
+class PaymentReminderEmailTests(TestCase):
+    """Master prompt §107 — the client-facing email distinct from the
+    internal in-app notification tested above (docs/decisions-log.md's
+    Phase 6 audit named this exact gap)."""
+
+    def setUp(self):
+        self.company = Company.objects.create(name="Firma A")
+        self.past = timezone.now().date() - timedelta(days=5)
+
+    def test_sends_a_reminder_to_the_client_when_an_email_is_on_file(self):
+        client_obj = Client.objects.create(
+            company=self.company, name="Klijent A", email="klijent@primer.rs"
+        )
+        invoice = InvoiceService.issue(
+            _draft(self.company, client_obj, self.past, price="1500.00"), actor=None
+        )
+        InvoiceService.mark_overdue_all()
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["klijent@primer.rs"])
+        self.assertIn(invoice.invoice_number, mail.outbox[0].subject)
+
+    def test_no_email_sent_when_the_client_has_no_email_on_file(self):
+        client_obj = Client.objects.create(company=self.company, name="Klijent bez email-a")
+        InvoiceService.issue(_draft(self.company, client_obj, self.past), actor=None)
+        InvoiceService.mark_overdue_all()
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_reminder_is_also_sent_for_an_overdue_avans(self):
+        # Avans behaves like a real invoice for the ledger (Phase 6c), and
+        # a reminder email for it is sent too — it's a real financial
+        # obligation from the client's perspective, same as an invoice.
+        client_obj = Client.objects.create(
+            company=self.company, name="Klijent A", email="klijent@primer.rs"
+        )
+        invoice = InvoiceService.create_draft(
+            company=self.company,
+            client=client_obj,
+            document_type=Invoice.DocumentType.ADVANCE,
+            issue_date=timezone.now().date(),
+            due_date=self.past,
+            service_date=timezone.now().date(),
+            notes="",
+            line_items=[{"description": "X", "quantity": "1", "unit_price": "100"}],
+        )
+        InvoiceService.issue(invoice, actor=None)
+        InvoiceService.mark_overdue_all()
+        self.assertEqual(len(mail.outbox), 1)

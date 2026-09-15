@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Button, Card, Input, Alert, Skeleton } from '@pausalac/ui'
 import { createClient, getClient, updateClient, type ClientPayload } from '@/services/clients'
 import { ApiError } from '@/lib/api'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 
 const props = defineProps<{ id?: string }>()
 const router = useRouter()
@@ -24,8 +25,13 @@ const saving = ref(false)
 const errorMessage = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 
+const { markClean } = useUnsavedChangesGuard(() => form.value)
+
 onMounted(async () => {
-  if (!props.id) return
+  if (!props.id) {
+    markClean()
+    return
+  }
   loading.value = true
   try {
     const client = await getClient(props.id)
@@ -35,6 +41,7 @@ onMounted(async () => {
       error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo klijenta.'
   } finally {
     loading.value = false
+    markClean()
   }
 })
 
@@ -43,12 +50,12 @@ async function onSubmit() {
   errorMessage.value = ''
   fieldErrors.value = {}
   try {
-    if (isEditing.value && props.id) {
-      await updateClient(props.id, form.value)
-    } else {
-      await createClient(form.value)
-    }
-    await router.push({ name: 'clients' })
+    const client =
+      isEditing.value && props.id
+        ? await updateClient(props.id, form.value)
+        : await createClient(form.value)
+    markClean()
+    await router.push({ name: 'client-detail', params: { id: client.id } })
   } catch (error) {
     if (error instanceof ApiError) {
       if (error.fields) {

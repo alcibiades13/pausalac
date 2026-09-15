@@ -4,6 +4,7 @@ import { Alert, Badge, Button } from '@pausalac/ui'
 import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
 import { listAdminSubscriptions, type AdminSubscription } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+import { formatDate } from '@/lib/formatDate'
 
 const subscriptions = ref<AdminSubscription[]>([])
 const loading = ref(true)
@@ -30,7 +31,7 @@ const STATUS_VARIANTS: Record<AdminSubscription['status'], 'success' | 'warning'
 const columns: AdminTableColumn<AdminSubscription>[] = [
   { key: 'company_name', label: 'Kompanija' },
   { key: 'plan', label: 'Plan', format: (r) => r.plan?.name ?? '—' },
-  { key: 'trial_ends_at', label: 'Probni period do', format: (r) => new Date(r.trial_ends_at).toLocaleDateString('sr-RS') },
+  { key: 'trial_ends_at', label: 'Probni period do', format: (r) => formatDate(r.trial_ends_at) },
 ]
 
 async function load() {

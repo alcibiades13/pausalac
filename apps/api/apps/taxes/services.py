@@ -148,6 +148,7 @@ class TaxService:
                 title="Poreska obaveza kasni",
                 message=f"Poreska obaveza za {obligation.period_start} kasni sa uplatom.",
                 action_route="obligations",
+                action_query={"status": "overdue"},
             )
             count += 1
         return count

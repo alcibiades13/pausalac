@@ -1,0 +1,17 @@
+{# Built per master prompt §107 but not wired to a new send-trigger yet —
+   see docs/decisions-log.md's Phase 6e entry.
+   accounting_connection_requested already triggers an in-app
+   notification (apps.accounting.services) at "attention" priority (no
+   auto-email); wiring this template in means an explicit new send call
+   at that site, deliberately deferred rather than folded into an
+   already-large phase. #}
+{% extends "emails/base.html" %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 16px;">Poziv za povezivanje</h1>
+<p style="margin:0 0 16px;line-height:1.5;">Zdravo,</p>
+<p style="margin:0 0 16px;line-height:1.5;">
+  {{ accounting_org_name }} želi da se poveže sa tvojom kompanijom na Pausalac platformi kao
+  računovodstvena agencija.
+</p>
+<p style="margin:0;line-height:1.5;">Prijavi se na platformu da prihvatiš ili odbiješ zahtev.</p>
+{% endblock %}

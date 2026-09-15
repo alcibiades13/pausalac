@@ -4,6 +4,7 @@ import { Alert, Badge, Button } from '@pausalac/ui'
 import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
 import { listAdminNotifications, type AdminNotification } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+import { formatDate } from '@/lib/formatDate'
 
 const notifications = ref<AdminNotification[]>([])
 const loading = ref(true)
@@ -20,7 +21,7 @@ const columns: AdminTableColumn<AdminNotification>[] = [
   {
     key: 'created_at',
     label: 'Datum',
-    format: (r) => new Date(r.created_at).toLocaleDateString('sr-RS'),
+    format: (r) => formatDate(r.created_at),
   },
 ]
 

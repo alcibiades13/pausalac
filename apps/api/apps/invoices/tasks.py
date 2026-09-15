@@ -8,12 +8,11 @@ view — so the status can't claim "sent" for something delivery failed on.
 import logging
 
 from celery import shared_task
-from django.core.mail import EmailMessage
 
 from apps.accounts.models import User
 
 from .models import Invoice
-from .pdf import render_invoice_pdf
+from .pdf import format_money, render_invoice_pdf
 from .services import InvoiceService
 
 logger = logging.getLogger("pausalac.invoices")
@@ -31,21 +30,22 @@ def send_invoice_email_task(
 
     pdf_bytes = render_invoice_pdf(invoice)
 
-    body = (
-        f"Zdravo,\n\nU prilogu je faktura {invoice.invoice_number} od {invoice.company.name}, "
-        f"za ukupan iznos {invoice.total} {invoice.currency}.\n"
-    )
-    if message:
-        body += f"\n{message}\n"
-    body += "\nHvala,\n" + invoice.company.name
+    # Lazy import — apps.notifications sits after apps.invoices in DOMAIN_APPS.
+    from apps.notifications.email import EmailService
 
-    email = EmailMessage(
-        subject=f"Faktura {invoice.invoice_number} — {invoice.company.name}",
-        body=body,
+    EmailService.send(
+        "invoice_sent",
+        {
+            "invoice_number": invoice.invoice_number,
+            "company_name": invoice.company.name,
+            "total_formatted": format_money(invoice.total),
+            "currency": invoice.currency,
+            "message": message,
+        },
         to=[recipient_email],
+        subject=f"Faktura {invoice.invoice_number} — {invoice.company.name}",
+        attachments=[(f"{invoice.invoice_number}.pdf", pdf_bytes, "application/pdf")],
     )
-    email.attach(f"{invoice.invoice_number}.pdf", pdf_bytes, "application/pdf")
-    email.send()
 
     try:
         actor = User.objects.get(pk=actor_id)

@@ -87,6 +87,83 @@ class DocumentViewSetTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_client_from_another_company_rejected(self):
+        from apps.clients.models import Client
+
+        other_company = Company.objects.create(name="Firma B", pib="987654321")
+        other_client = Client.objects.create(company=other_company, name="Klijent B")
+        response = self.client.post(
+            self.list_url,
+            {
+                "category": "other",
+                "title": "Dokument",
+                "description": "",
+                "file": _pdf_file(),
+                "client": other_client.id,
+            },
+            **self.headers,
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_invoice_from_another_company_rejected(self):
+        from apps.clients.models import Client
+        from apps.invoices.services import InvoiceService
+
+        other_company = Company.objects.create(name="Firma B", pib="987654321")
+        other_client = Client.objects.create(company=other_company, name="Klijent B")
+        other_invoice = InvoiceService.create_draft(
+            company=other_company,
+            client=other_client,
+            issue_date=date(2026, 1, 1),
+            due_date=date(2026, 1, 1),
+            service_date=date(2026, 1, 1),
+            notes="",
+            line_items=[{"description": "X", "quantity": "1", "unit_price": "1"}],
+        )
+        response = self.client.post(
+            self.list_url,
+            {
+                "category": "other",
+                "title": "Dokument",
+                "description": "",
+                "file": _pdf_file(),
+                "invoice": other_invoice.id,
+            },
+            **self.headers,
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_document_can_be_linked_to_a_client_and_invoice_in_this_company(self):
+        from apps.clients.models import Client
+        from apps.invoices.services import InvoiceService
+
+        client_obj = Client.objects.create(company=self.company, name="Klijent A")
+        invoice = InvoiceService.create_draft(
+            company=self.company,
+            client=client_obj,
+            issue_date=date(2026, 1, 1),
+            due_date=date(2026, 1, 1),
+            service_date=date(2026, 1, 1),
+            notes="",
+            line_items=[{"description": "X", "quantity": "1", "unit_price": "1"}],
+        )
+        response = self.client.post(
+            self.list_url,
+            {
+                "category": "other",
+                "title": "Dokument",
+                "description": "",
+                "file": _pdf_file(),
+                "client": client_obj.id,
+                "invoice": invoice.id,
+            },
+            **self.headers,
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+
+        filtered = self.client.get(self.list_url, {"invoice": invoice.id}, **self.headers)
+        self.assertEqual(len(filtered.json()["results"]), 1)
+
     def test_list_filter_by_category(self):
         self.client.post(
             self.list_url,

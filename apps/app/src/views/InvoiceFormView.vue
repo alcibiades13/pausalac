@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Button, Card, Input, Select, Alert, Skeleton } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import {
@@ -12,11 +12,13 @@ import {
 } from '@/services/invoices'
 import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
 import { ApiError } from '@/lib/api'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 
 const props = withDefaults(
   defineProps<{ id?: string; documentType?: InvoiceDocumentType }>(),
   { documentType: 'invoice' },
 )
+const route = useRoute()
 const router = useRouter()
 const isEditing = computed(() => Boolean(props.id))
 // The type shown/sent while creating — once editing an existing draft,
@@ -66,6 +68,8 @@ const saving = ref(false)
 const errorMessage = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 
+const { markClean } = useUnsavedChangesGuard(() => form.value)
+
 function addLineItem() {
   form.value.items.push({ description: '', item_type: 'service', quantity: '1', unit_price: '' })
 }
@@ -109,14 +113,20 @@ onMounted(async () => {
           unit_price: item.unit_price,
         })),
       }
-    } else if (clients.value.length > 0) {
-      form.value.client = clients.value[0]!.id
+    } else {
+      // §94 "when client is selected: prepopulate known data" — arriving
+      // from a client's own profile page's "Nova faktura" CTA skips
+      // having to pick the client again.
+      const preselectedClientId = Number(route.query.client)
+      const preselected = clients.value.find((c) => c.id === preselectedClientId)
+      form.value.client = preselected ? preselected.id : (clients.value[0]?.id ?? 0)
     }
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo podatke.'
   } finally {
     loading.value = false
+    markClean()
   }
 })
 
@@ -129,6 +139,7 @@ async function onSubmit() {
       isEditing.value && props.id
         ? await updateInvoice(props.id, form.value)
         : await createInvoice({ ...form.value, document_type: documentType.value })
+    markClean()
     await router.push({ name: 'invoice-detail', params: { id: invoice.id } })
   } catch (error) {
     if (error instanceof ApiError) {

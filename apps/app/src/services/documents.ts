@@ -18,6 +18,10 @@ export interface AppDocument {
   content_type: string
   size_bytes: number
   tax_resolution: number | null
+  client: number | null
+  invoice: number | null
+  payment: number | null
+  tax_obligation: number | null
   uploaded_by_name: string
   created_at: string
 }
@@ -27,6 +31,8 @@ export interface DocumentUploadPayload {
   title: string
   description?: string
   tax_resolution?: number
+  client?: number
+  invoice?: number
   file: File
 }
 
@@ -39,13 +45,21 @@ function currentCompanyId(): number {
 }
 
 export function listDocuments(
-  options: { category?: DocumentCategory; taxResolution?: number; search?: string } = {},
+  options: {
+    category?: DocumentCategory
+    taxResolution?: number
+    client?: number | string
+    invoice?: number | string
+    search?: string
+  } = {},
 ): Promise<Paginated<AppDocument>> {
   return apiFetch<Paginated<AppDocument>>('documents/', {
     companyId: currentCompanyId(),
     params: {
       category: options.category,
       tax_resolution: options.taxResolution,
+      client: options.client,
+      invoice: options.invoice,
       search: options.search,
     },
   })
@@ -58,6 +72,12 @@ export function uploadDocument(payload: DocumentUploadPayload): Promise<AppDocum
   formData.set('description', payload.description ?? '')
   if (payload.tax_resolution !== undefined) {
     formData.set('tax_resolution', String(payload.tax_resolution))
+  }
+  if (payload.client !== undefined) {
+    formData.set('client', String(payload.client))
+  }
+  if (payload.invoice !== undefined) {
+    formData.set('invoice', String(payload.invoice))
   }
   formData.set('file', payload.file)
 

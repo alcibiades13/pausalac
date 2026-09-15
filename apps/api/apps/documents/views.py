@@ -13,7 +13,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     serializer_class = DocumentSerializer
     http_method_names = ["get", "post", "delete", "head", "options"]
-    filterset_fields = ["category", "tax_resolution"]
+    filterset_fields = [
+        "category",
+        "tax_resolution",
+        "client",
+        "invoice",
+        "payment",
+        "tax_obligation",
+    ]
     search_fields = ["title", "description", "original_filename"]
 
     def get_permissions(self):

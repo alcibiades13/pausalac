@@ -1,0 +1,10 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 16px;color:#0d9488;">Potvrda uplate</h1>
+<p style="margin:0 0 16px;line-height:1.5;">Zdravo,</p>
+<p style="margin:0 0 16px;line-height:1.5;">
+  Potvrđujemo prijem uplate za fakturu {{ invoice_number }} od {{ company_name }},
+  u iznosu od {{ total_formatted }} {{ currency }}.
+</p>
+<p style="margin:0;line-height:1.5;">Hvala na saradnji!</p>
+{% endblock %}

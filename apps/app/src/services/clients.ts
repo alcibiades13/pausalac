@@ -22,6 +22,15 @@ export type ClientPayload = Pick<
   'client_type' | 'name' | 'tax_id' | 'email' | 'phone' | 'address' | 'notes'
 >
 
+/** Master prompt §15/blueprint §6.3 client profile totals — GET /clients/{id}/summary/. */
+export interface ClientSummary {
+  total_invoiced: string
+  total_paid: string
+  outstanding: string
+  invoice_count: number
+  last_invoice_date: string | null
+}
+
 function currentCompanyId(): number {
   const id = useCompanyStore().currentCompanyId
   if (id === null) {
@@ -30,15 +39,21 @@ function currentCompanyId(): number {
   return id
 }
 
-export function listClients(options: { pageSize?: number } = {}): Promise<Paginated<Client>> {
+export function listClients(
+  options: { pageSize?: number; page?: number; search?: string } = {},
+): Promise<Paginated<Client>> {
   return apiFetch<Paginated<Client>>('clients/', {
     companyId: currentCompanyId(),
-    params: { page_size: options.pageSize },
+    params: { page_size: options.pageSize, page: options.page, search: options.search },
   })
 }
 
 export function getClient(id: number | string): Promise<Client> {
   return apiFetch<Client>(`clients/${id}/`, { companyId: currentCompanyId() })
+}
+
+export function getClientSummary(id: number | string): Promise<ClientSummary> {
+  return apiFetch<ClientSummary>(`clients/${id}/summary/`, { companyId: currentCompanyId() })
 }
 
 export function createClient(payload: Partial<ClientPayload>): Promise<Client> {

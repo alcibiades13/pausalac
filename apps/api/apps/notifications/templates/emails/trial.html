@@ -1,0 +1,17 @@
+{# Built per master prompt §107 ("subscription/trial") but not wired to a
+   new send-trigger yet — see docs/decisions-log.md's Phase 6e entry.
+   trial_expired already triggers a critical in-app notification + a
+   plain generic email today (apps.notifications.tasks); switching that
+   call site to this template is deliberately deferred, not done blindly
+   here. Generic heading/body context so it can serve both
+   trial_ending_soon and trial_expired once wired. #}
+{% extends "emails/base.html" %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 16px;">{{ heading }}</h1>
+<p style="margin:0 0 16px;line-height:1.5;">Zdravo,</p>
+<p style="margin:0 0 16px;line-height:1.5;">{{ body_text }}</p>
+<p style="margin:0 0 16px;">
+  <a href="{{ subscription_url }}" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Pogledaj pretplatu</a>
+</p>
+<p style="margin:0;font-size:13px;color:#64748b;">Ako dugme ne radi, kopiraj i nalepi ovaj link u browser: {{ subscription_url }}</p>
+{% endblock %}

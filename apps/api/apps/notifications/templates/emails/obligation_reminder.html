@@ -1,0 +1,14 @@
+{# Built per master prompt §107 but not wired to a send-trigger yet —
+   see docs/decisions-log.md's Phase 6e entry. tax_obligation_overdue
+   already triggers a critical in-app notification + a plain generic
+   email today (apps.notifications.tasks); switching that call site to
+   this template is deliberately deferred, not done blindly here. #}
+{% extends "emails/base.html" %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 16px;color:#dc2626;">Poreska obaveza kasni</h1>
+<p style="margin:0 0 16px;line-height:1.5;">Zdravo,</p>
+<p style="margin:0 0 16px;line-height:1.5;">
+  Poreska obaveza za period {{ period_start }} kasni sa uplatom.
+</p>
+<p style="margin:0;line-height:1.5;">Proveri detalje na Pausalac platformi.</p>
+{% endblock %}

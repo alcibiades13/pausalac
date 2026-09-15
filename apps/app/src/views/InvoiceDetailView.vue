@@ -7,12 +7,15 @@ import {
   issueInvoice,
   cancelInvoice,
   convertInvoice,
+  duplicateInvoice,
   sendInvoice,
   invoicePdfUrl,
   type Invoice,
 } from '@/services/invoices'
 import { listPayments, recordPayment, type Payment } from '@/services/payments'
+import { listDocuments, type AppDocument } from '@/services/documents'
 import { canTransitionTo, isPayable } from '@/lib/invoiceStatus'
+import { formatDate } from '@/lib/formatDate'
 import { ApiError } from '@/lib/api'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
 import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
@@ -22,9 +25,10 @@ const router = useRouter()
 
 const invoice = ref<Invoice | null>(null)
 const payments = ref<Payment[]>([])
+const documents = ref<AppDocument[]>([])
 const loadStatus = ref<'loading' | 'ready' | 'error'>('loading')
 const errorMessage = ref('')
-const actionLoading = ref<'issue' | 'cancel' | 'convert' | null>(null)
+const actionLoading = ref<'issue' | 'cancel' | 'convert' | 'duplicate' | null>(null)
 
 // A profaktura is a non-binding quote (Phase 6c) — never payable, and
 // convertible into a real invoice only once, while issued/sent.
@@ -48,8 +52,12 @@ async function load() {
   loadStatus.value = 'loading'
   try {
     invoice.value = await getInvoice(props.id)
-    const page = await listPayments({ invoice: props.id })
-    payments.value = page.results
+    const [paymentsPage, documentsPage] = await Promise.all([
+      listPayments({ invoice: props.id }),
+      listDocuments({ invoice: props.id }),
+    ])
+    payments.value = paymentsPage.results
+    documents.value = documentsPage.results
     loadStatus.value = 'ready'
   } catch (error) {
     errorMessage.value =
@@ -91,6 +99,21 @@ async function onConvert() {
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError ? error.message : 'Profaktura nije mogla da se konvertuje.'
+    actionLoading.value = null
+  }
+}
+
+async function onDuplicate() {
+  actionLoading.value = 'duplicate'
+  errorMessage.value = ''
+  try {
+    const newInvoice = await duplicateInvoice(props.id)
+    // Straight to the edit form, not the detail view — the duplicate is
+    // a fresh draft meant to be adjusted immediately (master prompt §94:
+    // minimum number of interactions).
+    await router.push({ name: 'invoice-edit', params: { id: newInvoice.id } })
+  } catch (error) {
+    errorMessage.value = error instanceof ApiError ? error.message : 'Faktura nije mogla da se duplira.'
     actionLoading.value = null
   }
 }
@@ -197,7 +220,12 @@ onMounted(load)
           <h1 class="font-mono text-xl font-semibold text-navy">
             {{ invoice.invoice_number ?? `Nacrt #${invoice.id}` }}
           </h1>
-          <p class="text-sm text-text-secondary">{{ invoice.client_name }}</p>
+          <RouterLink
+            :to="{ name: 'client-detail', params: { id: invoice.client } }"
+            class="text-sm text-primary hover:underline"
+          >
+            {{ invoice.client_name }}
+          </RouterLink>
         </div>
         <div class="flex items-center gap-2">
           <DocumentTypeBadge v-if="invoice.document_type !== 'invoice'" :type="invoice.document_type" />
@@ -231,15 +259,15 @@ onMounted(load)
         <dl class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
           <div>
             <dt class="text-text-secondary">Datum izdavanja</dt>
-            <dd class="text-navy">{{ invoice.issue_date }}</dd>
+            <dd class="text-navy">{{ formatDate(invoice.issue_date) }}</dd>
           </div>
           <div>
             <dt class="text-text-secondary">Rok plaćanja</dt>
-            <dd class="text-navy">{{ invoice.due_date }}</dd>
+            <dd class="text-navy">{{ formatDate(invoice.due_date) }}</dd>
           </div>
           <div>
             <dt class="text-text-secondary">Datum prometa</dt>
-            <dd class="text-navy">{{ invoice.service_date }}</dd>
+            <dd class="text-navy">{{ formatDate(invoice.service_date) }}</dd>
           </div>
         </dl>
       </Card>
@@ -269,6 +297,18 @@ onMounted(load)
         <p class="text-sm text-text-secondary">{{ invoice.notes }}</p>
       </Card>
 
+      <Card v-if="documents.length">
+        <h2 class="mb-3 text-base font-semibold text-navy">Dokumenti</h2>
+        <ul class="flex flex-col divide-y divide-border">
+          <li v-for="doc in documents" :key="doc.id" class="flex items-center justify-between py-2 text-sm">
+            <p class="min-w-0 truncate text-navy">{{ doc.title }}</p>
+            <a v-if="doc.file_url" :href="doc.file_url" target="_blank" rel="noopener" class="shrink-0 text-primary hover:underline">
+              Otvori
+            </a>
+          </li>
+        </ul>
+      </Card>
+
       <Card
         v-if="!isProfaktura && (payments.length || isPayable(invoice.status) || invoice.status === 'paid')"
       >
@@ -281,7 +321,7 @@ onMounted(load)
         <ul v-if="payments.length" class="flex flex-col divide-y divide-border">
           <li v-for="payment in payments" :key="payment.id" class="flex items-center justify-between py-2 text-sm">
             <div>
-              <p class="text-navy">{{ payment.paid_at }}</p>
+              <p class="text-navy">{{ formatDate(payment.paid_at) }}</p>
               <p class="text-text-secondary">
                 {{ payment.method === 'bank_transfer' ? 'Uplata na račun' : payment.method === 'cash' ? 'Gotovina' : 'Ostalo' }}
               </p>
@@ -372,6 +412,9 @@ onMounted(load)
         </Button>
         <Button v-if="canConvert" :loading="actionLoading === 'convert'" @click="onConvert">
           Konvertuj u fakturu
+        </Button>
+        <Button variant="secondary" :loading="actionLoading === 'duplicate'" @click="onDuplicate">
+          Dupliraj
         </Button>
         <Button
           v-if="canTransitionTo(invoice.status, 'cancelled')"

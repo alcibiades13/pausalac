@@ -19,6 +19,10 @@ class DocumentService:
         description: str,
         file_obj,
         tax_resolution=None,
+        client=None,
+        invoice=None,
+        payment=None,
+        tax_obligation=None,
     ) -> Document:
         document = Document.objects.create(
             company=company,
@@ -31,6 +35,10 @@ class DocumentService:
             content_type=file_obj.content_type,
             size_bytes=file_obj.size,
             tax_resolution=tax_resolution,
+            client=client,
+            invoice=invoice,
+            payment=payment,
+            tax_obligation=tax_obligation,
         )
         AuditService.log(
             actor=uploaded_by,

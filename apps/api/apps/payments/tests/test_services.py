@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 
@@ -186,3 +187,63 @@ class RecordPaymentTests(TestCase):
         )
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.status, Invoice.Status.PAID)
+
+
+class PaymentConfirmationEmailTests(TestCase):
+    """Master prompt §107 — sent to the client only on the transition to
+    fully PAID, never on a partial payment."""
+
+    def setUp(self):
+        self.company = Company.objects.create(name="Firma A")
+        self.client_obj = Client.objects.create(
+            company=self.company, name="Klijent A", email="klijent@primer.rs"
+        )
+        self.user = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        today = timezone.now().date()
+        self.invoice = InvoiceService.create_draft(
+            company=self.company,
+            client=self.client_obj,
+            issue_date=today,
+            due_date=today,
+            service_date=today,
+            notes="",
+            line_items=[{"description": "Usluga", "quantity": "1", "unit_price": "1000.00"}],
+        )
+        self.invoice = InvoiceService.issue(self.invoice, actor=self.user)
+
+    def test_full_payment_sends_a_confirmation_to_the_client(self):
+        PaymentService.record_payment(
+            self.invoice,
+            amount=Decimal("1000.00"),
+            paid_at=timezone.now().date(),
+            method=Payment.Method.BANK_TRANSFER,
+            notes="",
+            actor=self.user,
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["klijent@primer.rs"])
+        self.assertIn(self.invoice.invoice_number, mail.outbox[0].subject)
+
+    def test_partial_payment_sends_no_confirmation(self):
+        PaymentService.record_payment(
+            self.invoice,
+            amount=Decimal("400.00"),
+            paid_at=timezone.now().date(),
+            method=Payment.Method.BANK_TRANSFER,
+            notes="",
+            actor=self.user,
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_no_confirmation_when_the_client_has_no_email_on_file(self):
+        self.client_obj.email = ""
+        self.client_obj.save(update_fields=["email"])
+        PaymentService.record_payment(
+            self.invoice,
+            amount=Decimal("1000.00"),
+            paid_at=timezone.now().date(),
+            method=Payment.Method.BANK_TRANSFER,
+            notes="",
+            actor=self.user,
+        )
+        self.assertEqual(len(mail.outbox), 0)

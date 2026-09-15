@@ -108,4 +108,26 @@ describe('InvoicesListView', () => {
       expect.objectContaining({ documentType: 'profaktura' }),
     )
   })
+
+  describe('deep link (master prompt §115)', () => {
+    it('seeds the status filter from a ?status= query param', async () => {
+      vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+      await router.push('/?status=overdue')
+      const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+      await flushPromises()
+
+      expect(listInvoices).toHaveBeenCalledWith(expect.objectContaining({ status: 'overdue' }))
+      const statusSelect = wrapper.find<HTMLSelectElement>('#status-filter')
+      expect(statusSelect.element.value).toBe('overdue')
+    })
+
+    it('defaults to no status filter when there is no query param', async () => {
+      vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+      await router.push('/')
+      mount(InvoicesListView, { global: { plugins: [router] } })
+      await flushPromises()
+
+      expect(listInvoices).toHaveBeenCalledWith(expect.objectContaining({ status: undefined }))
+    })
+  })
 })

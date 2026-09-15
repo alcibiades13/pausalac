@@ -40,6 +40,16 @@ class ClientCrudTests(TestCase):
         c.refresh_from_db()
         self.assertEqual(c.name, "Novi naziv")
 
+    def test_summary_action_returns_zeroed_totals_for_a_new_client(self):
+        c = Client.objects.create(company=self.company, name="Klijent")
+        url = reverse("client-summary", kwargs={"version": "v1", "pk": c.pk})
+        response = self.client.get(url, **self._headers())
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["total_invoiced"], "0.00")
+        self.assertEqual(body["invoice_count"], 0)
+        self.assertIsNone(body["last_invoice_date"])
+
     def test_delete_is_a_soft_delete(self):
         c = Client.objects.create(company=self.company, name="Klijent")
         url = reverse("client-detail", kwargs={"version": "v1", "pk": c.pk})

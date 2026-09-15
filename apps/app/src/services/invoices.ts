@@ -71,11 +71,19 @@ function currentCompanyId(): number {
 }
 
 export function listInvoices(
-  options: { status?: InvoiceStatus; documentType?: InvoiceDocumentType } = {},
+  options: {
+    status?: InvoiceStatus
+    documentType?: InvoiceDocumentType
+    client?: number | string
+  } = {},
 ): Promise<Paginated<Invoice>> {
   return apiFetch<Paginated<Invoice>>('invoices/', {
     companyId: currentCompanyId(),
-    params: { status: options.status, document_type: options.documentType },
+    params: {
+      status: options.status,
+      document_type: options.documentType,
+      client: options.client,
+    },
   })
 }
 
@@ -110,6 +118,17 @@ export function cancelInvoice(id: number | string): Promise<Invoice> {
  */
 export function convertInvoice(id: number | string): Promise<Invoice> {
   return apiFetch<Invoice>(`invoices/${id}/convert/`, { method: 'POST', companyId: currentCompanyId() })
+}
+
+/**
+ * Master prompt §94: "When previous invoice exists: allow duplication."
+ * Works from any status/document type — see InvoiceService.duplicate_invoice.
+ */
+export function duplicateInvoice(id: number | string): Promise<Invoice> {
+  return apiFetch<Invoice>(`invoices/${id}/duplicate/`, {
+    method: 'POST',
+    companyId: currentCompanyId(),
+  })
 }
 
 /**

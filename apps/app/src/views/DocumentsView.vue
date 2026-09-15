@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Button, Card, Input, Select, Alert, EmptyState, Badge, Skeleton } from '@pausalac/ui'
 import {
   listDocuments,
@@ -9,7 +10,11 @@ import {
   type DocumentCategory,
 } from '@/services/documents'
 import { listTaxResolutions, type TaxResolution } from '@/services/taxes'
+import { listClients, type Client } from '@/services/clients'
+import { listInvoices, type Invoice } from '@/services/invoices'
 import { ApiError } from '@/lib/api'
+
+const route = useRoute()
 
 const CATEGORY_LABELS: Record<DocumentCategory, string> = {
   tax_resolution: 'Poresko rešenje',
@@ -45,7 +50,16 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  // Master prompt §115 deep link (e.g. from a "Dokumenti" section
+  // elsewhere) — documents don't get their own detail page, so landing
+  // on this list with the right row scrolled-to and highlighted is the
+  // deep link.
+  if (route.query.document) {
+    document.getElementById(`document-${route.query.document}`)?.scrollIntoView({ block: 'center' })
+  }
+})
 watch([categoryFilter, searchTerm], load)
 
 const deletingId = ref<number | null>(null)
@@ -88,9 +102,44 @@ const taxResolutionOptions = computed(() => [
   })),
 ])
 
+// --- clients/invoices, for the optional link pickers (master prompt §102) --
+
+const clients = ref<Client[]>([])
+const invoices = ref<Invoice[]>([])
+onMounted(async () => {
+  try {
+    clients.value = (await listClients({ pageSize: 100 })).results
+  } catch {
+    // A failed fetch shouldn't block the page — the picker just stays empty.
+  }
+  try {
+    invoices.value = (await listInvoices()).results
+  } catch {
+    // Same as above.
+  }
+})
+const clientOptions = computed(() => [
+  { value: '', label: 'Bez povezanog klijenta' },
+  ...clients.value.map((c) => ({ value: String(c.id), label: c.name })),
+])
+const invoiceOptions = computed(() => [
+  { value: '', label: 'Bez povezane fakture' },
+  ...invoices.value.map((i) => ({
+    value: String(i.id),
+    label: i.invoice_number ?? `Nacrt #${i.id}`,
+  })),
+])
+
 // --- upload form -------------------------------------------------------
 
-const form = ref({ category: 'other' as DocumentCategory, title: '', description: '', tax_resolution: '' })
+const form = ref({
+  category: 'other' as DocumentCategory,
+  title: '',
+  description: '',
+  tax_resolution: '',
+  client: '',
+  invoice: '',
+})
 const selectedFile = ref<File | null>(null)
 const uploading = ref(false)
 const uploadError = ref('')
@@ -113,9 +162,18 @@ async function onUpload() {
       title: form.value.title,
       description: form.value.description,
       tax_resolution: form.value.tax_resolution ? Number(form.value.tax_resolution) : undefined,
+      client: form.value.client ? Number(form.value.client) : undefined,
+      invoice: form.value.invoice ? Number(form.value.invoice) : undefined,
       file: selectedFile.value,
     })
-    form.value = { category: 'other', title: '', description: '', tax_resolution: '' }
+    form.value = {
+      category: 'other',
+      title: '',
+      description: '',
+      tax_resolution: '',
+      client: '',
+      invoice: '',
+    }
     selectedFile.value = null
     await load()
   } catch (error) {
@@ -136,13 +194,15 @@ async function onUpload() {
         <Alert v-if="uploadError" variant="danger">{{ uploadError }}</Alert>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Select v-model="form.category" label="Kategorija" :options="CATEGORY_OPTIONS" required />
+          <Input v-model="form.title" label="Naziv" required />
+          <Input v-model="form.description" label="Opis (opciono)" />
           <Select
             v-model="form.tax_resolution"
             label="Povezano poresko rešenje"
             :options="taxResolutionOptions"
           />
-          <Input v-model="form.title" label="Naziv" required />
-          <Input v-model="form.description" label="Opis (opciono)" />
+          <Select v-model="form.client" label="Povezani klijent" :options="clientOptions" />
+          <Select v-model="form.invoice" label="Povezana faktura" :options="invoiceOptions" />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium text-navy" for="doc-file">Fajl</label>
@@ -180,7 +240,13 @@ async function onUpload() {
     </Card>
 
     <div v-else class="flex flex-col gap-2">
-      <Card v-for="doc in documents" :key="doc.id" class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Card
+        v-for="doc in documents"
+        :id="`document-${doc.id}`"
+        :key="doc.id"
+        class="flex flex-col gap-3 sm:flex-row sm:items-center"
+        :class="String(doc.id) === route.query.document ? 'ring-2 ring-primary' : ''"
+      >
         <div class="flex min-w-0 flex-1 items-center gap-4">
           <img v-if="isImage(doc)" :src="doc.file_url ?? undefined" class="h-12 w-12 shrink-0 rounded object-cover" alt="" />
           <div v-else class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl">

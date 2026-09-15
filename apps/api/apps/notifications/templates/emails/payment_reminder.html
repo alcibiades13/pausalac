@@ -1,0 +1,11 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 16px;color:#dc2626;">Podsetnik: faktura kasni</h1>
+<p style="margin:0 0 16px;line-height:1.5;">Zdravo,</p>
+<p style="margin:0 0 16px;line-height:1.5;">
+  Faktura {{ invoice_number }} od {{ company_name }}, na iznos {{ total_formatted }} {{ currency }},
+  kasni sa uplatom (rok je bio {{ due_date }}).
+</p>
+<p style="margin:0 0 24px;line-height:1.5;">Molimo te da izmiriš obavezu u najkraćem roku.</p>
+<p style="margin:0;font-size:13px;color:#64748b;">Ako si uplatu već izvršio, slobodno ignoriši ovaj podsetnik.</p>
+{% endblock %}

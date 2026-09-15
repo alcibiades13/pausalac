@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { createRouter, createMemoryHistory } from 'vue-router'
 import ObligationsView from '../ObligationsView.vue'
 import {
   createTaxResolution,
@@ -53,7 +54,11 @@ function resolution(overrides: Partial<TaxResolution> = {}): TaxResolution {
 function mountView() {
   const pinia = createPinia()
   setActivePinia(pinia)
-  return mount(ObligationsView, { global: { plugins: [pinia] } })
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [{ path: '/', component: { template: '<div />' } }],
+  })
+  return mount(ObligationsView, { global: { plugins: [pinia, router] } })
 }
 
 describe('ObligationsView', () => {
@@ -79,7 +84,7 @@ describe('ObligationsView', () => {
     })
     const wrapper = mountView()
     await flushPromises()
-    expect(wrapper.text()).toContain('2026-01-01')
+    expect(wrapper.text()).toContain('1. 1. 2026.')
     expect(wrapper.text()).toContain('Na čekanju')
     expect(wrapper.text()).toContain('45.050,00 RSD')
   })
@@ -124,5 +129,24 @@ describe('ObligationsView', () => {
 
     expect(markObligationPaid).toHaveBeenCalledWith(1)
     expect(listTaxObligations).toHaveBeenCalledTimes(2)
+  })
+
+  describe('deep link (master prompt §115)', () => {
+    it('seeds the status filter from a ?status= query param', async () => {
+      vi.mocked(listTaxObligations).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+      const pinia = createPinia()
+      setActivePinia(pinia)
+      const router = createRouter({
+        history: createMemoryHistory(),
+        routes: [{ path: '/', component: { template: '<div/>' } }],
+      })
+      await router.push('/?status=overdue')
+      const wrapper = mount(ObligationsView, { global: { plugins: [pinia, router] } })
+      await flushPromises()
+
+      expect(listTaxObligations).toHaveBeenCalledWith(expect.objectContaining({ status: 'overdue' }))
+      const select = wrapper.find<HTMLSelectElement>('#obligation-status-filter')
+      expect(select.element.value).toBe('overdue')
+    })
   })
 })

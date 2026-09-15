@@ -1,0 +1,11 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 16px;">Potvrdi svoju email adresu</h1>
+<p style="margin:0 0 16px;line-height:1.5;">Zdravo,</p>
+<p style="margin:0 0 24px;line-height:1.5;">Potvrdi svoju email adresu klikom na dugme ispod:</p>
+<p style="margin:0 0 24px;">
+  <a href="{{ link }}" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Potvrdi email</a>
+</p>
+<p style="margin:0 0 16px;font-size:13px;color:#64748b;">Ako dugme ne radi, kopiraj i nalepi ovaj link u browser: {{ link }}</p>
+<p style="margin:0;font-size:13px;color:#64748b;">Ako nisi ti napravio nalog, slobodno ignoriši ovaj email.</p>
+{% endblock %}

@@ -10,9 +10,12 @@ import uuid
 from django.db import models
 
 from apps.accounts.models import User
+from apps.clients.models import Client
 from apps.companies.managers import TenantScopedManager
 from apps.companies.models import Company
-from apps.taxes.models import TaxResolution
+from apps.invoices.models import Invoice
+from apps.payments.models import Payment
+from apps.taxes.models import TaxObligation, TaxResolution
 
 
 def document_upload_path(instance: "Document", filename: str) -> str:
@@ -44,14 +47,32 @@ class Document(models.Model):
     size_bytes = models.PositiveIntegerField()
 
     # Links an uploaded rešenje scan to the resolution record it
-    # documents (apps.taxes.TaxResolution) — optional, the only "related
-    # entity" concrete enough to model directly this phase.
+    # documents (apps.taxes.TaxResolution) — the original, Phase-3f link.
     tax_resolution = models.ForeignKey(
         TaxResolution,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="documents",
+    )
+    # Phase 6e (master prompt §102 DOCUMENT RELATIONSHIPS): all optional,
+    # all SET_NULL, same shape as tax_resolution above. §102 also names
+    # "SEF document" and "accountant interaction" as linkable — neither
+    # has a backing entity anywhere in this codebase (no SEF integration
+    # exists yet, §39/40; no accountant-interaction model exists), so
+    # they're not modeled — same discipline as every other SEF-adjacent
+    # exclusion in this project.
+    client = models.ForeignKey(
+        Client, on_delete=models.SET_NULL, null=True, blank=True, related_name="documents"
+    )
+    invoice = models.ForeignKey(
+        Invoice, on_delete=models.SET_NULL, null=True, blank=True, related_name="documents"
+    )
+    payment = models.ForeignKey(
+        Payment, on_delete=models.SET_NULL, null=True, blank=True, related_name="documents"
+    )
+    tax_obligation = models.ForeignKey(
+        TaxObligation, on_delete=models.SET_NULL, null=True, blank=True, related_name="documents"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

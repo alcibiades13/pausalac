@@ -103,7 +103,7 @@ describe('SubscriptionView', () => {
     const wrapper = mount(SubscriptionView)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Sledeće obnavljanje: 2026-10-01')
+    expect(wrapper.text()).toContain('Sledeće obnavljanje: 1. 10. 2026.')
     const cancelButton = wrapper.findAll('button').find((b) => b.text() === 'Otkaži pretplatu')
     await cancelButton!.trigger('click')
     await flushPromises()

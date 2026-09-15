@@ -15,6 +15,7 @@ from apps.audit.services import AuditService
 
 from .models import FinancialEvent, Invoice, InvoiceLineItem
 from .numbering import assign_invoice_number
+from .pdf import format_money
 
 Status = Invoice.Status
 DocumentType = Invoice.DocumentType
@@ -249,9 +250,11 @@ class InvoiceService:
         a non-binding quote doesn't "go overdue" in any meaningful sense
         (Phase 6c); Avans stays included, same as a regular invoice.
         """
-        candidates = Invoice.objects.filter(
-            status__in=OVERDUE_ELIGIBLE_STATUSES, due_date__lt=timezone.now().date()
-        ).exclude(document_type=Invoice.DocumentType.PROFORMA)
+        candidates = (
+            Invoice.objects.select_related("client", "company")
+            .filter(status__in=OVERDUE_ELIGIBLE_STATUSES, due_date__lt=timezone.now().date())
+            .exclude(document_type=Invoice.DocumentType.PROFORMA)
+        )
         count = 0
         for invoice in candidates:
             old_status = invoice.status
@@ -290,6 +293,26 @@ class InvoiceService:
             from apps.analytics.tracking import track_event  # lazy — see above
 
             track_event("invoice_overdue", company=invoice.company, invoice_id=invoice.id)
+
+            # Client-facing payment reminder (master prompt §107) —
+            # distinct from the internal notification above, which goes
+            # to the paušalac, not the client. This is the exact gap
+            # docs/decisions-log.md's Phase 6 audit flagged as missing.
+            if invoice.client.email:
+                from apps.notifications.email import EmailService  # lazy — see above
+
+                EmailService.send(
+                    "payment_reminder",
+                    {
+                        "invoice_number": invoice.invoice_number,
+                        "company_name": invoice.company.name,
+                        "total_formatted": format_money(invoice.total),
+                        "currency": invoice.currency,
+                        "due_date": invoice.due_date.strftime("%d.%m.%Y."),
+                    },
+                    to=[invoice.client.email],
+                    subject=f"Podsetnik: faktura {invoice.invoice_number} kasni",
+                )
             count += 1
         return count
 
@@ -344,6 +367,50 @@ class InvoiceService:
             entity_id=invoice.id,
             action="converted_from_profaktura",
             old_value={"profaktura_id": profaktura.id},
+            new_value={"invoice_id": invoice.id},
+        )
+        return invoice
+
+    @staticmethod
+    @transaction.atomic
+    def duplicate_invoice(source: Invoice, actor) -> Invoice:
+        """
+        Master prompt §94: "When previous invoice exists: allow
+        duplication." Available from any source status (unlike
+        convert_to_invoice, which is issued/sent-only) — duplicating is a
+        one-time copy, not a tracked relationship, so unlike conversion
+        there's no linkage field and no "only once" restriction. Preserves
+        the source's own document_type (duplicating a Profaktura produces
+        a new Profaktura draft, not a type change — that's convert's job).
+        """
+        line_items = [
+            {
+                "description": item.description,
+                "item_type": item.item_type,
+                "quantity": item.quantity,
+                "unit_price": item.unit_price,
+            }
+            for item in source.items.all()
+        ]
+        today = timezone.now().date()
+        invoice = InvoiceService.create_draft(
+            company=source.company,
+            client=source.client,
+            line_items=line_items,
+            currency=source.currency,
+            issue_date=today,
+            due_date=today + timedelta(days=15),
+            service_date=today,
+            notes=source.notes,
+            document_type=source.document_type,
+        )
+        AuditService.log(
+            actor=actor,
+            company=source.company,
+            entity_type="invoice",
+            entity_id=invoice.id,
+            action="duplicated_from",
+            old_value={"source_invoice_id": source.id},
             new_value={"invoice_id": invoice.id},
         )
         return invoice

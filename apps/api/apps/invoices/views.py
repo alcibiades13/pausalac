@@ -45,13 +45,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             "issue": "edit_invoice",
             "send": "edit_invoice",
             "cancel": "cancel_invoice",
-            # Converting a Profaktura creates a new invoice, so it's gated
-            # exactly like `create` (Phase 6c) — same codename, same
-            # entitlement check below.
+            # Converting a Profaktura / duplicating any invoice both create
+            # a new invoice, so both are gated exactly like `create` —
+            # same codename, same entitlement check below.
             "convert": "create_invoice",
+            "duplicate": "create_invoice",
         }[self.action]
         gates = [permissions.IsAuthenticated(), HasCompanyPermission(codename)()]
-        if self.action in ("create", "convert"):
+        if self.action in ("create", "convert", "duplicate"):
             # Phase 5's one real entitlement-enforcement point (master
             # prompt §104: "backend must enforce") — added alongside the
             # RBAC check above, not instead of it. Deliberately not swept
@@ -108,6 +109,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             invoice = InvoiceService.convert_to_invoice(profaktura, actor=request.user)
         except InvalidTransitionError as exc:
             raise exceptions.ValidationError(str(exc)) from exc
+        return Response(self.get_serializer(invoice).data, status=201)
+
+    @action(detail=True, methods=["post"])
+    def duplicate(self, request, pk=None, *args, **kwargs):
+        """Any invoice -> new draft copy (master prompt §94) — see
+        InvoiceService.duplicate_invoice."""
+        source = self.get_object()
+        invoice = InvoiceService.duplicate_invoice(source, actor=request.user)
         return Response(self.get_serializer(invoice).data, status=201)
 
     @action(detail=True, methods=["post"])

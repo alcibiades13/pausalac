@@ -1,0 +1,11 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h1 style="font-size:20px;margin:0 0 16px;">Faktura {{ invoice_number }}</h1>
+<p style="margin:0 0 16px;line-height:1.5;">Zdravo,</p>
+<p style="margin:0 0 16px;line-height:1.5;">
+  U prilogu je faktura {{ invoice_number }} od {{ company_name }}, za ukupan iznos
+  {{ total_formatted }} {{ currency }}.
+</p>
+{% if message %}<p style="margin:0 0 16px;line-height:1.5;white-space:pre-line;">{{ message }}</p>{% endif %}
+<p style="margin:24px 0 0;line-height:1.5;">Hvala,<br>{{ company_name }}</p>
+{% endblock %}

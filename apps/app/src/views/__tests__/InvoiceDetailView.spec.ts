@@ -1,15 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import InvoiceDetailView from '../InvoiceDetailView.vue'
-import { getInvoice, convertInvoice, type Invoice } from '@/services/invoices'
+import { getInvoice, convertInvoice, duplicateInvoice, type Invoice } from '@/services/invoices'
 import { listPayments } from '@/services/payments'
+import { listDocuments, type AppDocument } from '@/services/documents'
 
 vi.mock('@/services/invoices', () => ({
   getInvoice: vi.fn<typeof getInvoice>(),
   issueInvoice: vi.fn<() => Promise<never>>(),
   cancelInvoice: vi.fn<() => Promise<never>>(),
   convertInvoice: vi.fn<typeof convertInvoice>(),
+  duplicateInvoice: vi.fn<typeof duplicateInvoice>(),
   sendInvoice: vi.fn<() => Promise<never>>(),
   invoicePdfUrl: vi.fn<(id: number | string) => string>(
     (id) => `http://localhost/invoices/${id}/pdf/`,
@@ -21,12 +23,17 @@ vi.mock('@/services/payments', () => ({
   recordPayment: vi.fn<() => Promise<never>>(),
 }))
 
+vi.mock('@/services/documents', () => ({
+  listDocuments: vi.fn<typeof listDocuments>(),
+}))
+
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
     { path: '/', component: { template: '<div/>' } },
     { path: '/fakture/:id', name: 'invoice-detail', component: { template: '<div/>' }, props: true },
     { path: '/fakture/:id/izmeni', name: 'invoice-edit', component: { template: '<div/>' }, props: true },
+    { path: '/klijenti/:id', name: 'client-detail', component: { template: '<div/>' }, props: true },
   ],
 })
 
@@ -60,9 +67,19 @@ function baseInvoice(overrides: Partial<Invoice> = {}): Invoice {
   }
 }
 
-async function mountDetail(invoice: Invoice) {
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+async function mountDetail(invoice: Invoice, documents: AppDocument[] = []) {
   vi.mocked(getInvoice).mockResolvedValue(invoice)
   vi.mocked(listPayments).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+  vi.mocked(listDocuments).mockResolvedValue({
+    count: documents.length,
+    next: null,
+    previous: null,
+    results: documents,
+  })
   const wrapper = mount(InvoiceDetailView, {
     props: { id: String(invoice.id) },
     global: { plugins: [router] },
@@ -76,6 +93,8 @@ describe('InvoiceDetailView document types', () => {
     vi.mocked(getInvoice).mockReset()
     vi.mocked(listPayments).mockReset()
     vi.mocked(convertInvoice).mockReset()
+    vi.mocked(duplicateInvoice).mockReset()
+    vi.mocked(listDocuments).mockReset()
   })
 
   it('shows a "Konvertuj u fakturu" button for an issued, not-yet-converted profaktura', async () => {
@@ -137,5 +156,87 @@ describe('InvoiceDetailView document types', () => {
       }),
     )
     expect(wrapper.text()).toContain('PRO-2026-003')
+  })
+})
+
+describe('InvoiceDetailView duplication (master prompt §94)', () => {
+  beforeEach(() => {
+    vi.mocked(getInvoice).mockReset()
+    vi.mocked(listPayments).mockReset()
+    vi.mocked(duplicateInvoice).mockReset()
+    vi.mocked(listDocuments).mockReset()
+  })
+
+  it('shows the "Dupliraj" button regardless of status', async () => {
+    const wrapper = await mountDetail(baseInvoice({ status: 'cancelled' }))
+    expect(wrapper.text()).toContain('Dupliraj')
+  })
+
+  it('duplicates the invoice and navigates straight to the new draft\'s edit page', async () => {
+    const wrapper = await mountDetail(baseInvoice({ status: 'issued' }))
+    vi.mocked(duplicateInvoice).mockResolvedValue(baseInvoice({ id: 5, status: 'draft' }))
+
+    const pushSpy = vi.spyOn(router, 'push')
+    const duplicateButton = wrapper.findAll('button').find((b) => b.text() === 'Dupliraj')!
+    await duplicateButton.trigger('click')
+    await flushPromises()
+
+    expect(duplicateInvoice).toHaveBeenCalledWith('1')
+    expect(pushSpy).toHaveBeenCalledWith({ name: 'invoice-edit', params: { id: 5 } })
+  })
+
+  it('shows an error message and does not navigate when duplication fails', async () => {
+    const wrapper = await mountDetail(baseInvoice({ status: 'issued' }))
+    vi.mocked(duplicateInvoice).mockRejectedValue(new Error('boom'))
+
+    const routeBefore = router.currentRoute.value.fullPath
+    const duplicateButton = wrapper.findAll('button').find((b) => b.text() === 'Dupliraj')!
+    await duplicateButton.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Faktura nije mogla da se duplira.')
+    expect(router.currentRoute.value.fullPath).toBe(routeBefore)
+  })
+})
+
+describe('InvoiceDetailView documents section (master prompt §102)', () => {
+  beforeEach(() => {
+    vi.mocked(getInvoice).mockReset()
+    vi.mocked(listPayments).mockReset()
+    vi.mocked(listDocuments).mockReset()
+  })
+
+  function doc(overrides: Partial<AppDocument> = {}): AppDocument {
+    return {
+      id: 1,
+      category: 'contract',
+      title: 'Ugovor uz fakturu',
+      description: '',
+      file_url: 'http://minio.local/documents/1/file.pdf',
+      original_filename: 'ugovor.pdf',
+      content_type: 'application/pdf',
+      size_bytes: 2048,
+      tax_resolution: null,
+      client: null,
+      invoice: 1,
+      payment: null,
+      tax_obligation: null,
+      uploaded_by_name: 'Marko Markovic',
+      created_at: '2026-01-01T00:00:00Z',
+      ...overrides,
+    }
+  }
+
+  it('does not show a "Dokumenti" section when there are no linked documents', async () => {
+    const wrapper = await mountDetail(baseInvoice())
+    expect(wrapper.text()).not.toContain('Dokumenti')
+  })
+
+  it('lists documents linked to this invoice', async () => {
+    const wrapper = await mountDetail(baseInvoice(), [doc()])
+
+    expect(wrapper.text()).toContain('Dokumenti')
+    expect(wrapper.text()).toContain('Ugovor uz fakturu')
+    expect(listDocuments).toHaveBeenCalledWith(expect.objectContaining({ invoice: '1' }))
   })
 })

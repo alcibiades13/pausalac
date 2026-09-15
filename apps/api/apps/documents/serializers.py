@@ -33,6 +33,10 @@ class DocumentSerializer(serializers.ModelSerializer):
             "content_type",
             "size_bytes",
             "tax_resolution",
+            "client",
+            "invoice",
+            "payment",
+            "tax_obligation",
             "uploaded_by_name",
             "created_at",
         ]
@@ -63,6 +67,30 @@ class DocumentSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         if value is not None and value.company_id != request.company.id:
             raise serializers.ValidationError("Poresko rešenje ne pripada ovoj kompaniji.")
+        return value
+
+    def validate_client(self, value):
+        request = self.context["request"]
+        if value is not None and value.company_id != request.company.id:
+            raise serializers.ValidationError("Klijent ne pripada ovoj kompaniji.")
+        return value
+
+    def validate_invoice(self, value):
+        request = self.context["request"]
+        if value is not None and value.company_id != request.company.id:
+            raise serializers.ValidationError("Faktura ne pripada ovoj kompaniji.")
+        return value
+
+    def validate_payment(self, value):
+        request = self.context["request"]
+        if value is not None and value.company_id != request.company.id:
+            raise serializers.ValidationError("Uplata ne pripada ovoj kompaniji.")
+        return value
+
+    def validate_tax_obligation(self, value):
+        request = self.context["request"]
+        if value is not None and value.company_id != request.company.id:
+            raise serializers.ValidationError("Poreska obaveza ne pripada ovoj kompaniji.")
         return value
 
     def create(self, validated_data):

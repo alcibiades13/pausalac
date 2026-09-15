@@ -4,6 +4,7 @@ import { Alert, Button } from '@pausalac/ui'
 import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
 import { listAdminDocuments, type AdminDocument } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+import { formatDate } from '@/lib/formatDate'
 
 const documents = ref<AdminDocument[]>([])
 const loading = ref(true)
@@ -20,7 +21,7 @@ const columns: AdminTableColumn<AdminDocument>[] = [
   {
     key: 'created_at',
     label: 'Datum',
-    format: (r) => new Date(r.created_at).toLocaleDateString('sr-RS'),
+    format: (r) => formatDate(r.created_at),
   },
 ]
 
