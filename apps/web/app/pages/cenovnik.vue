@@ -5,7 +5,7 @@ import Icon from '~/components/Icon.vue'
 import Kicker from '~/components/Kicker.vue'
 
 const { data: plans, pending, error } = usePublicPlans()
-const { t, tm } = useI18n()
+const { t, tm, rt } = useI18n()
 
 useHead({
   title: t('meta.cenovnik.title'),
@@ -47,7 +47,7 @@ useHead({
         <div class="flex flex-col gap-3">
           <Card
             v-for="(item, i) in tm('cenovnik.faq')"
-            :key="item.q"
+            :key="i"
             v-reveal
             :style="{ transitionDelay: `${i * 75}ms` }"
             class="flex gap-3"
@@ -56,8 +56,8 @@ useHead({
               <Icon name="check-circle" :size="16" />
             </span>
             <div>
-              <h3 class="font-medium text-navy">{{ item.q }}</h3>
-              <p class="mt-1 text-sm text-text-secondary">{{ item.a }}</p>
+              <h3 class="font-medium text-navy">{{ rt(item.q) }}</h3>
+              <p class="mt-1 text-sm text-text-secondary">{{ rt(item.a) }}</p>
             </div>
           </Card>
         </div>

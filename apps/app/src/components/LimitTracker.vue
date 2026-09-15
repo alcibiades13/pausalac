@@ -8,8 +8,13 @@ const props = defineProps<{
   tracker: LimitTrackerData
 }>()
 
-const BAR_VARIANT: Record<string, 'success' | 'warning' | 'danger'> = {
-  ok: 'success',
+// 'ok' (the common, default state — most companies most of the time)
+// renders in the neutral primary color rather than a saturated success
+// green: a calm "nothing to report" baseline that only escalates to a
+// real color once there's actually something worth flagging, matching
+// this session's move toward a muted palette with color used sparingly.
+const BAR_VARIANT: Record<string, 'primary' | 'warning' | 'danger'> = {
+  ok: 'primary',
   attention: 'warning',
   warning: 'warning',
   critical: 'danger',

@@ -8,7 +8,7 @@ import Kicker from '~/components/Kicker.vue'
 
 const config = useRuntimeConfig()
 const { data: plans } = usePublicPlans()
-const { t, tm } = useI18n()
+const { t, tm, rt } = useI18n()
 const localePath = useLocalePath()
 
 useHead({
@@ -18,10 +18,11 @@ useHead({
 
 // Icon names/step numbers aren't translatable content — kept as parallel,
 // index-matched arrays here rather than duplicated across every locale
-// file. `tm()` (not `t()`) returns the raw translated {title, body}
-// objects/arrays from i18n/locales/*.json as-is, which is what a plain
-// (non-ICU) JSON leaf already is — see @nuxtjs/i18n's "List rendering"
-// pattern.
+// file. `tm()` returns the raw {title, body} objects/arrays from
+// i18n/locales/*.json, but — found the hard way, it rendered the
+// compiled message AST as literal on-page text — each string LEAF still
+// needs `rt()` to resolve to a plain string; `tm()` alone is only safe
+// for the structural (array/object) shape.
 const PROBLEM_ICONS = ['card', 'trending-up', 'check-circle', 'clock']
 const MODULE_ICONS = ['module-invoices', 'module-clients', 'module-limits', 'module-kpo', 'module-obligations', 'module-documents']
 const STEP_ICONS = ['module-clients', 'check-circle', 'arrow-right']
@@ -36,9 +37,10 @@ const STEP_NUMBERS = ['01', '02', '03']
 
       <div class="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-10">
         <div class="flex flex-col gap-6 text-center lg:text-left">
-          <h1 class="font-display text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
-            <span class="text-navy">{{ t('home.hero.titleMain') }}</span>
-            <span class="text-text-secondary"> {{ t('home.hero.titleAccent') }}</span>
+          <h1 class="font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
+            <span class="text-navy">{{ t('home.hero.titleMain') }}</span>{{ ' ' }}<span class="text-text-secondary">{{
+              t('home.hero.titleAccent')
+            }}</span>
           </h1>
 
           <p class="max-w-xl text-lg text-text-secondary lg:mx-0">
@@ -77,7 +79,7 @@ const STEP_NUMBERS = ['01', '02', '03']
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card
           v-for="(card, i) in tm('home.problem.cards')"
-          :key="card.title"
+          :key="i"
           v-reveal
           :style="{ transitionDelay: `${i * 75}ms` }"
           class="flex flex-col gap-3 transition-shadow hover:shadow-[0_10px_40px_-10px_rgba(10,10,10,0.20)]"
@@ -85,8 +87,8 @@ const STEP_NUMBERS = ['01', '02', '03']
           <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background text-navy">
             <Icon :name="PROBLEM_ICONS[i]" :size="20" />
           </span>
-          <h3 class="font-display text-base font-semibold text-navy">{{ card.title }}</h3>
-          <p class="text-sm text-text-secondary">{{ card.body }}</p>
+          <h3 class="font-display text-base font-semibold text-navy">{{ rt(card.title) }}</h3>
+          <p class="text-sm text-text-secondary">{{ rt(card.body) }}</p>
         </Card>
       </div>
     </section>
@@ -105,7 +107,7 @@ const STEP_NUMBERS = ['01', '02', '03']
         <div class="mt-12 grid grid-cols-1 gap-x-10 sm:grid-cols-2">
           <div
             v-for="(item, i) in tm('home.modules.items')"
-            :key="item.title"
+            :key="i"
             v-reveal
             :style="{ transitionDelay: `${i * 60}ms` }"
             class="flex items-start gap-4 border-t border-white/10 py-6 first:border-t-0 sm:[&:nth-child(2)]:border-t-0"
@@ -114,8 +116,8 @@ const STEP_NUMBERS = ['01', '02', '03']
               <Icon :name="MODULE_ICONS[i]" :size="18" />
             </span>
             <div>
-              <h3 class="font-display text-base font-semibold">{{ item.title }}</h3>
-              <p class="mt-1 text-sm text-white/60">{{ item.body }}</p>
+              <h3 class="font-display text-base font-semibold">{{ rt(item.title) }}</h3>
+              <p class="mt-1 text-sm text-white/60">{{ rt(item.body) }}</p>
             </div>
           </div>
         </div>
@@ -144,7 +146,7 @@ const STEP_NUMBERS = ['01', '02', '03']
         />
         <div
           v-for="(item, i) in tm('home.steps.items')"
-          :key="item.title"
+          :key="i"
           v-reveal
           :style="{ transitionDelay: `${i * 100}ms` }"
           class="relative flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6"
@@ -155,8 +157,8 @@ const STEP_NUMBERS = ['01', '02', '03']
             </span>
             <span class="font-mono text-xs text-text-secondary">{{ STEP_NUMBERS[i] }}</span>
           </div>
-          <h3 class="font-medium text-navy">{{ item.title }}</h3>
-          <p class="text-sm text-text-secondary">{{ item.body }}</p>
+          <h3 class="font-medium text-navy">{{ rt(item.title) }}</h3>
+          <p class="text-sm text-text-secondary">{{ rt(item.body) }}</p>
         </div>
       </div>
     </section>
@@ -172,25 +174,29 @@ const STEP_NUMBERS = ['01', '02', '03']
           <h3 class="mb-4 text-sm font-semibold text-text-secondary">{{ t('home.comparison.withoutTitle') }}</h3>
           <ul class="flex flex-col gap-3">
             <li
-              v-for="item in tm('home.comparison.withoutItems')"
-              :key="item"
+              v-for="(item, i) in tm('home.comparison.withoutItems')"
+              :key="i"
               class="flex items-start gap-3 text-sm text-text-secondary"
             >
               <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-danger/10 text-danger">
                 <Icon name="x-mark" :size="12" />
               </span>
-              {{ item }}
+              {{ rt(item) }}
             </li>
           </ul>
         </div>
         <div v-reveal class="rounded-2xl border-2 border-navy bg-surface p-6">
           <h3 class="mb-4 text-sm font-semibold text-navy">{{ t('home.comparison.withTitle') }}</h3>
           <ul class="flex flex-col gap-3">
-            <li v-for="item in tm('home.comparison.withItems')" :key="item" class="flex items-start gap-3 text-sm text-navy">
+            <li
+              v-for="(item, i) in tm('home.comparison.withItems')"
+              :key="i"
+              class="flex items-start gap-3 text-sm text-navy"
+            >
               <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
                 <Icon name="check" :size="12" />
               </span>
-              {{ item }}
+              {{ rt(item) }}
             </li>
           </ul>
         </div>
@@ -232,11 +238,11 @@ const STEP_NUMBERS = ['01', '02', '03']
         <div class="flex flex-col justify-center gap-3 bg-background px-8 py-16 sm:px-12">
           <div
             v-for="(fact, i) in tm('home.finalCta.facts')"
-            :key="fact"
+            :key="i"
             :style="{ marginLeft: `${i * 1.25}rem` }"
             class="w-fit rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium text-navy shadow-[0_10px_40px_-10px_rgba(10,10,10,0.15)]"
           >
-            {{ fact }}
+            {{ rt(fact) }}
           </div>
         </div>
       </div>

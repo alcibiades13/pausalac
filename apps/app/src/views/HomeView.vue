@@ -130,6 +130,19 @@ onMounted(loadDashboard)
           </Card>
         </div>
 
+        <Card>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-navy">Limiti</span>
+            <RouterLink :to="{ name: 'limits' }" class="text-sm text-primary hover:underline">
+              Detaljno →
+            </RouterLink>
+          </div>
+          <div class="mt-4 grid grid-cols-1 gap-8 sm:grid-cols-2 sm:divide-x sm:divide-border">
+            <LimitTracker label="Paušalni limit" :tracker="dashboard.limits.pausal_limit" />
+            <LimitTracker label="PDV prag" :tracker="dashboard.limits.vat_threshold" class="sm:pl-8" />
+          </div>
+        </Card>
+
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Card>
             <Metric label="Fakturisano ove godine">
@@ -169,19 +182,6 @@ onMounted(loadDashboard)
             </p>
           </template>
           <p v-else class="mt-1 text-sm text-text-secondary">Nema predstojećih obaveza.</p>
-        </Card>
-
-        <Card>
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-navy">Limiti</span>
-            <RouterLink :to="{ name: 'limits' }" class="text-sm text-primary hover:underline">
-              Detaljno →
-            </RouterLink>
-          </div>
-          <div class="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <LimitTracker label="Paušalni limit" :tracker="dashboard.limits.pausal_limit" />
-            <LimitTracker label="PDV prag" :tracker="dashboard.limits.vat_threshold" />
-          </div>
         </Card>
 
         <Card v-if="dashboard.onboarding.percentage < 100">
