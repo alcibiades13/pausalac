@@ -7,13 +7,34 @@ import {
   createInvoice,
   getInvoice,
   updateInvoice,
+  type InvoiceDocumentType,
   type InvoiceDraftPayload,
 } from '@/services/invoices'
+import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
 import { ApiError } from '@/lib/api'
 
-const props = defineProps<{ id?: string }>()
+const props = withDefaults(
+  defineProps<{ id?: string; documentType?: InvoiceDocumentType }>(),
+  { documentType: 'invoice' },
+)
 const router = useRouter()
 const isEditing = computed(() => Boolean(props.id))
+// The type shown/sent while creating — once editing an existing draft,
+// the real type comes from the fetched invoice instead (see onMounted)
+// and is never re-sent as editable (apps/invoices/serializers.py rejects
+// changing it anyway).
+const documentType = ref<InvoiceDocumentType>(props.documentType)
+
+const FORM_TITLES: Record<InvoiceDocumentType, string> = {
+  invoice: 'Nova faktura',
+  profaktura: 'Nova profaktura',
+  avans: 'Novi avans',
+}
+const EDIT_TITLES: Record<InvoiceDocumentType, string> = {
+  invoice: 'Izmeni fakturu',
+  profaktura: 'Izmeni profakturu',
+  avans: 'Izmeni avans',
+}
 
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10)
@@ -74,6 +95,7 @@ onMounted(async () => {
         await router.replace({ name: 'invoice-detail', params: { id: invoice.id } })
         return
       }
+      documentType.value = invoice.document_type
       form.value = {
         client: invoice.client,
         issue_date: invoice.issue_date,
@@ -106,7 +128,7 @@ async function onSubmit() {
     const invoice =
       isEditing.value && props.id
         ? await updateInvoice(props.id, form.value)
-        : await createInvoice(form.value)
+        : await createInvoice({ ...form.value, document_type: documentType.value })
     await router.push({ name: 'invoice-detail', params: { id: invoice.id } })
   } catch (error) {
     if (error instanceof ApiError) {
@@ -127,9 +149,12 @@ async function onSubmit() {
 
 <template>
   <div>
-    <h1 class="mb-6 text-xl font-semibold text-navy">
-      {{ isEditing ? 'Izmeni fakturu' : 'Nova faktura' }}
-    </h1>
+    <div class="mb-6 flex items-center gap-3">
+      <h1 class="text-xl font-semibold text-navy">
+        {{ isEditing ? EDIT_TITLES[documentType] : FORM_TITLES[documentType] }}
+      </h1>
+      <DocumentTypeBadge v-if="documentType !== 'invoice'" :type="documentType" />
+    </div>
 
     <Card v-if="loading">
       <Skeleton :count="3" />

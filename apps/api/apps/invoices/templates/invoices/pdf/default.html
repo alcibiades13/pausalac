@@ -69,8 +69,9 @@
 <body>
   <div class="header">
     <div>
-      <div class="title">{{ invoice.invoice_number|default:"Faktura" }}</div>
+      <div class="title">{{ invoice.invoice_number|default:document_label }}</div>
       {% if is_draft %}<span class="draft-tag">NACRT — nije još izdata</span>{% endif %}
+      {% if document_type == "profaktura" %}<span class="draft-tag">Predračun — nije poreski dokument, ne predstavlja fakturu</span>{% endif %}
     </div>
   </div>
 

@@ -11,6 +11,8 @@ export type InvoiceStatus =
   | 'overdue'
   | 'cancelled'
 
+export type InvoiceDocumentType = 'invoice' | 'profaktura' | 'avans'
+
 export type InvoiceLineItemType = 'service' | 'product'
 
 export interface InvoiceLineItem {
@@ -30,6 +32,11 @@ export interface Invoice {
   client_email: string
   invoice_number: string | null
   status: InvoiceStatus
+  document_type: InvoiceDocumentType
+  converted_from: number | null
+  converted_from_number: string | null
+  converted_to: number | null
+  converted_to_number: string | null
   issue_date: string
   due_date: string
   service_date: string
@@ -47,6 +54,7 @@ export interface Invoice {
 
 export interface InvoiceDraftPayload {
   client: number
+  document_type?: InvoiceDocumentType
   issue_date: string
   due_date: string
   service_date: string
@@ -62,10 +70,12 @@ function currentCompanyId(): number {
   return id
 }
 
-export function listInvoices(options: { status?: InvoiceStatus } = {}): Promise<Paginated<Invoice>> {
+export function listInvoices(
+  options: { status?: InvoiceStatus; documentType?: InvoiceDocumentType } = {},
+): Promise<Paginated<Invoice>> {
   return apiFetch<Paginated<Invoice>>('invoices/', {
     companyId: currentCompanyId(),
-    params: { status: options.status },
+    params: { status: options.status, document_type: options.documentType },
   })
 }
 
@@ -91,6 +101,15 @@ export function issueInvoice(id: number | string): Promise<Invoice> {
 
 export function cancelInvoice(id: number | string): Promise<Invoice> {
   return apiFetch<Invoice>(`invoices/${id}/cancel/`, { method: 'POST', companyId: currentCompanyId() })
+}
+
+/**
+ * Profaktura -> new draft Invoice (Phase 6c) — the resulting invoice is a
+ * normal, independently editable draft; nothing about it stays linked to
+ * the source profaktura other than the one-way `converted_from` field.
+ */
+export function convertInvoice(id: number | string): Promise<Invoice> {
+  return apiFetch<Invoice>(`invoices/${id}/convert/`, { method: 'POST', companyId: currentCompanyId() })
 }
 
 /**

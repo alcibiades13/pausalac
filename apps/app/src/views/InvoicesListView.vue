@@ -1,22 +1,29 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { Button, Card, Alert, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
-import { listInvoices, type Invoice, type InvoiceStatus } from '@/services/invoices'
+import { listInvoices, type Invoice, type InvoiceDocumentType, type InvoiceStatus } from '@/services/invoices'
 import { STATUS_LABELS } from '@/lib/invoiceStatus'
+import { DOCUMENT_TYPE_LABELS } from '@/lib/documentType'
 import { ApiError } from '@/lib/api'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
+import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
 
 const invoices = ref<Invoice[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 const errorMessage = ref('')
 const statusFilter = ref<InvoiceStatus | ''>('')
+const documentTypeFilter = ref<InvoiceDocumentType | ''>('')
 
 const STATUS_OPTIONS = Object.entries(STATUS_LABELS) as [InvoiceStatus, string][]
+const DOCUMENT_TYPE_OPTIONS = Object.entries(DOCUMENT_TYPE_LABELS) as [InvoiceDocumentType, string][]
 
 async function load() {
   status.value = 'loading'
   try {
-    const page = await listInvoices({ status: statusFilter.value || undefined })
+    const page = await listInvoices({
+      status: statusFilter.value || undefined,
+      documentType: documentTypeFilter.value || undefined,
+    })
     invoices.value = page.results
     status.value = 'ready'
   } catch (error) {
@@ -27,28 +34,54 @@ async function load() {
 }
 
 onMounted(load)
-watch(statusFilter, load)
+watch([statusFilter, documentTypeFilter], load)
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-xl font-semibold text-navy">Fakture</h1>
-      <RouterLink :to="{ name: 'invoice-new' }">
-        <Button>+ Nova faktura</Button>
-      </RouterLink>
+      <!-- Three explicit buttons — a stand-in for Phase 6d's real global
+           quick-action FAB, which needs these routes to already exist
+           (docs/implementation-plan.md's own sequencing note). -->
+      <div class="flex flex-wrap gap-2">
+        <RouterLink :to="{ name: 'invoice-new' }">
+          <Button>+ Faktura</Button>
+        </RouterLink>
+        <RouterLink :to="{ name: 'invoice-new-profaktura' }">
+          <Button variant="secondary">+ Profaktura</Button>
+        </RouterLink>
+        <RouterLink :to="{ name: 'invoice-new-avans' }">
+          <Button variant="secondary">+ Avans</Button>
+        </RouterLink>
+      </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <label for="status-filter" class="text-sm text-text-secondary">Status:</label>
-      <select
-        id="status-filter"
-        v-model="statusFilter"
-        class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
-      >
-        <option value="">Sve</option>
-        <option v-for="[value, label] in STATUS_OPTIONS" :key="value" :value="value">{{ label }}</option>
-      </select>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="flex items-center gap-2">
+        <label for="status-filter" class="text-sm text-text-secondary">Status:</label>
+        <select
+          id="status-filter"
+          v-model="statusFilter"
+          class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <option value="">Sve</option>
+          <option v-for="[value, label] in STATUS_OPTIONS" :key="value" :value="value">{{ label }}</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <label for="document-type-filter" class="text-sm text-text-secondary">Tip:</label>
+        <select
+          id="document-type-filter"
+          v-model="documentTypeFilter"
+          class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <option value="">Svi</option>
+          <option v-for="[value, label] in DOCUMENT_TYPE_OPTIONS" :key="value" :value="value">
+            {{ label }}
+          </option>
+        </select>
+      </div>
     </div>
 
     <Alert v-if="status === 'error'" variant="danger">
@@ -88,6 +121,7 @@ watch(statusFilter, load)
             </div>
             <div class="flex items-center gap-3">
               <MoneyDisplay :amount="invoice.total" :currency="invoice.currency" />
+              <DocumentTypeBadge v-if="invoice.document_type !== 'invoice'" :type="invoice.document_type" />
               <InvoiceStatusBadge :status="invoice.status" />
             </div>
           </RouterLink>

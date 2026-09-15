@@ -14,6 +14,12 @@ const router = createRouter({
   routes: [
     { path: '/', component: { template: '<div/>' } },
     { path: '/fakture/nova', name: 'invoice-new', component: { template: '<div/>' } },
+    {
+      path: '/fakture/nova/profaktura',
+      name: 'invoice-new-profaktura',
+      component: { template: '<div/>' },
+    },
+    { path: '/fakture/nova/avans', name: 'invoice-new-avans', component: { template: '<div/>' } },
     { path: '/fakture/:id', name: 'invoice-detail', component: { template: '<div/>' } },
   ],
 })
@@ -43,6 +49,11 @@ describe('InvoicesListView', () => {
           client_email: 'klijent@primer.rs',
           invoice_number: 'INV-2026-001',
           status: 'issued',
+          document_type: 'invoice',
+          converted_from: null,
+          converted_from_number: null,
+          converted_to: null,
+          converted_to_number: null,
           issue_date: '2026-01-01',
           due_date: '2026-01-15',
           service_date: '2026-01-01',
@@ -74,5 +85,27 @@ describe('InvoicesListView', () => {
     const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Ne možemo trenutno.')
+  })
+
+  it('offers three explicit create buttons for the three document types', async () => {
+    vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('+ Faktura')
+    expect(wrapper.text()).toContain('+ Profaktura')
+    expect(wrapper.text()).toContain('+ Avans')
+  })
+
+  it('re-fetches with the selected document type when the type filter changes', async () => {
+    vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+    await flushPromises()
+
+    await wrapper.find('#document-type-filter').setValue('profaktura')
+    await flushPromises()
+
+    expect(listInvoices).toHaveBeenLastCalledWith(
+      expect.objectContaining({ documentType: 'profaktura' }),
+    )
   })
 })

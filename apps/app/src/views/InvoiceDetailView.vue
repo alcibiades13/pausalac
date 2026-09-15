@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Button, Card, Alert, Input, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import {
   getInvoice,
   issueInvoice,
   cancelInvoice,
+  convertInvoice,
   sendInvoice,
   invoicePdfUrl,
   type Invoice,
@@ -13,14 +15,27 @@ import { listPayments, recordPayment, type Payment } from '@/services/payments'
 import { canTransitionTo, isPayable } from '@/lib/invoiceStatus'
 import { ApiError } from '@/lib/api'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
+import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
 
 const props = defineProps<{ id: string }>()
+const router = useRouter()
 
 const invoice = ref<Invoice | null>(null)
 const payments = ref<Payment[]>([])
 const loadStatus = ref<'loading' | 'ready' | 'error'>('loading')
 const errorMessage = ref('')
-const actionLoading = ref<'issue' | 'cancel' | null>(null)
+const actionLoading = ref<'issue' | 'cancel' | 'convert' | null>(null)
+
+// A profaktura is a non-binding quote (Phase 6c) — never payable, and
+// convertible into a real invoice only once, while issued/sent.
+const isProfaktura = computed(() => invoice.value?.document_type === 'profaktura')
+const canConvert = computed(
+  () =>
+    isProfaktura.value &&
+    invoice.value !== null &&
+    (invoice.value.status === 'issued' || invoice.value.status === 'sent') &&
+    invoice.value.converted_to === null,
+)
 
 const totalPaid = computed(() =>
   payments.value.reduce((sum, p) => sum + Number(p.amount), 0),
@@ -63,6 +78,19 @@ async function onCancel() {
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Faktura nije mogla da se stornira.'
   } finally {
+    actionLoading.value = null
+  }
+}
+
+async function onConvert() {
+  actionLoading.value = 'convert'
+  errorMessage.value = ''
+  try {
+    const newInvoice = await convertInvoice(props.id)
+    await router.push({ name: 'invoice-detail', params: { id: newInvoice.id } })
+  } catch (error) {
+    errorMessage.value =
+      error instanceof ApiError ? error.message : 'Profaktura nije mogla da se konvertuje.'
     actionLoading.value = null
   }
 }
@@ -171,10 +199,33 @@ onMounted(load)
           </h1>
           <p class="text-sm text-text-secondary">{{ invoice.client_name }}</p>
         </div>
-        <InvoiceStatusBadge :status="invoice.status" />
+        <div class="flex items-center gap-2">
+          <DocumentTypeBadge v-if="invoice.document_type !== 'invoice'" :type="invoice.document_type" />
+          <InvoiceStatusBadge :status="invoice.status" />
+        </div>
       </div>
 
       <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
+
+      <Alert v-if="invoice.converted_from_number" variant="info">
+        Kreirano konverzijom iz profakture
+        <RouterLink
+          :to="{ name: 'invoice-detail', params: { id: invoice.converted_from } }"
+          class="underline"
+        >
+          {{ invoice.converted_from_number }}
+        </RouterLink>
+      </Alert>
+
+      <Alert v-if="invoice.converted_to" variant="info">
+        Konvertovano u fakturu
+        <RouterLink
+          :to="{ name: 'invoice-detail', params: { id: invoice.converted_to } }"
+          class="underline"
+        >
+          {{ invoice.converted_to_number }}
+        </RouterLink>
+      </Alert>
 
       <Card>
         <dl class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
@@ -218,7 +269,9 @@ onMounted(load)
         <p class="text-sm text-text-secondary">{{ invoice.notes }}</p>
       </Card>
 
-      <Card v-if="payments.length || isPayable(invoice.status) || invoice.status === 'paid'">
+      <Card
+        v-if="!isProfaktura && (payments.length || isPayable(invoice.status) || invoice.status === 'paid')"
+      >
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-base font-semibold text-navy">Uplate</h2>
           <p v-if="isPayable(invoice.status)" class="text-sm text-text-secondary">
@@ -310,12 +363,15 @@ onMounted(load)
           Pošalji fakturu
         </Button>
         <Button
-          v-if="isPayable(invoice.status)"
+          v-if="!isProfaktura && isPayable(invoice.status)"
           variant="secondary"
           :disabled="showPaymentForm"
           @click="openPaymentForm"
         >
           Evidentiraj uplatu
+        </Button>
+        <Button v-if="canConvert" :loading="actionLoading === 'convert'" @click="onConvert">
+          Konvertuj u fakturu
         </Button>
         <Button
           v-if="canTransitionTo(invoice.status, 'cancelled')"

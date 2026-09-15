@@ -51,6 +51,11 @@ function invoiceResult(): Invoice {
     client_email: '',
     invoice_number: null,
     status: 'draft',
+    document_type: 'invoice',
+    converted_from: null,
+    converted_from_number: null,
+    converted_to: null,
+    converted_to_number: null,
     issue_date: '2026-01-01',
     due_date: '2026-01-15',
     service_date: '2026-01-01',
@@ -109,5 +114,49 @@ describe('InvoiceFormView', () => {
         items: [expect.objectContaining({ item_type: 'product', description: 'Widget' })],
       }),
     )
+  })
+
+  it('defaults to document_type invoice and the "Nova faktura" heading when no type prop is given', async () => {
+    vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
+    const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Nova faktura')
+
+    await wrapper.find('input[type="text"]').setValue('X')
+    await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
+    expect(createInvoice).toHaveBeenCalledWith(expect.objectContaining({ document_type: 'invoice' }))
+  })
+
+  it('shows the profaktura heading and sends document_type profaktura when created via that route', async () => {
+    vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
+    const wrapper = mount(InvoiceFormView, {
+      props: { documentType: 'profaktura' },
+      global: { plugins: [router] },
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Nova profaktura')
+
+    await wrapper.find('input[type="text"]').setValue('X')
+    await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
+    expect(createInvoice).toHaveBeenCalledWith(
+      expect.objectContaining({ document_type: 'profaktura' }),
+    )
+  })
+
+  it('shows the avans heading and sends document_type avans when created via that route', async () => {
+    vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
+    const wrapper = mount(InvoiceFormView, {
+      props: { documentType: 'avans' },
+      global: { plugins: [router] },
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Novi avans')
+
+    await wrapper.find('input[type="text"]').setValue('X')
+    await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
+    expect(createInvoice).toHaveBeenCalledWith(expect.objectContaining({ document_type: 'avans' }))
   })
 })

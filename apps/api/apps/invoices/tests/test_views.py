@@ -89,6 +89,110 @@ class InvoiceCrudTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+class InvoiceDocumentTypeApiTests(TestCase):
+    """Phase 6c — the API-boundary half of the document_type behavior:
+    creation, filtering, immutability, and the convert action. Ledger-
+    level behavior (KPO/FinancialEvent/limits) is covered directly against
+    InvoiceService in test_document_types.py."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        self.company = Company.objects.create(name="Firma A")
+        self.client_obj = Client.objects.create(company=self.company, name="Klijent A")
+        Membership.objects.create(user=self.owner, company=self.company)
+        self.client.login(username="owner@pausalac.rs", password="s3cr3t-pass")
+        self.headers = {"HTTP_X_COMPANY_ID": str(self.company.id)}
+        self.list_url = reverse("invoice-list", kwargs={"version": "v1"})
+
+    def _create(self, document_type=None):
+        payload = {
+            "client": self.client_obj.id,
+            **_dates(),
+            "items": [{"description": "X", "quantity": "1", "unit_price": "1000"}],
+        }
+        if document_type is not None:
+            payload["document_type"] = document_type
+        return self.client.post(
+            self.list_url, payload, content_type="application/json", **self.headers
+        )
+
+    def test_create_without_document_type_defaults_to_invoice(self):
+        response = self._create()
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(response.json()["document_type"], "invoice")
+
+    def test_create_profaktura_and_avans(self):
+        profaktura = self._create("profaktura")
+        avans = self._create("avans")
+        self.assertEqual(profaktura.json()["document_type"], "profaktura")
+        self.assertEqual(avans.json()["document_type"], "avans")
+
+    def test_filter_by_document_type(self):
+        self._create("invoice")
+        self._create("profaktura")
+        self._create("profaktura")
+
+        response = self.client.get(self.list_url, {"document_type": "profaktura"}, **self.headers)
+        results = response.json()["results"]
+        self.assertEqual(len(results), 2)
+        self.assertTrue(all(r["document_type"] == "profaktura" for r in results))
+
+    def test_document_type_cannot_be_changed_after_creation(self):
+        invoice_id = self._create("profaktura").json()["id"]
+        detail_url = reverse("invoice-detail", kwargs={"version": "v1", "pk": invoice_id})
+        response = self.client.patch(
+            detail_url,
+            {"document_type": "invoice"},
+            content_type="application/json",
+            **self.headers,
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_convert_issued_profaktura_to_invoice(self):
+        profaktura_id = self._create("profaktura").json()["id"]
+        issue_url = reverse("invoice-issue", kwargs={"version": "v1", "pk": profaktura_id})
+        self.client.post(issue_url, **self.headers)
+
+        convert_url = reverse("invoice-convert", kwargs={"version": "v1", "pk": profaktura_id})
+        response = self.client.post(convert_url, **self.headers)
+        self.assertEqual(response.status_code, 201, response.content)
+        body = response.json()
+        self.assertEqual(body["document_type"], "invoice")
+        self.assertEqual(body["status"], "draft")
+        self.assertEqual(body["converted_from"], profaktura_id)
+
+        profaktura_detail = self.client.get(
+            reverse("invoice-detail", kwargs={"version": "v1", "pk": profaktura_id}),
+            **self.headers,
+        ).json()
+        self.assertEqual(profaktura_detail["converted_to"], body["id"])
+
+    def test_convert_draft_profaktura_is_rejected(self):
+        profaktura_id = self._create("profaktura").json()["id"]
+        convert_url = reverse("invoice-convert", kwargs={"version": "v1", "pk": profaktura_id})
+        response = self.client.post(convert_url, **self.headers)
+        self.assertEqual(response.status_code, 400)
+
+    def test_cannot_record_payment_against_profaktura(self):
+        profaktura_id = self._create("profaktura").json()["id"]
+        issue_url = reverse("invoice-issue", kwargs={"version": "v1", "pk": profaktura_id})
+        self.client.post(issue_url, **self.headers)
+
+        response = self.client.post(
+            reverse("payment-list", kwargs={"version": "v1"}),
+            {
+                "invoice": profaktura_id,
+                "amount": "1000.00",
+                "paid_at": timezone.now().date().isoformat(),
+                "method": "bank_transfer",
+                "notes": "",
+            },
+            content_type="application/json",
+            **self.headers,
+        )
+        self.assertEqual(response.status_code, 400)
+
+
 class InvoiceTenantIsolationTests(TestCase):
     def setUp(self):
         self.owner_a = User.objects.create_user(email="a@pausalac.rs", password="s3cr3t-pass")

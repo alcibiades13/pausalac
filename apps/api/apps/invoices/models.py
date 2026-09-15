@@ -27,6 +27,23 @@ class Invoice(models.Model):
         OVERDUE = "overdue", "Kasni"
         CANCELLED = "cancelled", "Stornirana"
 
+    class DocumentType(models.TextChoices):
+        """
+        Phase 6c (master prompt §7/blueprint §5 name these only as two bare
+        quick-create menu labels — neither is otherwise specified anywhere
+        in either spec document; this whole dimension is genuine product
+        design, not derived spec — see docs/decisions-log.md). PROFORMA is
+        non-binding (InvoiceService.issue/cancel skip FinancialEvent/KPO
+        for it, and PaymentService rejects payments against it); ADVANCE
+        behaves exactly like INVOICE everywhere (user-confirmed: an
+        advance payment counts as promet when issued, same as a real
+        invoice) — it exists purely as a numbering/labeling dimension.
+        """
+
+        INVOICE = "invoice", "Faktura"
+        PROFORMA = "profaktura", "Profaktura"
+        ADVANCE = "avans", "Avans"
+
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="invoices")
     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="invoices")
 
@@ -37,6 +54,19 @@ class Invoice(models.Model):
     invoice_number = models.CharField(max_length=32, null=True, blank=True)
 
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
+    document_type = models.CharField(
+        max_length=20, choices=DocumentType.choices, default=DocumentType.INVOICE
+    )
+    # Set only by InvoiceService.convert_to_invoice, on the resulting real
+    # Invoice — points back at the Profaktura it was converted from.
+    # Nothing but that one action ever writes this field.
+    converted_from = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversions",
+    )
 
     issue_date = models.DateField("datum izdavanja")
     due_date = models.DateField("rok plaćanja")
@@ -91,6 +121,12 @@ class Invoice(models.Model):
                 ),
                 name="invoice_status_valid",
             ),
+            # Same hardcoded-list convention as invoice_status_valid above —
+            # keep in sync with DocumentType.choices if a type is ever added.
+            models.CheckConstraint(
+                condition=models.Q(document_type__in=["invoice", "profaktura", "avans"]),
+                name="invoice_document_type_valid",
+            ),
         ]
 
     def __str__(self) -> str:
@@ -125,14 +161,19 @@ class InvoiceLineItem(models.Model):
 
 class InvoiceSequence(models.Model):
     """
-    One counter row per (company, year) — never exposed via the API.
-    apps.invoices.numbering.assign_invoice_number is the only writer,
-    always inside `select_for_update()` to stay race-safe under
-    concurrent invoice issuance (master prompt §95).
+    One counter row per (company, year, document_type) — never exposed via
+    the API. apps.invoices.numbering.assign_invoice_number is the only
+    writer, always inside `select_for_update()` to stay race-safe under
+    concurrent invoice issuance (master prompt §95). Phase 6c: each
+    document type gets its own independent yearly counter/prefix rather
+    than sharing one — see apps.invoices.numbering.
     """
 
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="invoice_sequences")
     year = models.PositiveIntegerField()
+    document_type = models.CharField(
+        max_length=20, choices=Invoice.DocumentType.choices, default=Invoice.DocumentType.INVOICE
+    )
     last_number = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -140,12 +181,13 @@ class InvoiceSequence(models.Model):
         verbose_name_plural = "sekvence brojeva faktura"
         constraints = [
             models.UniqueConstraint(
-                fields=["company", "year"], name="unique_sequence_per_company_year"
+                fields=["company", "year", "document_type"],
+                name="unique_sequence_per_company_year_type",
             )
         ]
 
     def __str__(self) -> str:
-        return f"{self.company_id} / {self.year} -> {self.last_number}"
+        return f"{self.company_id} / {self.year} / {self.document_type} -> {self.last_number}"
 
 
 class FinancialEvent(models.Model):

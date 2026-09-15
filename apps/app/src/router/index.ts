@@ -80,6 +80,18 @@ const router = createRouter({
           component: () => import('@/views/InvoiceFormView.vue'),
         },
         {
+          path: 'fakture/nova/profaktura',
+          name: 'invoice-new-profaktura',
+          component: () => import('@/views/InvoiceFormView.vue'),
+          props: { documentType: 'profaktura' },
+        },
+        {
+          path: 'fakture/nova/avans',
+          name: 'invoice-new-avans',
+          component: () => import('@/views/InvoiceFormView.vue'),
+          props: { documentType: 'avans' },
+        },
+        {
           path: 'fakture/:id/izmeni',
           name: 'invoice-edit',
           component: () => import('@/views/InvoiceFormView.vue'),

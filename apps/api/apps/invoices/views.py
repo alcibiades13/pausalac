@@ -29,7 +29,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
     serializer_class = InvoiceSerializer
     http_method_names = ["get", "post", "patch", "head", "options"]
-    filterset_fields = ["status", "client"]
+    filterset_fields = ["status", "client", "document_type"]
     search_fields = ["invoice_number", "notes"]
     ordering_fields = ["issue_date", "due_date", "created_at"]
 
@@ -45,9 +45,13 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             "issue": "edit_invoice",
             "send": "edit_invoice",
             "cancel": "cancel_invoice",
+            # Converting a Profaktura creates a new invoice, so it's gated
+            # exactly like `create` (Phase 6c) — same codename, same
+            # entitlement check below.
+            "convert": "create_invoice",
         }[self.action]
         gates = [permissions.IsAuthenticated(), HasCompanyPermission(codename)()]
-        if self.action == "create":
+        if self.action in ("create", "convert"):
             # Phase 5's one real entitlement-enforcement point (master
             # prompt §104: "backend must enforce") — added alongside the
             # RBAC check above, not instead of it. Deliberately not swept
@@ -84,6 +88,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             company=self.request.company,
             invoice_id=invoice.id,
+            document_type=invoice.document_type,
         )
 
     @action(detail=True, methods=["post"])
@@ -94,6 +99,16 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         except InvalidTransitionError as exc:
             raise exceptions.ValidationError(str(exc)) from exc
         return Response(self.get_serializer(invoice).data)
+
+    @action(detail=True, methods=["post"])
+    def convert(self, request, pk=None, *args, **kwargs):
+        """Profaktura -> new draft Invoice (Phase 6c) — see InvoiceService.convert_to_invoice."""
+        profaktura = self.get_object()
+        try:
+            invoice = InvoiceService.convert_to_invoice(profaktura, actor=request.user)
+        except InvalidTransitionError as exc:
+            raise exceptions.ValidationError(str(exc)) from exc
+        return Response(self.get_serializer(invoice).data, status=201)
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None, *args, **kwargs):
@@ -119,9 +134,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     def send(self, request, pk=None, *args, **kwargs):
         invoice = self.get_object()
         if invoice.status != Invoice.Status.ISSUED:
-            raise exceptions.ValidationError(
-                "Samo izdata faktura može da se pošalje klijentu."
-            )
+            raise exceptions.ValidationError("Samo izdata faktura može da se pošalje klijentu.")
         recipient_email = request.data.get("recipient_email") or invoice.client.email
         if not recipient_email:
             raise exceptions.ValidationError(

@@ -23,6 +23,11 @@ class InvoiceSerializer(serializers.ModelSerializer):
     items = InvoiceLineItemSerializer(many=True, required=False)
     client_name = serializers.CharField(source="client.name", read_only=True)
     client_email = serializers.CharField(source="client.email", read_only=True)
+    converted_from_number = serializers.CharField(
+        source="converted_from.invoice_number", read_only=True, default=None
+    )
+    converted_to = serializers.SerializerMethodField()
+    converted_to_number = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
@@ -33,6 +38,11 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "client_email",
             "invoice_number",
             "status",
+            "document_type",
+            "converted_from",
+            "converted_from_number",
+            "converted_to",
+            "converted_to_number",
             "issue_date",
             "due_date",
             "service_date",
@@ -51,6 +61,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "id",
             "invoice_number",
             "status",
+            "converted_from",
             "total",
             "issued_at",
             "sent_at",
@@ -59,6 +70,16 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def get_converted_to(self, invoice):
+        # At most one conversion is ever created (InvoiceService.
+        # convert_to_invoice refuses a second one) — .first() is enough.
+        converted = invoice.conversions.first()
+        return converted.id if converted else None
+
+    def get_converted_to_number(self, invoice):
+        converted = invoice.conversions.first()
+        return converted.invoice_number if converted else None
 
     def validate_client(self, value):
         # A PrimaryKeyRelatedField's default queryset (Client.objects.all())
@@ -76,6 +97,14 @@ class InvoiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"items": "Faktura mora imati bar jednu stavku."})
         if items is not None and len(items) == 0:
             raise serializers.ValidationError({"items": "Faktura mora imati bar jednu stavku."})
+        if (
+            self.instance is not None
+            and "document_type" in attrs
+            and attrs["document_type"] != self.instance.document_type
+        ):
+            raise serializers.ValidationError(
+                {"document_type": "Tip dokumenta ne može da se menja nakon kreiranja."}
+            )
         return attrs
 
     def create(self, validated_data):

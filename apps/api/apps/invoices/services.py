@@ -5,6 +5,7 @@ explicitly) — views stay thin, all state-changing logic lives here.
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 
 from django.db import transaction
@@ -16,6 +17,7 @@ from .models import FinancialEvent, Invoice, InvoiceLineItem
 from .numbering import assign_invoice_number
 
 Status = Invoice.Status
+DocumentType = Invoice.DocumentType
 
 # VIEWED joins this once view-tracking exists to drive it. A sent (or
 # overdue) invoice can still be cancelled — voiding something the client
@@ -123,20 +125,26 @@ class InvoiceService:
         invoice.issued_at = timezone.now()
         invoice.save(update_fields=["invoice_number", "status", "issued_at", "updated_at"])
 
-        FinancialEvent.objects.create(
-            company=invoice.company,
-            invoice=invoice,
-            event_type=FinancialEvent.EventType.INVOICE_ISSUED,
-            amount=invoice.total,
-            currency=invoice.currency,
-        )
-        # Lazy import: apps.kpo depends on apps.invoices (domain-list
-        # order), so a module-level import the other way would invert
-        # that direction. Deliberate, contained exception — same pattern
-        # as CompanyViewSet.onboarding's lazy Client import (Phase 2a).
-        from apps.kpo.services import KPOService
+        # Profaktura is a non-binding quote (Phase 6c, docs/decisions-log.md)
+        # — no revenue is ever recognized for it, so it must never create a
+        # FinancialEvent/KPOEntry. Avans is deliberately NOT excluded here:
+        # user-confirmed it behaves exactly like a real invoice for ledger/
+        # turnover-limit purposes.
+        if invoice.document_type != Invoice.DocumentType.PROFORMA:
+            FinancialEvent.objects.create(
+                company=invoice.company,
+                invoice=invoice,
+                event_type=FinancialEvent.EventType.INVOICE_ISSUED,
+                amount=invoice.total,
+                currency=invoice.currency,
+            )
+            # Lazy import: apps.kpo depends on apps.invoices (domain-list
+            # order), so a module-level import the other way would invert
+            # that direction. Deliberate, contained exception — same pattern
+            # as CompanyViewSet.onboarding's lazy Client import (Phase 2a).
+            from apps.kpo.services import KPOService
 
-        KPOService.record_issued(invoice)
+            KPOService.record_issued(invoice)
         AuditService.log(
             actor=actor,
             company=invoice.company,
@@ -166,10 +174,12 @@ class InvoiceService:
         invoice.cancelled_at = timezone.now()
         invoice.save(update_fields=["status", "cancelled_at", "updated_at"])
 
-        if was_ever_issued:
+        if was_ever_issued and invoice.document_type != Invoice.DocumentType.PROFORMA:
             # A cancelled draft never counted toward anything — only
             # reverse the ledger impact of an invoice that was actually
             # issued (master prompt §97: inclusion/exclusion must be explicit).
+            # Profaktura never created a FinancialEvent/KPOEntry in issue()
+            # above, so there's nothing to reverse here either.
             FinancialEvent.objects.create(
                 company=invoice.company,
                 invoice=invoice,
@@ -224,9 +234,7 @@ class InvoiceService:
         # Lazy import — apps.analytics sits after apps.invoices in DOMAIN_APPS.
         from apps.analytics.tracking import track_event
 
-        track_event(
-            "invoice_sent", user=actor, company=invoice.company, invoice_id=invoice.id
-        )
+        track_event("invoice_sent", user=actor, company=invoice.company, invoice_id=invoice.id)
         return invoice
 
     @staticmethod
@@ -237,11 +245,13 @@ class InvoiceService:
         apps.invoices.tasks.mark_overdue_invoices_task (Celery Beat) and
         the `check_overdue_invoices` management command, never duplicated
         between the two. No FinancialEvent: this is a status/timestamp
-        change only, not a cash or revenue event.
+        change only, not a cash or revenue event. Profaktura is excluded —
+        a non-binding quote doesn't "go overdue" in any meaningful sense
+        (Phase 6c); Avans stays included, same as a regular invoice.
         """
         candidates = Invoice.objects.filter(
             status__in=OVERDUE_ELIGIBLE_STATUSES, due_date__lt=timezone.now().date()
-        )
+        ).exclude(document_type=Invoice.DocumentType.PROFORMA)
         count = 0
         for invoice in candidates:
             old_status = invoice.status
@@ -282,3 +292,58 @@ class InvoiceService:
             track_event("invoice_overdue", company=invoice.company, invoice_id=invoice.id)
             count += 1
         return count
+
+    @staticmethod
+    @transaction.atomic
+    def convert_to_invoice(profaktura: Invoice, actor) -> Invoice:
+        """
+        Turns an issued/sent Profaktura into a real, independent draft
+        Invoice (Phase 6c) — never a settlement/netting mechanism, just a
+        one-time copy. The Profaktura itself is untouched (still ISSUED/
+        SENT, a historical document, not consumed) other than gaining a
+        reverse `conversions` row. Allowed only once per Profaktura — the
+        conversions.exists() check — to stop duplicate real invoices from
+        being created by mistake; the caller is expected to show the
+        already-converted invoice instead of the action once this fires.
+        """
+        if profaktura.document_type != DocumentType.PROFORMA:
+            raise InvalidTransitionError("Samo profaktura može da se konvertuje u fakturu.")
+        if profaktura.status not in (Status.ISSUED, Status.SENT):
+            raise InvalidTransitionError(
+                "Profaktura mora biti izdata da bi se konvertovala u fakturu."
+            )
+        if profaktura.conversions.exists():
+            raise InvalidTransitionError("Ova profaktura je već konvertovana u fakturu.")
+
+        line_items = [
+            {
+                "description": item.description,
+                "item_type": item.item_type,
+                "quantity": item.quantity,
+                "unit_price": item.unit_price,
+            }
+            for item in profaktura.items.all()
+        ]
+        today = timezone.now().date()
+        invoice = InvoiceService.create_draft(
+            company=profaktura.company,
+            client=profaktura.client,
+            line_items=line_items,
+            currency=profaktura.currency,
+            issue_date=today,
+            due_date=today + timedelta(days=15),
+            service_date=today,
+            notes=profaktura.notes,
+            document_type=DocumentType.INVOICE,
+            converted_from=profaktura,
+        )
+        AuditService.log(
+            actor=actor,
+            company=profaktura.company,
+            entity_type="invoice",
+            entity_id=invoice.id,
+            action="converted_from_profaktura",
+            old_value={"profaktura_id": profaktura.id},
+            new_value={"invoice_id": invoice.id},
+        )
+        return invoice

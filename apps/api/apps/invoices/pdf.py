@@ -45,6 +45,11 @@ def render_invoice_pdf(invoice, *, template_name: str = "invoices/pdf/default.ht
         ],
         "total_formatted": format_money(invoice.total),
         "is_draft": invoice.status == invoice.Status.DRAFT,
+        # Phase 6c: Profaktura/Avans reuse this same template rather than
+        # a separate one per type (pdf.py's own template_name seam isn't
+        # justified yet by anything more than a title/disclaimer change).
+        "document_type": invoice.document_type,
+        "document_label": invoice.get_document_type_display(),
     }
     html = render_to_string(template_name, context)
     return HTML(string=html).write_pdf()

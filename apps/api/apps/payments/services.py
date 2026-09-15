@@ -51,6 +51,10 @@ class PaymentService:
             raise InvalidPaymentError(
                 f"Faktura u statusu '{invoice.status}' ne može da primi uplatu."
             )
+        if invoice.document_type == Invoice.DocumentType.PROFORMA:
+            # A profaktura is a non-binding quote (Phase 6c) — it's never
+            # "paid" in the ledger sense, regardless of its status.
+            raise InvalidPaymentError("Profaktura ne može da primi uplatu.")
         if amount <= 0:
             raise InvalidPaymentError("Iznos uplate mora biti veći od nule.")
 
