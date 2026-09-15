@@ -5,6 +5,7 @@ import { Button } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
 import { listNotifications } from '@/services/notifications'
+import MobileBottomNav from './MobileBottomNav.vue'
 
 const auth = useAuthStore()
 const company = useCompanyStore()
@@ -22,7 +23,6 @@ const NAV_LINKS = [
   { name: 'accounting', label: 'Računovođa' },
 ]
 
-const menuOpen = ref(false)
 const unreadCount = ref(0)
 
 // Deliberately not `class="..." active-class="..."`: RouterLink appends
@@ -67,7 +67,6 @@ onMounted(refreshUnreadCount)
 watch(
   () => route.fullPath,
   () => {
-    menuOpen.value = false
     refreshUnreadCount()
   },
 )
@@ -140,53 +139,15 @@ async function onLogout() {
             {{ unreadCount > 9 ? '9+' : unreadCount }}
           </span>
         </RouterLink>
-
-        <!-- Mobile: a single hamburger toggle instead of cramming every
-             link into the header row (mobile-first — never let the nav
-             force the header to grow or wrap). -->
-        <button
-          type="button"
-          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-navy hover:bg-background sm:hidden"
-          :aria-expanded="menuOpen"
-          aria-label="Meni"
-          @click="menuOpen = !menuOpen"
-        >
-          <svg v-if="!menuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
       </div>
-
-      <nav v-if="menuOpen" class="flex flex-col border-t border-border px-4 py-2 sm:hidden">
-        <RouterLink
-          v-for="link in NAV_LINKS"
-          :key="link.name"
-          :to="{ name: link.name }"
-          :class="navLinkClass(link.name, true)"
-        >
-          {{ link.label }}
-        </RouterLink>
-        <RouterLink :to="{ name: 'settings' }" :class="navLinkClass('settings', true)">
-          Podešavanja
-        </RouterLink>
-        <button
-          type="button"
-          class="rounded-lg px-2 py-2.5 text-left text-sm text-text-secondary hover:bg-background hover:text-navy"
-          @click="onLogout"
-        >
-          Odjavi se
-        </button>
-      </nav>
     </header>
-    <main class="mx-auto max-w-5xl px-4 py-8">
+    <main class="mx-auto max-w-5xl px-4 py-8 pb-24 sm:pb-8">
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">
           <component :is="Component" />
         </Transition>
       </RouterView>
     </main>
+    <MobileBottomNav />
   </div>
 </template>

@@ -41,10 +41,10 @@ watch([statusFilter, documentTypeFilter], load)
   <div class="flex flex-col gap-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-xl font-semibold text-navy">Fakture</h1>
-      <!-- Three explicit buttons — a stand-in for Phase 6d's real global
-           quick-action FAB, which needs these routes to already exist
-           (docs/implementation-plan.md's own sequencing note). -->
-      <div class="flex flex-wrap gap-2">
+      <!-- Desktop-only: on mobile these three actions are covered by the
+           global FAB (Phase 6d, MobileBottomNav.vue) — this row was
+           originally a temporary stand-in for it (docs/decisions-log.md). -->
+      <div class="hidden flex-wrap gap-2 sm:flex">
         <RouterLink :to="{ name: 'invoice-new' }">
           <Button>+ Faktura</Button>
         </RouterLink>
