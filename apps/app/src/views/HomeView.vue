@@ -7,6 +7,7 @@ import { createCompany } from '@/services/companies'
 import { getDashboard, type Dashboard } from '@/services/analytics'
 import { ApiError } from '@/lib/api'
 import AttentionItem from '@/components/AttentionItem.vue'
+import LimitTracker from '@/components/LimitTracker.vue'
 
 const auth = useAuthStore()
 const company = useCompanyStore()
@@ -177,15 +178,9 @@ onMounted(loadDashboard)
               Detaljno →
             </RouterLink>
           </div>
-          <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div class="text-sm text-text-secondary">
-              Paušalni limit
-              <span class="ml-1 font-semibold text-navy">{{ dashboard.limits.pausal_limit.percentage }}%</span>
-            </div>
-            <div class="text-sm text-text-secondary">
-              PDV prag
-              <span class="ml-1 font-semibold text-navy">{{ dashboard.limits.vat_threshold.percentage }}%</span>
-            </div>
+          <div class="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <LimitTracker label="Paušalni limit" :tracker="dashboard.limits.pausal_limit" />
+            <LimitTracker label="PDV prag" :tracker="dashboard.limits.vat_threshold" />
           </div>
         </Card>
 

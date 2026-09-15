@@ -150,7 +150,7 @@ describe('HomeView (dashboard)', () => {
     expect(wrapper.text()).not.toContain('Dovrši podešavanje')
   })
 
-  it('shows the compact limits card with both percentages', async () => {
+  it('shows both limits with a real progress bar each, not just bare percentages', async () => {
     vi.mocked(getDashboard).mockResolvedValue({
       business_health: { status: 'ok', reasons: [] },
       attention: [],
@@ -163,8 +163,11 @@ describe('HomeView (dashboard)', () => {
     const wrapper = mountHome()
     await flushPromises()
     expect(wrapper.text()).toContain('Limiti')
+    expect(wrapper.text()).toContain('Paušalni limit')
+    expect(wrapper.text()).toContain('PDV prag')
     expect(wrapper.text()).toContain('47%')
     expect(wrapper.text()).toContain('12%')
+    expect(wrapper.findAll('[role="progressbar"]')).toHaveLength(2)
   })
 
   it('shows the next obligation card when one exists, flagging overdue', async () => {

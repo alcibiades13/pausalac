@@ -21,43 +21,28 @@ const localePath = useLocalePath()
           <span class="font-display text-base font-semibold text-navy">Pausalac</span>
         </NuxtLink>
 
-        <nav class="hidden items-center gap-1 sm:flex" :aria-label="$t('nav.aplikacija') + ' / ' + $t('nav.cenovnik')">
+        <nav class="hidden items-center gap-1 sm:flex" :aria-label="$t('nav.cenovnik')">
           <NuxtLink
             :to="localePath('/cenovnik')"
             class="rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary"
           >
             {{ $t('nav.cenovnik') }}
           </NuxtLink>
-          <a
-            :href="config.public.appUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary"
-          >
-            {{ $t('nav.aplikacija') }}
-          </a>
         </nav>
 
         <div class="flex items-center gap-3">
           <LanguageSwitcher class="hidden sm:flex" />
-          <template v-if="isLoggedIn">
-            <a :href="`${config.public.appUrl}/pocetna`" target="_blank" rel="noopener noreferrer">
-              <Button>{{ $t('nav.otvoriAplikaciju') }}</Button>
-            </a>
-          </template>
-          <template v-else>
-            <a
-              :href="`${config.public.appUrl}/prijava`"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="hidden rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary sm:inline-block"
-            >
-              {{ $t('nav.prijava') }}
-            </a>
-            <a :href="`${config.public.appUrl}/registracija`" target="_blank" rel="noopener noreferrer">
-              <Button>{{ $t('nav.registracija') }}</Button>
-            </a>
-          </template>
+          <a
+            v-if="isLoggedIn"
+            :href="`${config.public.appUrl}/pocetna`"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button>{{ $t('nav.otvoriAplikaciju') }}</Button>
+          </a>
+          <a v-else :href="config.public.appUrl" target="_blank" rel="noopener noreferrer">
+            <Button>{{ $t('nav.aplikacija') }}</Button>
+          </a>
         </div>
       </header>
     </div>
