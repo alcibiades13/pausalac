@@ -52,34 +52,61 @@ function keyFor(row: T, index: number): string | number {
   <div v-else-if="rows.length === 0" class="rounded-xl border border-border bg-surface p-4">
     <EmptyState :title="emptyTitle" :description="emptyDescription" />
   </div>
-  <div v-else class="overflow-x-auto rounded-xl border border-border bg-surface">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr
-          class="border-b border-border text-xs font-medium uppercase tracking-wide text-text-secondary"
-        >
-          <th v-for="column in columns" :key="column.key" class="px-4 py-2.5">
+  <div v-else>
+    <!-- A classic table forces every column into a fixed-width strip —
+    fine for short values, but a long free-text column (e.g. a
+    regulatory rule's "source") wraps into a wall of lines and squeezes
+    every other column with it, especially on mobile. Below `sm`, each
+    row renders as its own card (label: value stack) instead. -->
+    <div class="hidden overflow-x-auto rounded-xl border border-border bg-surface sm:block">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr
+            class="border-b border-border text-xs font-medium uppercase tracking-wide text-text-secondary"
+          >
+            <th v-for="column in columns" :key="column.key" class="px-4 py-2.5">
+              {{ column.label }}
+            </th>
+            <th v-if="$slots.actions" class="px-4 py-2.5">
+              <span class="sr-only">Akcije</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          <tr
+            v-for="(row, index) in rows"
+            :key="keyFor(row, index)"
+            class="cursor-default hover:bg-background"
+          >
+            <td v-for="column in columns" :key="column.key" class="px-4 py-2.5 text-navy">
+              <slot :name="`cell-${column.key}`" :row="row">{{ cellValue(row, column) }}</slot>
+            </td>
+            <td v-if="$slots.actions" class="px-4 py-2.5">
+              <slot name="actions" :row="row" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-col gap-2 sm:hidden">
+      <div
+        v-for="(row, index) in rows"
+        :key="keyFor(row, index)"
+        class="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4"
+      >
+        <dl v-for="column in columns" :key="column.key" class="flex flex-col gap-0.5">
+          <dt class="text-xs font-medium uppercase tracking-wide text-text-secondary">
             {{ column.label }}
-          </th>
-          <th v-if="$slots.actions" class="px-4 py-2.5">
-            <span class="sr-only">Akcije</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-border">
-        <tr
-          v-for="(row, index) in rows"
-          :key="keyFor(row, index)"
-          class="cursor-default hover:bg-background"
-        >
-          <td v-for="column in columns" :key="column.key" class="px-4 py-2.5 text-navy">
+          </dt>
+          <dd class="text-sm text-navy">
             <slot :name="`cell-${column.key}`" :row="row">{{ cellValue(row, column) }}</slot>
-          </td>
-          <td v-if="$slots.actions" class="px-4 py-2.5">
-            <slot name="actions" :row="row" />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </dd>
+        </dl>
+        <div v-if="$slots.actions" class="mt-1 flex flex-wrap items-center gap-2 border-t border-border pt-2">
+          <slot name="actions" :row="row" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>

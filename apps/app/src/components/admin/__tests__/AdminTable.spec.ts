@@ -88,7 +88,24 @@ describe('AdminTable', () => {
       },
     })
     expect(withActions.findAll('th')).toHaveLength(3)
-    expect(withActions.findAll('.act')).toHaveLength(2)
-    expect(withActions.findAll('.act')[0]!.text()).toBe('1')
+    // Rendered once in the desktop table and once in the mobile card list
+    // (below `sm`) — both exist in the DOM at once, CSS picks one per
+    // viewport, so each row's action shows up twice, not once.
+    const tableActions = withActions.findAll('table .act')
+    expect(tableActions).toHaveLength(2)
+    expect(tableActions[0]!.text()).toBe('1')
+  })
+
+  it('also renders each row as a mobile card, with the same cells and actions', () => {
+    const wrapper = mount(AdminTable, {
+      props: { columns, rows },
+      slots: {
+        actions: `<template #actions="{ row }"><button class="act">{{ row.id }}</button></template>`,
+      },
+    })
+    const cardList = wrapper.find('.sm\\:hidden')
+    expect(cardList.text()).toContain('Firma A')
+    expect(cardList.text()).toContain('Naziv')
+    expect(cardList.findAll('.act')).toHaveLength(2)
   })
 })
