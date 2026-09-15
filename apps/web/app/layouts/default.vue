@@ -2,6 +2,7 @@
 import { Button } from '@pausalac/ui'
 
 const config = useRuntimeConfig()
+const { isLoggedIn } = useAuthStatus()
 </script>
 
 <template>
@@ -26,15 +27,22 @@ const config = useRuntimeConfig()
         </nav>
 
         <div class="flex items-center gap-2">
-          <a
-            :href="`${config.public.appUrl}/prijava`"
-            class="hidden rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary sm:inline-block"
-          >
-            Prijavi se
-          </a>
-          <a :href="`${config.public.appUrl}/registracija`">
-            <Button>Probaj besplatno</Button>
-          </a>
+          <template v-if="isLoggedIn">
+            <a :href="`${config.public.appUrl}/pocetna`">
+              <Button>Idi u aplikaciju</Button>
+            </a>
+          </template>
+          <template v-else>
+            <a
+              :href="`${config.public.appUrl}/prijava`"
+              class="hidden rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary sm:inline-block"
+            >
+              Prijavi se
+            </a>
+            <a :href="`${config.public.appUrl}/registracija`">
+              <Button>Probaj besplatno</Button>
+            </a>
+          </template>
         </div>
       </div>
     </header>

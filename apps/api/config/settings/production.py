@@ -13,8 +13,9 @@ CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
-# TODO(deploy): same cross-subdomain cookie domain note as staging.py —
-# resolve once the real production domain is decided (docs/implementation-plan.md).
+# Cross-subdomain session sharing — see the identical note in staging.py.
+SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", default=None)
+CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default=None)
 
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
