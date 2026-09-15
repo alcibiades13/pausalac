@@ -13,6 +13,16 @@ declare module 'vue-router' {
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // Without this, Vue Router keeps the outgoing page's scroll position on
+  // the incoming one (the browser's default SPA behavior) — e.g. scrolling
+  // down a long invoice list then opening a detail page lands mid-page
+  // instead of at the top. Restore on back/forward, honor #hash targets,
+  // otherwise always reset to top.
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.hash) return { el: to.hash }
+    return { top: 0 }
+  },
   routes: [
     {
       path: '/prijava',
