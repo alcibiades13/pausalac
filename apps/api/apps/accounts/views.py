@@ -14,6 +14,7 @@ from .serializers import (
     EmailVerificationSerializer,
     LoginSerializer,
     MeSerializer,
+    MeUpdateSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     RegisterSerializer,
@@ -137,9 +138,22 @@ class LogoutView(APIView):
 
 
 class MeView(APIView):
+    """
+    GET returns the full profile (MeSerializer). PATCH is a narrow
+    self-service update — only `language` (MeUpdateSerializer) is
+    writable here; everything else on the user (email, is_staff, ...)
+    has no self-service path through this endpoint.
+    """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        return Response(MeSerializer(request.user).data)
+
+    def patch(self, request, *args, **kwargs):
+        serializer = MeUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(MeSerializer(request.user).data)
 
 

@@ -6,12 +6,21 @@
  * color palette in each app.
  *
  * "Ledger" visual direction (Phase 3f, docs/decisions-log.md): a confident
- * fintech look via layered shadows and a distinctive teal accent, not
- * literal glassmorphism/blur — this is a trust-critical, data-dense,
- * mobile-first compliance tool, and heavy blur costs both legibility on
- * financial figures and GPU performance on lower-end phones. Light mode
- * only for now; dark mode is a contained future addition to this same
- * token set, not built yet.
+ * fintech look via layered shadows, not literal glassmorphism/blur — this
+ * is a trust-critical, data-dense, mobile-first compliance tool, and
+ * heavy blur costs both legibility on financial figures and GPU
+ * performance on lower-end phones. Light mode only for now; dark mode is
+ * a contained future addition to this same token set, not built yet.
+ *
+ * `--color-primary` moved from a teal accent to a cool slate-blue
+ * (user judgment call, this session: the teal read as generic SaaS
+ * green/teal, wanted something closer to the muted, near-monochrome
+ * palettes of reference sites like privy.io — black/slate text with
+ * color used sparingly rather than a saturated brand hue everywhere).
+ * Values are Tailwind's own slate-600/700, not picked by eye — verified
+ * by the same real-contrast-math discipline as the note below (both
+ * exceed the darkened-palette values' contrast, so the earlier axe-core
+ * WCAG AA pass this file documents still holds without re-scanning).
  *
  * The Google Fonts @import for Inter/Space Grotesk/IBM Plex Mono
  * (referenced below) lives in each consuming app's own main.css, as the
@@ -46,8 +55,8 @@
    * primary gradient keeps its original visual gap instead of
    * collapsing toward flat.
    */
-  --color-primary: #0a7067;
-  --color-primary-dark: #08564f;
+  --color-primary: #475569;
+  --color-primary-dark: #334155;
   --color-success: #0f7334;
   --color-warning: #965204;
   --color-danger: #bf1f1f;

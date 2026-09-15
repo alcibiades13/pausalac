@@ -44,12 +44,29 @@ class MeSerializer(serializers.ModelSerializer):
             "last_name",
             "is_email_verified",
             "is_staff",
+            "language",
             "memberships",
         ]
         # is_staff is a real writable model field (unlike is_email_verified,
         # a property) — read-only here so this serializer stays safe if it's
         # ever reused for a profile-update endpoint (it's output-only today).
-        read_only_fields = ["is_staff"]
+        # `language` is likewise read-only on this serializer — it's writable
+        # only through MeUpdateSerializer, which exposes it alone (see below).
+        read_only_fields = ["is_staff", "language"]
+
+
+class MeUpdateSerializer(serializers.ModelSerializer):
+    """
+    Self-service profile updates via PATCH /api/v1/auth/me/ — deliberately
+    exposes only `language`. Other MeSerializer fields (email, is_staff,
+    ...) stay out of this serializer entirely rather than being marked
+    read-only, so there's no risk of a future edit accidentally widening
+    what a user can change about themselves through this endpoint.
+    """
+
+    class Meta:
+        model = User
+        fields = ["language"]
 
 
 class EmailVerificationSerializer(serializers.Serializer):

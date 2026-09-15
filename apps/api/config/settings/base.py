@@ -132,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # identifiers stay English. Django's own admin/locale strings can still use
 # Django's built-in translations.
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "sr-latn"
 TIME_ZONE = "Europe/Belgrade"
 USE_I18N = True
 USE_TZ = True

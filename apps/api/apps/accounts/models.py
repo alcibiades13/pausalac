@@ -47,6 +47,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField("datum registracije", default=timezone.now)
     email_verified_at = models.DateTimeField(null=True, blank=True)
 
+    class Language(models.TextChoices):
+        SR = "sr", "srpski"
+        EN = "en", "English"
+        RU = "ru", "русский"
+
+    language = models.CharField(
+        "jezik", max_length=2, choices=Language.choices, default=Language.SR
+    )
+
     objects = UserManager()
 
     USERNAME_FIELD = "email"

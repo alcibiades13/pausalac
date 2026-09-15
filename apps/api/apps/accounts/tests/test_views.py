@@ -100,6 +100,25 @@ class LoginLogoutFlowTests(TestCase):
         me_response = self.client.get(reverse("auth-me", kwargs={"version": "v1"}))
         self.assertEqual(me_response.status_code, 403)
 
+    def test_user_can_update_their_own_language(self):
+        self.client.login(username="marko@pausalac.rs", password="s3cr3t-pass")
+        url = reverse("auth-me", kwargs={"version": "v1"})
+        response = self.client.patch(url, {"language": "ru"}, content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["language"], "ru")
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.language, "ru")
+
+    def test_invalid_language_is_rejected(self):
+        self.client.login(username="marko@pausalac.rs", password="s3cr3t-pass")
+        url = reverse("auth-me", kwargs={"version": "v1"})
+        response = self.client.patch(url, {"language": "fr"}, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.language, "sr")
+
 
 class PasswordResetFlowTests(TestCase):
     def setUp(self):

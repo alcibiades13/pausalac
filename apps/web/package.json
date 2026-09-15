@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxtjs/i18n": "^10.6.0",
     "@pausalac/config": "workspace:^",
     "@pausalac/ui": "workspace:^",
     "nuxt": "^4.5.2",

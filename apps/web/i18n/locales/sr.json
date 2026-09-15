@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "home": {
+      "title": "Vođenje poslovanja za paušalne preduzetnike",
+      "description": "Fakture, limiti, KPO i poreske obaveze na jednom mestu — sa jasnim statusom umesto gomile razbacanih tabova. 14 dana besplatno, bez kartice."
+    },
+    "cenovnik": {
+      "title": "Cenovnik",
+      "description": "Jednostavni paketi, bez skrivenih troškova. 14 dana besplatno, bez potrebe za karticom."
+    }
+  },
+  "nav": {
+    "cenovnik": "Cenovnik",
+    "aplikacija": "Aplikacija",
+    "prijava": "Prijava",
+    "registracija": "Registracija",
+    "otvoriAplikaciju": "Otvori aplikaciju"
+  },
+  "footer": {
+    "tagline": "Aplikacija za vođenje poslovanja paušalnih preduzetnika u Srbiji.",
+    "product": "Proizvod",
+    "kakoRadi": "Kako radi",
+    "cenovnik": "Cenovnik",
+    "nalog": "Nalog",
+    "prijava": "Prijava",
+    "registracija": "Registracija",
+    "copyright": "© {year} Pausalac.",
+    "madeFor": "Napravljeno za paušalne preduzetnike u Srbiji."
+  },
+  "home": {
+    "hero": {
+      "titleMain": "Administracija paušalnog biznisa,",
+      "titleAccent": "bez haosa i bez iznenađenja.",
+      "subtitle": "Fakture, limiti, KPO i poreske obaveze na jednom mestu — sa jasnim statusom umesto gomile razbacanih tabova.",
+      "ctaPrimary": "Probaj besplatno",
+      "ctaSecondary": "Vidi kako radi",
+      "trust": "14 dana besplatno · Bez potrebe za karticom"
+    },
+    "kickers": {
+      "kakoRadi": "Kako radi",
+      "moduli": "Moduli",
+      "jedanStatus": "Jedan status",
+      "fakturisanje": "Fakturisanje",
+      "poredjenje": "Poređenje",
+      "cenovnik": "Cenovnik"
+    },
+    "problem": {
+      "cards": [
+        { "title": "Koliko sam zaradio?", "body": "Fakturisano i naplaćeno na jednom mestu, uvek ažurno." },
+        {
+          "title": "Koliko mi je ostalo do limita?",
+          "body": "Paušalni i PDV limit prate se automatski, sa projekcijom do kraja godine."
+        },
+        {
+          "title": "Šta moram da uradim?",
+          "body": "Jedna lista prioriteta umesto gomile razbacanih kartica i tabova."
+        },
+        {
+          "title": "Da li nešto zahteva hitnu reakciju?",
+          "body": "Fakture koje kasne i obaveze koje dospevaju, na vreme, ne posle roka."
+        }
+      ]
+    },
+    "modules": {
+      "heading": "Sve na jednom mestu",
+      "subtitle": "Isti moduli koje koristiš u aplikaciji svaki dan — bez tabova koje moraš sam da povezuješ.",
+      "items": [
+        { "title": "Fakture", "body": "Kreiraj, pošalji i prati status naplate — sve na jednom mestu." },
+        { "title": "Klijenti", "body": "Baza klijenata sa istorijom faktura i kontakt podacima." },
+        { "title": "Limiti", "body": "Paušalni i PDV limit prate se automatski, sa projekcijom do kraja godine." },
+        { "title": "KPO", "body": "Knjiga prihoda generiše se iz stvarnih transakcija, ne ručno." },
+        { "title": "Obaveze", "body": "Poreske i doprinosne obaveze sa rokovima na jednom mestu." },
+        { "title": "Dokumenti", "body": "Svi generisani PDF-ovi i priložena dokumentacija, organizovano." }
+      ]
+    },
+    "attention": {
+      "heading": "Ne gomila kartica",
+      "body": "Umesto da sam sastavljaš sliku iz faktura, limita i poreskih obaveza, Pausalac ih objedinjuje u jednu listu prioriteta — šta kasni, šta dospeva, šta zahteva pažnju. Uvek znaš odakle dolazi svaki broj koji vidiš."
+    },
+    "steps": {
+      "heading": "Tri koraka, bez trećeg alata",
+      "items": [
+        { "title": "Izaberi klijenta", "body": "Iz liste klijenata ili dodaj novog u par sekundi." },
+        {
+          "title": "Dodaj stavke",
+          "body": "Usluge ili proizvodi, sa automatskim izračunom ukupnog iznosa."
+        },
+        {
+          "title": "Pošalji",
+          "body": "PDF i email idu direktno klijentu, status prati da li je faktura viđena i plaćena."
+        }
+      ]
+    },
+    "comparison": {
+      "heading": "Pausalac naspram ručnog vođenja",
+      "withoutTitle": "Bez Pausalac-a",
+      "withoutItems": [
+        "Excel tabele i razbacani podsetnici",
+        "Ručno računanje koliko ti je ostalo do limita",
+        "Rokovi koje pratiš iz glave ili kalendara",
+        "Fakture bez uvida u status naplate"
+      ],
+      "withTitle": "Sa Pausalac-om",
+      "withItems": [
+        "Sve na jednom mestu, uvek ažurno",
+        "Automatsko praćenje limita sa projekcijom",
+        "Jasan rok i status za svaku obavezu",
+        "Fakture sa PDF-om i statusom naplate uživo"
+      ]
+    },
+    "pricing": {
+      "heading": "Jednostavni paketi",
+      "seeAll": "Pogledaj sve pakete i detalje →"
+    },
+    "finalCta": {
+      "heading": "Spreman da prestaneš da razmišljaš o administraciji?",
+      "cta": "Probaj besplatno",
+      "facts": ["14 dana besplatno", "Bez potrebe za karticom", "Sve na jednom mestu"]
+    }
+  },
+  "mockup": {
+    "windowLabel": "Početna",
+    "attentionTitle": "3 stvari zahtevaju tvoju pažnju",
+    "badge": "Pogledaj",
+    "item1": "Faktura #2026-014 kasni 6 dana",
+    "item2": "Ostalo ti je 18% do godišnjeg limita",
+    "item3": "Poreska obaveza dospeva za 4 dana",
+    "phoneLabel": "Naplaćeno ovog meseca",
+    "phoneToast": "Faktura #2026-015 plaćena",
+    "phoneNav": {
+      "fakture": "Fakture",
+      "limiti": "Limiti",
+      "dokumenti": "Dokumenti"
+    }
+  },
+  "cenovnik": {
+    "heading": "Jednostavni paketi, bez skrivenih troškova.",
+    "subtitle": "14 dana besplatno, bez potrebe za karticom. Odaberi paket koji odgovara tvom poslovanju.",
+    "loading": "Učitavanje paketa...",
+    "error": "Trenutno ne možemo da učitamo cenovnik. Pokušaj ponovo malo kasnije.",
+    "faqHeading": "Najčešća pitanja",
+    "faq": [
+      {
+        "q": "Da li postoji besplatan probni period?",
+        "a": "Da — svaka nova kompanija dobija 14 dana besplatnog probnog perioda, bez potrebe za unosom kartice."
+      },
+      {
+        "q": "Šta se dešava kad probni period istekne?",
+        "a": "Dobićeš na vreme obaveštenje pre isteka. Do izbora paketa, pristup kreiranju novih faktura je privremeno ograničen — tvoji podaci ostaju netaknuti."
+      },
+      {
+        "q": "Mogu li da promenim paket kasnije?",
+        "a": "Da, paket možeš promeniti u bilo kom trenutku iz podešavanja naloga."
+      }
+    ]
+  },
+  "pricingCard": {
+    "perMonth": "/mes",
+    "mostPopular": "Najpopularniji",
+    "cta": "Probaj besplatno"
+  }
+}

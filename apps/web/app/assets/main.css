@@ -32,3 +32,15 @@ button {
     box-shadow 150ms ease-out,
     transform 150ms ease-out;
 }
+
+/*
+ * Decorative hero backdrop (index.vue) — a faint dot lattice, not a
+ * literal image asset. Color comes from --color-navy at low opacity
+ * rather than a hardcoded gray so it stays correct if the palette ever
+ * changes.
+ */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, rgb(23 32 51 / 8%) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 70% 60% at 60% 0%, black 40%, transparent 100%);
+}
