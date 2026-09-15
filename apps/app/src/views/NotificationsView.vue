@@ -73,16 +73,16 @@ async function onMarkRead(notification: AppNotification) {
         :key="notification.id"
         :class="!notification.read_at ? 'border-l-4 border-l-primary' : ''"
       >
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <Badge :variant="PRIORITY_VARIANTS[notification.priority]">
                 {{ PRIORITY_LABELS[notification.priority] }}
               </Badge>
               <span :class="!notification.read_at ? 'font-semibold text-navy' : 'font-medium text-navy'">
                 {{ notification.title }}
               </span>
-              <span v-if="!notification.read_at" class="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+              <span v-if="!notification.read_at" class="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />
             </div>
             <p class="text-sm text-text-secondary">{{ notification.message }}</p>
             <RouterLink
@@ -96,7 +96,7 @@ async function onMarkRead(notification: AppNotification) {
           <button
             v-if="!notification.read_at"
             type="button"
-            class="shrink-0 text-sm text-text-secondary hover:text-navy disabled:opacity-40"
+            class="self-start text-sm text-text-secondary hover:text-navy disabled:opacity-40"
             :disabled="markingReadId === notification.id"
             @click="onMarkRead(notification)"
           >
