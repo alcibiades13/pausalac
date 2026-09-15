@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Button, Card, Input, Alert, MoneyDisplay, EmptyState, Skeleton } from '@pausalac/ui'
+import { Button, Card, Input, Alert, MoneyDisplay, EmptyState, Skeleton, Metric } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
 import { createCompany } from '@/services/companies'
@@ -131,22 +131,20 @@ onMounted(loadDashboard)
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Card>
-            <p class="text-sm text-text-secondary">Fakturisano ove godine</p>
-            <p class="mt-1 text-2xl font-semibold text-navy">
+            <Metric label="Fakturisano ove godine">
               <MoneyDisplay :amount="dashboard.revenue.ytd" :currency="dashboard.revenue.currency" />
-            </p>
+            </Metric>
           </Card>
           <Card>
-            <p class="text-sm text-text-secondary">
-              Neizmireno ({{ dashboard.outstanding.count }})
-            </p>
-            <p class="mt-1 text-2xl font-semibold text-navy">
+            <Metric :label="`Neizmireno (${dashboard.outstanding.count})`">
               <MoneyDisplay :amount="dashboard.outstanding.total" :currency="dashboard.outstanding.currency" />
-            </p>
-            <p v-if="dashboard.outstanding.overdue_count" class="mt-1 text-sm text-danger">
-              od toga {{ dashboard.outstanding.overdue_count }} kasni
-              (<MoneyDisplay :amount="dashboard.outstanding.overdue_total" :currency="dashboard.outstanding.currency" />)
-            </p>
+              <template v-if="dashboard.outstanding.overdue_count" #secondary>
+                <p class="text-sm text-danger">
+                  od toga {{ dashboard.outstanding.overdue_count }} kasni
+                  (<MoneyDisplay :amount="dashboard.outstanding.overdue_total" :currency="dashboard.outstanding.currency" />)
+                </p>
+              </template>
+            </Metric>
           </Card>
         </div>
 

@@ -77,7 +77,7 @@ async function onSubmit() {
       </form>
       <p class="mt-4 text-center text-sm text-text-secondary">
         Već imaš nalog?
-        <RouterLink :to="{ name: 'login' }" class="text-primary hover:underline">Prijavi se</RouterLink>
+        <RouterLink :to="{ name: 'login' }" class="text-primary underline">Prijavi se</RouterLink>
       </p>
     </Card>
   </AuthLayout>

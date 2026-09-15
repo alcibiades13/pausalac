@@ -68,6 +68,30 @@ describe('NotificationsView', () => {
     expect(wrapper.text()).toContain('Označi kao pročitano')
   })
 
+  it('exposes an unread status as text, not just a visual dot/border (master prompt §55)', async () => {
+    vi.mocked(listNotifications).mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [notification()],
+    })
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.text()).toContain('Nepročitano')
+  })
+
+  it('does not expose the unread text for an already-read notification', async () => {
+    vi.mocked(listNotifications).mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [notification({ read_at: '2026-09-14T01:00:00Z' })],
+    })
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('Nepročitano')
+  })
+
   it('does not show the mark-read button for an already-read notification', async () => {
     vi.mocked(listNotifications).mockResolvedValue({
       count: 1,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Card, Alert, Input, MoneyDisplay, Skeleton } from '@pausalac/ui'
+import { Button, Card, Alert, Input, MoneyDisplay, Skeleton, MoneyInput } from '@pausalac/ui'
 import {
   getInvoice,
   issueInvoice,
@@ -337,7 +337,7 @@ onMounted(load)
         <form class="flex flex-col gap-4" @submit.prevent="onRecordPayment">
           <Alert v-if="paymentError" variant="danger">{{ paymentError }}</Alert>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Input v-model="paymentAmount" type="number" label="Iznos" required />
+            <MoneyInput v-model="paymentAmount" :currency="invoice.currency" label="Iznos" required />
             <Input v-model="paymentDate" type="date" label="Datum uplate" required />
           </div>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

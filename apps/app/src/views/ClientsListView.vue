@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { Button, Card, Input, Alert, EmptyState, Skeleton } from '@pausalac/ui'
+import { Button, Card, Input, Alert, EmptyState, Skeleton, Pagination } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import { ApiError } from '@/lib/api'
 
@@ -96,10 +96,7 @@ function goPrevious() {
         </ul>
       </Card>
 
-      <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-        <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>
-        <Button variant="secondary" :disabled="!hasNext" @click="goNext">Sledeća</Button>
-      </div>
+      <Pagination :has-next="hasNext" :has-previous="hasPrevious" @next="goNext" @previous="goPrevious" />
     </template>
   </div>
 </template>

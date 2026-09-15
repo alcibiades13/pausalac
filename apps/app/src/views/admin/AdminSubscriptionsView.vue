@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Badge, Button } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Badge, Button , DataTable, type DataTableColumn } from '@pausalac/ui'
 import { listAdminSubscriptions, type AdminSubscription } from '@/services/admin'
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
@@ -28,7 +27,7 @@ const STATUS_VARIANTS: Record<AdminSubscription['status'], 'success' | 'warning'
   expired: 'danger',
 }
 
-const columns: AdminTableColumn<AdminSubscription>[] = [
+const columns: DataTableColumn<AdminSubscription>[] = [
   { key: 'company_name', label: 'Kompanija' },
   { key: 'plan', label: 'Plan', format: (r) => r.plan?.name ?? '—' },
   { key: 'trial_ends_at', label: 'Probni period do', format: (r) => formatDate(r.trial_ends_at) },
@@ -68,7 +67,7 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <AdminTable
+    <DataTable
       :columns="columns"
       :rows="subscriptions"
       :loading="loading"
@@ -77,7 +76,7 @@ onMounted(load)
       <template #actions="{ row }">
         <Badge :variant="STATUS_VARIANTS[row.status]">{{ STATUS_LABELS[row.status] }}</Badge>
       </template>
-    </AdminTable>
+    </DataTable>
 
     <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
       <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>

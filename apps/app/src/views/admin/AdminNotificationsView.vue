@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Badge, Button } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Badge, Button , DataTable, type DataTableColumn } from '@pausalac/ui'
 import { listAdminNotifications, type AdminNotification } from '@/services/admin'
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
@@ -13,7 +12,7 @@ const page = ref(1)
 const hasNext = ref(false)
 const hasPrevious = ref(false)
 
-const columns: AdminTableColumn<AdminNotification>[] = [
+const columns: DataTableColumn<AdminNotification>[] = [
   { key: 'company_name', label: 'Kompanija' },
   { key: 'recipient_email', label: 'Primalac' },
   { key: 'event_type', label: 'Događaj' },
@@ -59,7 +58,7 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <AdminTable
+    <DataTable
       :columns="columns"
       :rows="notifications"
       :loading="loading"
@@ -68,7 +67,7 @@ onMounted(load)
       <template #actions="{ row }">
         <Badge :variant="row.status === 'failed' ? 'danger' : 'neutral'">{{ row.status }}</Badge>
       </template>
-    </AdminTable>
+    </DataTable>
 
     <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
       <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>

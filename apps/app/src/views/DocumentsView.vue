@@ -248,8 +248,17 @@ async function onUpload() {
         :class="String(doc.id) === route.query.document ? 'ring-2 ring-primary' : ''"
       >
         <div class="flex min-w-0 flex-1 items-center gap-4">
-          <img v-if="isImage(doc)" :src="doc.file_url ?? undefined" class="h-12 w-12 shrink-0 rounded object-cover" alt="" />
-          <div v-else class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl">
+          <img
+            v-if="isImage(doc)"
+            :src="doc.file_url ?? undefined"
+            class="h-12 w-12 shrink-0 rounded object-cover"
+            :alt="`Pregled dokumenta: ${doc.title}`"
+          />
+          <div
+            v-else
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl"
+            aria-hidden="true"
+          >
             📄
           </div>
           <div class="min-w-0 flex-1">

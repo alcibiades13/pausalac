@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Badge, Button, MoneyDisplay } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Badge, Button, MoneyDisplay , DataTable, type DataTableColumn } from '@pausalac/ui'
 import { listAdminTaxObligations, type AdminTaxObligation } from '@/services/admin'
 import { ApiError } from '@/lib/api'
 
@@ -23,7 +22,7 @@ const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'danger' | 'neutra
   overdue: 'danger',
 }
 
-const columns: AdminTableColumn<AdminTaxObligation>[] = [
+const columns: DataTableColumn<AdminTaxObligation>[] = [
   { key: 'company_name', label: 'Kompanija' },
   { key: 'period_start', label: 'Period' },
   { key: 'due_date', label: 'Rok' },
@@ -63,7 +62,7 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <AdminTable
+    <DataTable
       :columns="columns"
       :rows="obligations"
       :loading="loading"
@@ -77,7 +76,7 @@ onMounted(load)
           <MoneyDisplay :amount="row.total_amount" currency="RSD" />
         </div>
       </template>
-    </AdminTable>
+    </DataTable>
 
     <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
       <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>

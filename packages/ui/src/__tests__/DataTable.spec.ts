@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import AdminTable from '../AdminTable.vue'
+import DataTable from '../DataTable.vue'
 
 interface Row {
   id: number
@@ -19,15 +19,15 @@ const columns = [
   { key: 'status', label: 'Status' },
 ]
 
-describe('AdminTable', () => {
+describe('DataTable', () => {
   it('shows a loading skeleton while loading', () => {
-    const wrapper = mount(AdminTable, { props: { columns, rows: [], loading: true } })
+    const wrapper = mount(DataTable, { props: { columns, rows: [], loading: true } })
     expect(wrapper.find('[role="status"]').exists()).toBe(true)
     expect(wrapper.find('table').exists()).toBe(false)
   })
 
   it('shows an empty state when there are no rows', () => {
-    const wrapper = mount(AdminTable, {
+    const wrapper = mount(DataTable, {
       props: { columns, rows: [], emptyTitle: 'Nema ničega.' },
     })
     expect(wrapper.text()).toContain('Nema ničega.')
@@ -35,7 +35,7 @@ describe('AdminTable', () => {
   })
 
   it('renders a header per column and a row per data item', () => {
-    const wrapper = mount(AdminTable, { props: { columns, rows } })
+    const wrapper = mount(DataTable, { props: { columns, rows } })
     const headers = wrapper.findAll('th')
     expect(headers[0]!.text()).toBe('Naziv')
     expect(headers[1]!.text()).toBe('Status')
@@ -47,7 +47,7 @@ describe('AdminTable', () => {
   })
 
   it('applies a column format function when provided', () => {
-    const wrapper = mount(AdminTable, {
+    const wrapper = mount(DataTable, {
       props: {
         columns: [
           { key: 'status', label: 'Status', format: (r) => String((r as Row).status).toUpperCase() },
@@ -60,14 +60,14 @@ describe('AdminTable', () => {
   })
 
   it('falls back to an em dash for empty cell values', () => {
-    const wrapper = mount(AdminTable, {
+    const wrapper = mount(DataTable, {
       props: { columns: [{ key: 'name', label: 'Naziv' }], rows: [{ id: 1, name: '' }] },
     })
     expect(wrapper.find('tbody td')!.text()).toBe('—')
   })
 
   it('renders a scoped cell slot when provided, overriding the default', () => {
-    const wrapper = mount(AdminTable, {
+    const wrapper = mount(DataTable, {
       props: { columns, rows },
       slots: {
         'cell-status': `<template #cell-status="{ row }"><span class="custom">{{ row.status }}!</span></template>`,
@@ -77,11 +77,11 @@ describe('AdminTable', () => {
   })
 
   it('renders an actions column only when an actions slot is provided', () => {
-    const withoutActions = mount(AdminTable, { props: { columns, rows } })
+    const withoutActions = mount(DataTable, { props: { columns, rows } })
     expect(withoutActions.find('th:last-child').text()).not.toBe('')
     expect(withoutActions.findAll('th')).toHaveLength(2)
 
-    const withActions = mount(AdminTable, {
+    const withActions = mount(DataTable, {
       props: { columns, rows },
       slots: {
         actions: `<template #actions="{ row }"><button class="act">{{ row.id }}</button></template>`,
@@ -97,7 +97,7 @@ describe('AdminTable', () => {
   })
 
   it('also renders each row as a mobile card, with the same cells and actions', () => {
-    const wrapper = mount(AdminTable, {
+    const wrapper = mount(DataTable, {
       props: { columns, rows },
       slots: {
         actions: `<template #actions="{ row }"><button class="act">{{ row.id }}</button></template>`,

@@ -1,16 +1,18 @@
 <script setup lang="ts" generic="T extends Record<string, unknown>">
 /**
- * Generic table driving every admin list screen (Phase 6b) — columns and
- * rows as props instead of ten hand-rolled tables. Also a first real step
- * toward the Table/DataTable primitive packages/ui is missing (noted as a
- * side-benefit in the Phase 6b plan, not built as its own task).
+ * Generic table (master prompt §51 Table/DataTable) — columns and rows as
+ * props instead of a hand-rolled table per screen. Originally built as
+ * `AdminTable.vue` to drive every admin list screen (Phase 6b), promoted
+ * here once it proved out as a genuinely generic, reusable primitive with
+ * zero admin-specific logic (Phase 6f).
  *
  * Generic over the row type `T` so a caller's scoped slots (`row`) come
  * back correctly typed instead of `Record<string, unknown>` everywhere.
  */
-import { EmptyState, Skeleton } from '@pausalac/ui'
+import EmptyState from './EmptyState.vue'
+import Skeleton from './Skeleton.vue'
 
-export interface AdminTableColumn<T> {
+export interface DataTableColumn<T> {
   key: string
   label: string
   format?: (row: T) => string
@@ -18,7 +20,7 @@ export interface AdminTableColumn<T> {
 
 const props = withDefaults(
   defineProps<{
-    columns: AdminTableColumn<T>[]
+    columns: DataTableColumn<T>[]
     rows: T[]
     loading?: boolean
     rowKey?: string
@@ -33,7 +35,7 @@ const props = withDefaults(
   },
 )
 
-function cellValue(row: T, column: AdminTableColumn<T>): string {
+function cellValue(row: T, column: DataTableColumn<T>): string {
   if (column.format) return column.format(row)
   const value = row[column.key]
   return value === null || value === undefined || value === '' ? '—' : String(value)

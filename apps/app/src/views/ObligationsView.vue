@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Button, Card, Input, Alert, Badge, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
+import { Button, Card, Input, Alert, Badge, EmptyState, MoneyDisplay, Skeleton, MoneyInput } from '@pausalac/ui'
 import {
   createTaxResolution,
   listTaxObligations,
@@ -131,24 +131,24 @@ async function onCreateResolution() {
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Input v-model="form.effective_from" type="date" label="Važi od" required />
           <Input v-model="form.effective_until" type="date" label="Važi do" required />
-          <Input v-model="form.tax_base" type="number" label="Poreska osnovica" required />
+          <MoneyInput v-model="form.tax_base" label="Poreska osnovica" required />
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div class="flex flex-col gap-1">
-            <Input v-model="form.income_tax_amount" type="number" label="Porez na prihod" required />
+            <MoneyInput v-model="form.income_tax_amount" label="Porez na prihod" required />
             <p class="text-xs text-text-secondary">{{ WHY_INCOME_TAX }}</p>
           </div>
           <div class="flex flex-col gap-1">
-            <Input v-model="form.pio_amount" type="number" label="PIO" required />
+            <MoneyInput v-model="form.pio_amount" label="PIO" required />
             <p class="text-xs text-text-secondary">{{ WHY_PIO }}</p>
           </div>
           <div class="flex flex-col gap-1">
-            <Input v-model="form.health_amount" type="number" label="Zdravstveno" required />
+            <MoneyInput v-model="form.health_amount" label="Zdravstveno" required />
             <p class="text-xs text-text-secondary">{{ WHY_HEALTH }}</p>
           </div>
           <div class="flex flex-col gap-1">
-            <Input v-model="form.unemployment_amount" type="number" label="Nezaposlenost" required />
+            <MoneyInput v-model="form.unemployment_amount" label="Nezaposlenost" required />
             <p class="text-xs text-text-secondary">{{ WHY_UNEMPLOYMENT }}</p>
           </div>
         </div>

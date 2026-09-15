@@ -79,6 +79,12 @@ async function onLogout() {
 
 <template>
   <div class="min-h-screen bg-background">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+    >
+      Preskoči na sadržaj
+    </a>
     <header class="sticky top-0 z-10 bg-surface shadow-[0_1px_2px_rgba(23,32,51,0.04),0_4px_16px_-8px_rgba(23,32,51,0.10)]">
       <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         <span class="flex min-w-0 items-center gap-2">
@@ -101,7 +107,7 @@ async function onLogout() {
         </span>
 
         <!-- Desktop/tablet nav: hidden below sm, a plain row from sm up. -->
-        <nav class="hidden items-center gap-1 sm:flex">
+        <nav class="hidden items-center gap-1 sm:flex" aria-label="Glavna navigacija">
           <RouterLink
             v-for="link in NAV_LINKS"
             :key="link.name"
@@ -122,8 +128,8 @@ async function onLogout() {
              the mobile menu — checking notifications is a primary action. -->
         <RouterLink
           :to="{ name: 'notifications' }"
-          class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-navy hover:bg-background"
-          aria-label="Obaveštenja"
+          class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-navy hover:bg-background"
+          :aria-label="unreadCount > 0 ? `Obaveštenja (${unreadCount} nepročitanih)` : 'Obaveštenja'"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
@@ -135,13 +141,14 @@ async function onLogout() {
           <span
             v-if="unreadCount > 0"
             class="absolute right-1 top-1 flex h-4 min-w-4 animate-pulse items-center justify-center rounded-full bg-danger px-1 text-[10px] font-medium text-white"
+            aria-hidden="true"
           >
             {{ unreadCount > 9 ? '9+' : unreadCount }}
           </span>
         </RouterLink>
       </div>
     </header>
-    <main class="mx-auto max-w-5xl px-4 py-8 pb-24 sm:pb-8">
+    <main id="main-content" class="mx-auto max-w-5xl px-4 py-8 pb-24 sm:pb-8">
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">
           <component :is="Component" />

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Button } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Button , DataTable, type DataTableColumn } from '@pausalac/ui'
 import { listAdminAuditLog, type AdminAuditLogEntry } from '@/services/admin'
 import { ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/formatDate'
@@ -13,7 +12,7 @@ const page = ref(1)
 const hasNext = ref(false)
 const hasPrevious = ref(false)
 
-const columns: AdminTableColumn<AdminAuditLogEntry>[] = [
+const columns: DataTableColumn<AdminAuditLogEntry>[] = [
   {
     key: 'created_at',
     label: 'Vreme',
@@ -59,7 +58,7 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <AdminTable
+    <DataTable
       :columns="columns"
       :rows="entries"
       :loading="loading"

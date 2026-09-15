@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { MoneyDisplay } from '@pausalac/ui'
+import { MoneyDisplay, Progress } from '@pausalac/ui'
 import type { LimitTrackerData } from '@/services/limits'
 
 const props = defineProps<{
@@ -8,11 +8,11 @@ const props = defineProps<{
   tracker: LimitTrackerData
 }>()
 
-const BAR_COLOR: Record<string, string> = {
-  ok: 'bg-success',
-  attention: 'bg-warning',
-  warning: 'bg-warning',
-  critical: 'bg-danger',
+const BAR_VARIANT: Record<string, 'success' | 'warning' | 'danger'> = {
+  ok: 'success',
+  attention: 'warning',
+  warning: 'warning',
+  critical: 'danger',
 }
 
 const PERIOD_LABEL: Record<string, string> = {
@@ -20,9 +20,8 @@ const PERIOD_LABEL: Record<string, string> = {
   trailing_12_months: 'poslednjih 12 meseci',
 }
 
-const barColor = computed(() => BAR_COLOR[props.tracker.warning_level])
+const barVariant = computed(() => BAR_VARIANT[props.tracker.warning_level] ?? 'primary')
 const periodLabel = computed(() => PERIOD_LABEL[props.tracker.period.type] ?? props.tracker.period.type)
-const barWidth = computed(() => `${Math.min(props.tracker.percentage, 100)}%`)
 </script>
 
 <template>
@@ -36,9 +35,7 @@ const barWidth = computed(() => `${Math.min(props.tracker.percentage, 100)}%`)
       /
       <MoneyDisplay :amount="tracker.threshold" :currency="tracker.currency" />
     </p>
-    <div class="h-2 w-full overflow-hidden rounded-full bg-background">
-      <div class="h-full transition-all" :class="barColor" :style="{ width: barWidth }" />
-    </div>
+    <Progress :value="tracker.percentage" :variant="barVariant" :label="label" />
     <div class="flex items-baseline justify-between text-sm text-text-secondary">
       <span>{{ tracker.percentage }}%</span>
       <span>Preostalo: <MoneyDisplay :amount="tracker.remaining" :currency="tracker.currency" /></span>

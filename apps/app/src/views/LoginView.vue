@@ -55,12 +55,12 @@ async function onSubmit() {
         <Button type="submit" :loading="loading">Prijavi se</Button>
       </form>
       <div class="mt-4 flex flex-col gap-1 text-center text-sm text-text-secondary">
-        <RouterLink :to="{ name: 'forgot-password' }" class="text-primary hover:underline">
+        <RouterLink :to="{ name: 'forgot-password' }" class="text-primary underline">
           Zaboravio/la si lozinku?
         </RouterLink>
         <span>
           Nemaš nalog?
-          <RouterLink :to="{ name: 'register' }" class="text-primary hover:underline">
+          <RouterLink :to="{ name: 'register' }" class="text-primary underline">
             Registruj se
           </RouterLink>
         </span>

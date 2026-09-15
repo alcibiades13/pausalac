@@ -83,6 +83,7 @@ async function onMarkRead(notification: AppNotification) {
                 {{ notification.title }}
               </span>
               <span v-if="!notification.read_at" class="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+              <span v-if="!notification.read_at" class="sr-only">(Nepročitano)</span>
             </div>
             <p class="text-sm text-text-secondary">{{ notification.message }}</p>
             <RouterLink

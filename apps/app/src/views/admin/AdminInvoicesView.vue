@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Button, MoneyDisplay } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Button, MoneyDisplay , DataTable, type DataTableColumn } from '@pausalac/ui'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
 import { listAdminInvoices, type AdminInvoice } from '@/services/admin'
 import { ApiError } from '@/lib/api'
@@ -13,7 +12,7 @@ const page = ref(1)
 const hasNext = ref(false)
 const hasPrevious = ref(false)
 
-const columns: AdminTableColumn<AdminInvoice>[] = [
+const columns: DataTableColumn<AdminInvoice>[] = [
   { key: 'company_name', label: 'Kompanija' },
   { key: 'client_name', label: 'Klijent' },
   { key: 'invoice_number', label: 'Broj', format: (r) => r.invoice_number ?? 'nacrt' },
@@ -57,14 +56,14 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <AdminTable :columns="columns" :rows="invoices" :loading="loading" empty-title="Nema faktura.">
+    <DataTable :columns="columns" :rows="invoices" :loading="loading" empty-title="Nema faktura.">
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <InvoiceStatusBadge :status="row.status" />
           <MoneyDisplay :amount="row.total" :currency="row.currency" />
         </div>
       </template>
-    </AdminTable>
+    </DataTable>
 
     <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
       <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>

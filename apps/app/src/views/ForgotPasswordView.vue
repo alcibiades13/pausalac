@@ -43,7 +43,7 @@ async function onSubmit() {
         <Button type="submit" :loading="loading">Pošalji link</Button>
       </form>
       <p class="mt-4 text-center text-sm text-text-secondary">
-        <RouterLink :to="{ name: 'login' }" class="text-primary hover:underline">Nazad na prijavu</RouterLink>
+        <RouterLink :to="{ name: 'login' }" class="text-primary underline">Nazad na prijavu</RouterLink>
       </p>
     </Card>
   </AuthLayout>

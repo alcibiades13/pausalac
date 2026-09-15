@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Button, Card } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Button, Card , DataTable, type DataTableColumn } from '@pausalac/ui'
 import {
   listAdminCompanies,
   listAdminCompanyMembers,
@@ -22,7 +21,7 @@ const membersFor = ref<AdminCompany | null>(null)
 const members = ref<AdminMembership[]>([])
 const membersLoading = ref(false)
 
-const columns: AdminTableColumn<AdminCompany>[] = [
+const columns: DataTableColumn<AdminCompany>[] = [
   { key: 'name', label: 'Naziv' },
   { key: 'pib', label: 'PIB' },
   { key: 'city', label: 'Grad' },
@@ -78,7 +77,7 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <AdminTable
+    <DataTable
       :columns="columns"
       :rows="companies"
       :loading="loading"
@@ -87,7 +86,7 @@ onMounted(load)
       <template #actions="{ row }">
         <Button variant="secondary" @click="onShowMembers(row)">Članovi</Button>
       </template>
-    </AdminTable>
+    </DataTable>
 
     <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
       <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>

@@ -26,4 +26,15 @@ describe('Input', () => {
     const wrapper = mount(Input, { props: { error: 'Greška.' } })
     expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
   })
+
+  it('keeps the emitted value a string for type="number", not a JS number', async () => {
+    // Vue 3.4+ auto-casts v-model on type="number" inputs to a JS
+    // number, which would silently break this app's Decimal-as-string
+    // convention for every money/numeric field using this component.
+    const wrapper = mount(Input, { props: { modelValue: '', type: 'number' } })
+    await wrapper.find('input').setValue('1500.50')
+    const emitted = wrapper.emitted('update:modelValue')?.[0]?.[0]
+    expect(emitted).toBe('1500.50')
+    expect(typeof emitted).toBe('string')
+  })
 })

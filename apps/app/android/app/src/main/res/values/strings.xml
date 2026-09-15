@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pausalac</string>
+    <string name="title_activity_main">Pausalac</string>
+    <string name="package_name">rs.pausalac.app</string>
+    <string name="custom_url_scheme">rs.pausalac.app</string>
+</resources>

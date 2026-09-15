@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Card, Input, Select, Alert, Skeleton } from '@pausalac/ui'
+import { Button, Card, Input, Select, Alert, Skeleton, MoneyInput } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import {
   createInvoice,
@@ -222,8 +222,8 @@ async function onSubmit() {
             <div class="col-span-3 sm:col-span-2">
               <Input v-model="item.quantity" type="number" label="Količina" required />
             </div>
-            <div class="col-span-3 sm:col-span-2">
-              <Input v-model="item.unit_price" type="number" label="Cena" required />
+            <div class="col-span-6 sm:col-span-2">
+              <MoneyInput v-model="item.unit_price" label="Cena" required />
             </div>
             <div class="col-span-3 sm:col-span-1">
               <button

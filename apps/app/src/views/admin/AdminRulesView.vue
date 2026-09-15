@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Badge, Button, Card, Input } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Badge, Button, Card, Input , DataTable, type DataTableColumn } from '@pausalac/ui'
 import {
   approveAdminRegulatoryRule,
   createAdminRegulatoryRule,
@@ -26,7 +25,7 @@ const form = ref({
   notes: '',
 })
 
-const columns: AdminTableColumn<AdminRegulatoryRule>[] = [
+const columns: DataTableColumn<AdminRegulatoryRule>[] = [
   { key: 'identifier', label: 'Identifikator' },
   { key: 'version', label: 'Verzija' },
   { key: 'effective_from', label: 'Važi od' },
@@ -129,7 +128,7 @@ onMounted(load)
       </form>
     </Card>
 
-    <AdminTable :columns="columns" :rows="rules" :loading="loading" empty-title="Nema pravila.">
+    <DataTable :columns="columns" :rows="rules" :loading="loading" empty-title="Nema pravila.">
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.approval_status === 'confirmed' ? 'success' : 'warning'">
@@ -145,6 +144,6 @@ onMounted(load)
           </Button>
         </div>
       </template>
-    </AdminTable>
+    </DataTable>
   </div>
 </template>

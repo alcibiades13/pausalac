@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 
@@ -66,6 +67,22 @@ export async function registerWithCompany(
     pib: uniquePib(),
   })
   return { email, password, company }
+}
+
+/**
+ * Real automated accessibility scan (master prompt §55) via axe-core
+ * against the currently-rendered page — run at a handful of
+ * representative points in the existing critical-flow specs rather than
+ * as its own dedicated suite, so it exercises real, already-authenticated
+ * app state instead of isolated static pages. WCAG 2.0/2.1 A+AA rule
+ * sets only — not asserting a conformance level beyond what §55 itself
+ * asks for ("reasonable WCAG-oriented practices").
+ */
+export async function expectNoA11yViolations(page: Page) {
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([])
 }
 
 /** Drives the real login form — used at the start of every UI-facing

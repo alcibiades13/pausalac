@@ -135,4 +135,39 @@ describe('MobileBottomNav', () => {
     await flushPromises()
     expect(document.body.querySelector('.fixed.inset-0.z-30')).toBeFalsy()
   })
+
+  it('exposes real dialog semantics on the sheet (master prompt §55 keyboard navigation)', async () => {
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router] }, attachTo: document.body })
+    await flushPromises()
+
+    await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
+    await flushPromises()
+
+    const dialog = document.body.querySelector('[role="dialog"]')!
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+    expect(dialog.getAttribute('aria-label')).toBe('Brza akcija')
+  })
+
+  it('moves focus into the sheet when it opens', async () => {
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router] }, attachTo: document.body })
+    await flushPromises()
+
+    await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
+    await flushPromises()
+
+    expect(document.activeElement?.textContent?.trim()).toBe('Nova faktura')
+  })
+
+  it('closes the sheet when Escape is pressed', async () => {
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router] }, attachTo: document.body })
+    await flushPromises()
+
+    await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
+    await flushPromises()
+    expect(document.body.querySelector('.fixed.inset-0.z-30')).toBeTruthy()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(document.body.querySelector('.fixed.inset-0.z-30')).toBeFalsy()
+  })
 })

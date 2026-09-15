@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Badge, Button, Card, Input, Select } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Badge, Button, Card, Input, Select , DataTable, type DataTableColumn } from '@pausalac/ui'
 import {
   createAdminPlan,
   listAdminPlans,
@@ -28,7 +27,7 @@ const form = ref({
   is_active: 'true',
 })
 
-const columns: AdminTableColumn<AdminPlan>[] = [
+const columns: DataTableColumn<AdminPlan>[] = [
   { key: 'identifier', label: 'Identifikator' },
   { key: 'name', label: 'Naziv' },
   { key: 'price', label: 'Cena', format: (r) => `${r.price} ${r.currency}` },
@@ -144,7 +143,7 @@ onMounted(load)
       </form>
     </Card>
 
-    <AdminTable :columns="columns" :rows="plans" :loading="loading" empty-title="Nema planova.">
+    <DataTable :columns="columns" :rows="plans" :loading="loading" empty-title="Nema planova.">
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.is_active ? 'success' : 'neutral'">
@@ -153,6 +152,6 @@ onMounted(load)
           <Button variant="secondary" @click="onEdit(row)">Izmeni</Button>
         </div>
       </template>
-    </AdminTable>
+    </DataTable>
   </div>
 </template>

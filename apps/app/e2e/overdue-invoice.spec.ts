@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import path from 'node:path'
 import { test, expect } from '@playwright/test'
-import { apiPost, registerWithCompany } from './helpers'
+import { apiPost, registerWithCompany, expectNoA11yViolations } from './helpers'
 
 /**
  * The overdue sweep is a Celery Beat task, not a user-triggered action
@@ -42,4 +42,8 @@ test('an invoice past its due date is shown as overdue once the sweep runs', asy
 
   await page.goto(`/fakture/${invoice.id}`)
   await expect(page.getByText('Kasni')).toBeVisible()
+
+  // Real automated a11y scan (master prompt §55) on the invoice detail
+  // page — badges, status-derived action buttons, a Dokumenti section.
+  await expectNoA11yViolations(page)
 })

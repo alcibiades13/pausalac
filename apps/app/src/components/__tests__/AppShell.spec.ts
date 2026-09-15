@@ -86,3 +86,55 @@ describe('AppShell nav active state', () => {
     expect(inactive!.classes()).toContain('text-text-secondary')
   })
 })
+
+describe('AppShell accessibility (master prompt §55)', () => {
+  let pinia: ReturnType<typeof createPinia>
+
+  beforeEach(async () => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    vi.mocked(listNotifications).mockReset()
+    const auth = useAuthStore()
+    auth.status = 'authenticated'
+    auth.user = authenticatedUser()
+    await router.push({ name: 'invoices' })
+    await router.isReady()
+  })
+
+  it('offers a skip-to-content link targeting the main landmark', async () => {
+    vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+
+    const skipLink = wrapper.find('a[href="#main-content"]')
+    expect(skipLink.exists()).toBe(true)
+    expect(skipLink.text()).toBe('Preskoči na sadržaj')
+    expect(wrapper.find('main#main-content').exists()).toBe(true)
+  })
+
+  it('labels the desktop nav landmark', async () => {
+    vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+
+    expect(wrapper.get('nav').attributes('aria-label')).toBe('Glavna navigacija')
+  })
+
+  it('includes the unread count in the notification link\'s accessible name', async () => {
+    vi.mocked(listNotifications).mockResolvedValue({ count: 3, next: null, previous: null, results: [] })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+
+    const bell = wrapper.get('[href="/obavestenja"]')
+    expect(bell.attributes('aria-label')).toBe('Obaveštenja (3 nepročitanih)')
+  })
+
+  it('falls back to a plain label when there are no unread notifications', async () => {
+    vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+
+    const bell = wrapper.get('[href="/obavestenja"]')
+    expect(bell.attributes('aria-label')).toBe('Obaveštenja')
+  })
+})

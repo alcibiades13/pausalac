@@ -9,6 +9,7 @@
  */
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { Drawer } from '@pausalac/ui'
 
 const route = useRoute()
 const fabOpen = ref(false)
@@ -119,19 +120,19 @@ watch(
     </RouterLink>
   </nav>
 
-  <Teleport to="body">
-    <div v-if="fabOpen" class="fixed inset-0 z-30 sm:hidden">
-      <div class="absolute inset-0 bg-navy/40" @click="fabOpen = false" />
-      <div class="absolute inset-x-0 bottom-0 flex flex-col gap-1 rounded-t-2xl bg-surface p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_24px_rgba(23,32,51,0.12)]">
-        <RouterLink
-          v-for="item in FAB_ITEMS"
-          :key="item.label"
-          :to="item.to"
-          class="rounded-lg px-4 py-3 text-sm font-medium text-navy hover:bg-background"
-        >
-          {{ item.label }}
-        </RouterLink>
-      </div>
-    </div>
-  </Teleport>
+  <Drawer
+    :open="fabOpen"
+    label="Brza akcija"
+    container-class="sm:hidden"
+    @update:open="fabOpen = $event"
+  >
+    <RouterLink
+      v-for="item in FAB_ITEMS"
+      :key="item.label"
+      :to="item.to"
+      class="rounded-lg px-4 py-3 text-sm font-medium text-navy hover:bg-background"
+    >
+      {{ item.label }}
+    </RouterLink>
+  </Drawer>
 </template>

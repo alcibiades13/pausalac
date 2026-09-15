@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Alert, Badge, Button } from '@pausalac/ui'
-import AdminTable, { type AdminTableColumn } from '@/components/admin/AdminTable.vue'
+import { Alert, Badge, Button, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import {
   deactivateAdminUser,
   listAdminUsers,
@@ -19,7 +18,7 @@ const page = ref(1)
 const hasNext = ref(false)
 const hasPrevious = ref(false)
 
-const columns: AdminTableColumn<AdminUser>[] = [
+const columns: DataTableColumn<AdminUser>[] = [
   { key: 'email', label: 'Email' },
   { key: 'name', label: 'Ime', format: (r) => `${r.first_name} ${r.last_name}`.trim() || '—' },
   {
@@ -79,7 +78,7 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <AdminTable :columns="columns" :rows="users" :loading="loading" empty-title="Nema korisnika.">
+    <DataTable :columns="columns" :rows="users" :loading="loading" empty-title="Nema korisnika.">
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.is_active ? 'success' : 'neutral'">
@@ -94,11 +93,8 @@ onMounted(load)
           </Button>
         </div>
       </template>
-    </AdminTable>
+    </DataTable>
 
-    <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>
-      <Button variant="secondary" :disabled="!hasNext" @click="goNext">Sledeća</Button>
-    </div>
+    <Pagination :has-next="hasNext" :has-previous="hasPrevious" @next="goNext" @previous="goPrevious" />
   </div>
 </template>
