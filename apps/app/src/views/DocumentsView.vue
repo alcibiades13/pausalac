@@ -180,38 +180,42 @@ async function onUpload() {
     </Card>
 
     <div v-else class="flex flex-col gap-2">
-      <Card v-for="doc in documents" :key="doc.id" class="flex items-center gap-4">
-        <img v-if="isImage(doc)" :src="doc.file_url ?? undefined" class="h-12 w-12 rounded object-cover" alt="" />
-        <div v-else class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl">
-          📄
-        </div>
-        <div class="flex-1">
-          <div class="flex items-center gap-2">
-            <Badge variant="neutral">{{ CATEGORY_LABELS[doc.category] }}</Badge>
-            <span class="font-medium text-navy">{{ doc.title }}</span>
+      <Card v-for="doc in documents" :key="doc.id" class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="flex min-w-0 flex-1 items-center gap-4">
+          <img v-if="isImage(doc)" :src="doc.file_url ?? undefined" class="h-12 w-12 shrink-0 rounded object-cover" alt="" />
+          <div v-else class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl">
+            📄
           </div>
-          <p class="text-sm text-text-secondary">
-            {{ doc.original_filename }} · {{ formatSize(doc.size_bytes) }}
-            <span v-if="doc.uploaded_by_name"> · {{ doc.uploaded_by_name }}</span>
-          </p>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <Badge variant="neutral">{{ CATEGORY_LABELS[doc.category] }}</Badge>
+              <span class="font-medium text-navy">{{ doc.title }}</span>
+            </div>
+            <p class="text-sm text-text-secondary">
+              {{ doc.original_filename }} · {{ formatSize(doc.size_bytes) }}
+              <span v-if="doc.uploaded_by_name"> · {{ doc.uploaded_by_name }}</span>
+            </p>
+          </div>
         </div>
-        <a
-          v-if="doc.file_url"
-          :href="doc.file_url"
-          target="_blank"
-          rel="noopener"
-          class="text-sm text-primary hover:underline"
-        >
-          Otvori
-        </a>
-        <button
-          type="button"
-          class="text-sm text-danger hover:underline disabled:opacity-40"
-          :disabled="deletingId === doc.id"
-          @click="onDelete(doc.id)"
-        >
-          Obriši
-        </button>
+        <div class="flex items-center gap-3 sm:shrink-0">
+          <a
+            v-if="doc.file_url"
+            :href="doc.file_url"
+            target="_blank"
+            rel="noopener"
+            class="text-sm text-primary hover:underline"
+          >
+            Otvori
+          </a>
+          <button
+            type="button"
+            class="text-sm text-danger hover:underline disabled:opacity-40"
+            :disabled="deletingId === doc.id"
+            @click="onDelete(doc.id)"
+          >
+            Obriši
+          </button>
+        </div>
       </Card>
     </div>
   </div>
