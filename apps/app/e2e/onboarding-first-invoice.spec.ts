@@ -29,7 +29,11 @@ test('a new user can register, set up a company, add a client, and issue a first
   // Zero-company bridge (HomeView.vue) — a fresh account has no company yet.
   await page.getByLabel('Naziv kompanije').fill(companyName)
   await page.getByRole('button', { name: 'Napravi kompaniju' }).click()
-  await expect(page.getByText(companyName)).toBeVisible()
+  // The company name renders both in the sidebar (visible at this
+  // desktop viewport) and the mobile-only header (present in the DOM,
+  // CSS-hidden here) — scope to the sidebar landmark to avoid a
+  // strict-mode multi-match.
+  await expect(page.getByRole('complementary').getByText(companyName)).toBeVisible()
 
   // Real automated a11y scan (master prompt §55) on the dashboard —
   // covers the app's main authenticated landing page, distinct from

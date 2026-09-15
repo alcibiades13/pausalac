@@ -39,8 +39,12 @@ test('an accounting org can connect to a client company, and the client can acce
   await expect(ownerPage.getByText('Aktivna')).toBeVisible()
 
   // The connection now shows as active in the org's own portfolio table too.
+  // (Also scoped to the sidebar below: the connection provisions the org
+  // admin a real membership in the client company too, so its name now
+  // shows in both the sidebar's own company-switcher and the mobile-only
+  // header — same element present in both, CSS-hidden per viewport.)
   await adminPage.goto('/organizacija')
-  await expect(adminPage.getByText(company.name)).toBeVisible()
+  await expect(adminPage.getByRole('main').getByText(company.name)).toBeVisible()
 
   await adminContext.close()
   await ownerContext.close()

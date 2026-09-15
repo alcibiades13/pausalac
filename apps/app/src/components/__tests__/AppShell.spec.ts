@@ -87,6 +87,74 @@ describe('AppShell nav active state', () => {
   })
 })
 
+describe('AppShell sidebar (tablet/desktop nav)', () => {
+  let pinia: ReturnType<typeof createPinia>
+
+  beforeEach(async () => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    vi.mocked(listNotifications).mockReset()
+    vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const auth = useAuthStore()
+    auth.status = 'authenticated'
+    auth.user = authenticatedUser()
+    await router.push({ name: 'invoices' })
+    await router.isReady()
+  })
+
+  it('renders the sidebar hidden below sm and visible from sm up', async () => {
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+
+    const aside = wrapper.get('aside')
+    expect(aside.classes()).toContain('hidden')
+    expect(aside.classes()).toContain('sm:flex')
+  })
+
+  it('renders all 8 nav links inside the sidebar, each with an icon', async () => {
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+
+    const aside = wrapper.get('aside')
+    const labels = ['Početna', 'Klijenti', 'Fakture', 'Limiti', 'KPO', 'Obaveze', 'Dokumenti', 'Računovođa']
+    for (const label of labels) {
+      const link = aside.findAll('a').find((a) => a.text().includes(label))
+      expect(link, `missing sidebar link: ${label}`).toBeTruthy()
+      expect(link!.find('svg').exists()).toBe(true)
+    }
+  })
+
+  it('lists notifications, settings and logout in the sidebar footer', async () => {
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+
+    const aside = wrapper.get('aside')
+    expect(aside.text()).toContain('Obaveštenja')
+    expect(aside.text()).toContain('Podešavanja')
+    expect(aside.text()).toContain('Odjavi se')
+  })
+
+  it('calls auth.logout() when "Odjavi se" is clicked', async () => {
+    // Not asserting the post-logout redirect here: this router's global
+    // beforeEach guard resolves useAuthStore() independently of this
+    // test's pinia/mount wiring, so it doesn't reliably observe the
+    // mocked post-logout auth state in a unit test — a pre-existing
+    // router/test-setup quirk unrelated to this component, not something
+    // to chase down as part of a UI restructuring change. The redirect
+    // itself is unchanged code (still AppShell's existing onLogout).
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    await flushPromises()
+    const auth = useAuthStore()
+    const logoutSpy = vi.spyOn(auth, 'logout').mockResolvedValue()
+
+    const logoutButton = wrapper.get('aside').findAll('button').find((b) => b.text() === 'Odjavi se')!
+    await logoutButton.trigger('click')
+    await flushPromises()
+
+    expect(logoutSpy).toHaveBeenCalled()
+  })
+})
+
 describe('AppShell accessibility (master prompt §55)', () => {
   let pinia: ReturnType<typeof createPinia>
 
@@ -112,12 +180,12 @@ describe('AppShell accessibility (master prompt §55)', () => {
     expect(wrapper.find('main#main-content').exists()).toBe(true)
   })
 
-  it('labels the desktop nav landmark', async () => {
+  it('labels the sidebar nav landmark', async () => {
     vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
     const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
     await flushPromises()
 
-    expect(wrapper.get('nav').attributes('aria-label')).toBe('Glavna navigacija')
+    expect(wrapper.get('aside nav').attributes('aria-label')).toBe('Glavna navigacija')
   })
 
   it('includes the unread count in the notification link\'s accessible name', async () => {
