@@ -6,7 +6,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "docker compose up -d && concurrently -n api,celery,app -c blue,magenta,green \"cd apps/api && .venv/bin/python manage.py runserver\" \"cd apps/api && .venv/bin/celery -A config worker -B -l info\" \"pnpm --filter @pausalac/app dev\"",
+    "dev": "docker compose up -d && concurrently -n api,celery,app,web -c blue,magenta,green,yellow \"cd apps/api && .venv/bin/python manage.py runserver\" \"cd apps/api && .venv/bin/celery -A config worker -B -l info\" \"pnpm --filter @pausalac/app dev\" \"pnpm --filter @pausalac/web dev\"",
     "dev:app": "pnpm --filter @pausalac/app dev",
     "dev:web": "pnpm --filter @pausalac/web dev",
     "lint": "pnpm -r --if-present lint",

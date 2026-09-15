@@ -21,6 +21,22 @@ class PlanListView(generics.ListAPIView):
         return Plan.objects.filter(is_active=True)
 
 
+class PublicPlanListView(generics.ListAPIView):
+    """Same catalog as PlanListView, deliberately unauthenticated — the
+    marketing site (apps/web) needs to show real, current prices without
+    a logged-in session, and duplicating the numbers as static marketing
+    copy would drift from the real Plan rows the moment pricing changes.
+    A separate view (not just loosening PlanListView's permission) keeps
+    the authenticated one's assumptions untouched."""
+
+    serializer_class = PlanSerializer
+    pagination_class = None
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        return Plan.objects.filter(is_active=True)
+
+
 class SubscriptionView(APIView):
     """Current company's subscription — broadly readable (any active
     member), same reasoning as most status/read data in this app; only

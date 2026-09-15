@@ -37,6 +37,47 @@ class PlanListViewTests(TestCase):
         self.assertNotIn("starter", identifiers)
 
 
+class PublicPlanListViewTests(TestCase):
+    """Deliberately unauthenticated — apps/web (the marketing site) reads
+    real, current pricing from here without a logged-in session."""
+
+    def setUp(self):
+        self.plans = seed_test_plans()
+
+    def test_anonymous_request_sees_active_plans(self):
+        url = reverse("subscription-public-plans", kwargs={"version": "v1"})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        identifiers = {plan["identifier"] for plan in response.json()}
+        self.assertEqual(identifiers, {"starter", "professional", "business"})
+
+    def test_inactive_plan_excluded(self):
+        self.plans["starter"].is_active = False
+        self.plans["starter"].save(update_fields=["is_active"])
+        url = reverse("subscription-public-plans", kwargs={"version": "v1"})
+        response = self.client.get(url)
+        identifiers = {plan["identifier"] for plan in response.json()}
+        self.assertNotIn("starter", identifiers)
+
+    def test_same_shape_as_the_authenticated_plans_endpoint(self):
+        public_response = self.client.get(
+            reverse("subscription-public-plans", kwargs={"version": "v1"})
+        )
+        User.objects.create_user(email="shape@pausalac.rs", password="s3cr3t-pass")
+        self.client.login(username="shape@pausalac.rs", password="s3cr3t-pass")
+        authenticated_response = self.client.get(
+            reverse("subscription-plans", kwargs={"version": "v1"})
+        )
+
+        self.assertEqual(
+            {plan["identifier"] for plan in public_response.json()},
+            {plan["identifier"] for plan in authenticated_response.json()},
+        )
+        self.assertEqual(
+            set(public_response.json()[0].keys()), set(authenticated_response.json()[0].keys())
+        )
+
+
 class SubscriptionViewTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(email="owner@firma.rs", password="s3cr3t-pass")

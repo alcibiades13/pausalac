@@ -1,8 +1,34 @@
+/*
+ * Must be the very first rule in the compiled stylesheet — a CSS
+ * @import is invalid (and silently dropped by strict engines) if it
+ * comes after any non-@import rule. Fonts referenced by --font-display/
+ * --font-mono in tokens.css (same fonts apps/app already loads).
+ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 @import "@pausalac/config/tokens.css";
+
+/*
+ * Same fix apps/app needed (Phase 1a): Tailwind's content detection
+ * walks this app's own directory and skips node_modules, so it never
+ * sees packages/ui's .vue files even though pnpm resolves @pausalac/ui
+ * there as real source. Without this, utility classes used only inside
+ * shared components are silently missing from the built CSS.
+ */
+@source "../../../../packages/ui/src";
 
 body {
   font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-navy);
+}
+
+a,
+button {
+  transition:
+    color 150ms ease-out,
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    transform 150ms ease-out;
 }
