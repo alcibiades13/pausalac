@@ -9,7 +9,7 @@ import MobileBottomNav from './MobileBottomNav.vue'
 import AppSidebar from './AppSidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import NotificationBell from './NotificationBell.vue'
-import UserMenu from './UserMenu.vue'
+import DropdownMenu from './DropdownMenu.vue'
 import AppBreadcrumb from './AppBreadcrumb.vue'
 
 const { t } = useI18n()
@@ -48,6 +48,20 @@ const NAV_LINKS = [
     name: 'accounting',
     icon: 'M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2;M3 13h18',
   },
+]
+
+// Desktop equivalent of MobileBottomNav.vue's FAB — same 4 real
+// destinations, same i18n keys (authShell.mobileBottomNav.fab.*), on
+// purpose: one action model on both platforms, not two lists that can
+// drift apart. Fiskalni račun/Novi trošak are excluded there for real
+// reasons (fiscalization integration undefined, Novi trošak is a V2
+// item — see that file's docstring), not an oversight to "fix" here by
+// inventing a longer desktop-only list.
+const QUICK_CREATE_ITEMS = [
+  { labelKey: 'newInvoice', to: { name: 'invoice-new' } },
+  { labelKey: 'proforma', to: { name: 'invoice-new-profaktura' } },
+  { labelKey: 'advance', to: { name: 'invoice-new-avans' } },
+  { labelKey: 'newClient', to: { name: 'client-new' } },
 ]
 
 const unreadCount = ref(0)
@@ -103,17 +117,18 @@ const notificationsAriaLabel = computed(() =>
     : t('authShell.appShell.notificationsAriaLabel'),
 )
 
-// Breadcrumb (TopHeader, desktop/tablet only): a subroute's own
-// route.meta.section names which top-level NAV_LINKS entry it belongs
-// to (router/index.ts) — top-level pages themselves (route.name already
-// a NAV_LINKS name) don't set it, so `section` falls back to the route's
-// own name. `home` intentionally shows nothing: it's the landing page,
-// there's no "back" and no orientation need.
+// Breadcrumb (TopHeader, desktop/tablet only): only shows on routes one
+// level *below* a NAV_LINKS entry (route.meta.section set — router/
+// index.ts), e.g. client-detail/invoice-new. Top-level pages themselves
+// (Clients, Invoices, ...) show nothing here — the sidebar already
+// marks the active section, and each of those views has its own bare
+// page-level heading; a breadcrumb repeating that same name a third
+// time was real, reported redundancy, not orientation. Genuinely
+// nested routes are where a breadcrumb (plus a working back button)
+// earns its place, since the sidebar can't show that depth.
 const breadcrumbSection = computed(() => {
-  const name = route.name as string
-  if (name === 'home') return undefined
-  const section = (route.meta.section as string | undefined) ?? name
-  return t('authShell.breadcrumb.sections.' + section)
+  const section = route.meta.section as string | undefined
+  return section ? t('authShell.breadcrumb.sections.' + section) : undefined
 })
 const breadcrumbLeaf = computed(() => {
   const key = route.meta.breadcrumbKey as string | undefined
@@ -252,6 +267,32 @@ async function onLogout() {
         />
 
         <div class="flex shrink-0 items-center gap-2">
+          <!-- Desktop equivalent of the mobile FAB (MobileBottomNav.vue) —
+               same 4 destinations, so a user who's anywhere in the app
+               (not just on /fakture) can start the most common actions
+               without losing their place. -->
+          <DropdownMenu
+            :label="t('authShell.topHeader.quickCreateLabel')"
+            menu-width-class="w-56"
+            trigger-class="flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-primary to-primary-dark px-3 py-2 text-sm font-medium text-white hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <template #trigger>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round" />
+                <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round" />
+              </svg>
+              {{ t('authShell.topHeader.quickCreateButton') }}
+            </template>
+            <RouterLink
+              v-for="item in QUICK_CREATE_ITEMS"
+              :key="item.labelKey"
+              :to="item.to"
+              class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary-dark"
+            >
+              {{ t('authShell.mobileBottomNav.fab.' + item.labelKey) }}
+            </RouterLink>
+          </DropdownMenu>
+
           <div class="relative hidden lg:block">
             <svg
               class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
@@ -276,7 +317,11 @@ async function onLogout() {
           <NotificationBell :unread-count="unreadCount" :label="notificationsAriaLabel" />
           <LanguageSwitcher />
 
-          <UserMenu :initials="userInitials" :label="t('authShell.topHeader.userMenuLabel')">
+          <DropdownMenu
+            :label="t('authShell.topHeader.userMenuLabel')"
+            trigger-class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark text-sm font-semibold text-white hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <template #trigger>{{ userInitials }}</template>
             <button
               type="button"
               class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary-dark"
@@ -284,7 +329,7 @@ async function onLogout() {
             >
               {{ t('authShell.appShell.logoutButton') }}
             </button>
-          </UserMenu>
+          </DropdownMenu>
         </div>
       </header>
 

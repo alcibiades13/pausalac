@@ -6,6 +6,7 @@ const model = defineModel<string>({ default: '' })
 withDefaults(
   defineProps<{
     label?: string
+    labelSrOnly?: boolean
     type?: string
     placeholder?: string
     error?: string
@@ -18,6 +19,7 @@ withDefaults(
     type: 'text',
     required: false,
     disabled: false,
+    labelSrOnly: false,
   },
 )
 
@@ -38,7 +40,7 @@ function onInput(event: Event) {
 
 <template>
   <div class="flex flex-col gap-1">
-    <label v-if="label" :for="inputId" class="text-sm font-medium text-navy">
+    <label v-if="label" :for="inputId" :class="labelSrOnly ? 'sr-only' : 'text-sm font-medium text-navy'">
       {{ label }}
       <span v-if="required" class="text-danger">*</span>
     </label>

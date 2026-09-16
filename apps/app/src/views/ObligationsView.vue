@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Button, Card, Input, Alert, Badge, EmptyState, MoneyDisplay, Skeleton, MoneyInput } from '@pausalac/ui'
+import { Button, Card, DatePicker, Alert, Badge, EmptyState, MoneyDisplay, Skeleton, MoneyInput } from '@pausalac/ui'
 import {
   createTaxResolution,
   listTaxObligations,
@@ -130,8 +130,8 @@ async function onCreateResolution() {
         </Alert>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Input v-model="form.effective_from" type="date" :label="t('limitsAccountingEtc.obligationsView.effectiveFromLabel')" required />
-          <Input v-model="form.effective_until" type="date" :label="t('limitsAccountingEtc.obligationsView.effectiveUntilLabel')" required />
+          <DatePicker v-model="form.effective_from" :label="t('limitsAccountingEtc.obligationsView.effectiveFromLabel')" required />
+          <DatePicker v-model="form.effective_until" :label="t('limitsAccountingEtc.obligationsView.effectiveUntilLabel')" required />
           <MoneyInput v-model="form.tax_base" :label="t('limitsAccountingEtc.obligationsView.taxBaseLabel')" required />
         </div>
 
@@ -161,9 +161,15 @@ async function onCreateResolution() {
     </Card>
 
     <div>
-      <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h2 class="text-base font-semibold text-navy">{{ t('limitsAccountingEtc.obligationsView.monthlyObligationsTitle') }}</h2>
-        <div class="flex items-center gap-2">
+      <h2 class="mb-2 text-base font-semibold text-navy">{{ t('limitsAccountingEtc.obligationsView.monthlyObligationsTitle') }}</h2>
+
+      <Alert v-if="status === 'error'" variant="danger">
+        {{ errorMessage }}
+        <button class="ml-2 underline" @click="loadObligations">{{ t('limitsAccountingEtc.obligationsView.retryButton') }}</button>
+      </Alert>
+
+      <Card v-else>
+        <div class="flex items-center gap-2 border-b border-border pb-4">
           <label for="obligation-status-filter" class="text-sm text-text-secondary">{{ t('limitsAccountingEtc.obligationsView.statusFilterLabel') }}</label>
           <select
             id="obligation-status-filter"
@@ -176,61 +182,54 @@ async function onCreateResolution() {
             </option>
           </select>
         </div>
-      </div>
 
-      <Alert v-if="status === 'error'" variant="danger">
-        {{ errorMessage }}
-        <button class="ml-2 underline" @click="loadObligations">{{ t('limitsAccountingEtc.obligationsView.retryButton') }}</button>
-      </Alert>
+        <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
 
-      <Card v-else-if="status === 'loading'">
-        <Skeleton :count="3" />
-      </Card>
-
-      <Card v-else-if="obligations.length === 0">
         <EmptyState
+          v-else-if="obligations.length === 0"
+          class="mt-4"
           :title="t('limitsAccountingEtc.obligationsView.emptyTitle')"
           :description="t('limitsAccountingEtc.obligationsView.emptyDescription')"
         />
-      </Card>
 
-      <Card v-else class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
-              <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnPeriod') }}</th>
-              <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnDueDate') }}</th>
-              <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.obligationsView.columnAmount') }}</th>
-              <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnStatus') }}</th>
-              <th class="py-2 pr-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="obligation in obligations" :key="obligation.id" class="border-b border-border">
-              <td class="py-2 pr-3">{{ formatDate(obligation.period_start) }}</td>
-              <td class="py-2 pr-3">{{ formatDate(obligation.due_date) }}</td>
-              <td class="py-2 pr-3 text-right">
-                <MoneyDisplay :amount="obligation.total_amount" :currency="currency" />
-              </td>
-              <td class="py-2 pr-3">
-                <Badge :variant="STATUS_VARIANTS[obligation.status]">
-                  {{ STATUS_LABELS[obligation.status] }}
-                </Badge>
-              </td>
-              <td class="py-2 pr-3">
-                <button
-                  v-if="obligation.status !== 'paid'"
-                  type="button"
-                  class="text-sm text-primary-dark hover:underline disabled:opacity-40"
-                  :disabled="markingPaidId === obligation.id"
-                  @click="onMarkPaid(obligation.id)"
-                >
-                  {{ t('limitsAccountingEtc.obligationsView.markPaidButton') }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="mt-4 overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnPeriod') }}</th>
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnDueDate') }}</th>
+                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.obligationsView.columnAmount') }}</th>
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnStatus') }}</th>
+                <th class="py-2 pr-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="obligation in obligations" :key="obligation.id" class="border-b border-border">
+                <td class="py-2 pr-3">{{ formatDate(obligation.period_start) }}</td>
+                <td class="py-2 pr-3">{{ formatDate(obligation.due_date) }}</td>
+                <td class="py-2 pr-3 text-right">
+                  <MoneyDisplay :amount="obligation.total_amount" :currency="currency" />
+                </td>
+                <td class="py-2 pr-3">
+                  <Badge :variant="STATUS_VARIANTS[obligation.status]">
+                    {{ STATUS_LABELS[obligation.status] }}
+                  </Badge>
+                </td>
+                <td class="py-2 pr-3">
+                  <button
+                    v-if="obligation.status !== 'paid'"
+                    type="button"
+                    class="text-sm text-primary-dark hover:underline disabled:opacity-40"
+                    :disabled="markingPaidId === obligation.id"
+                    @click="onMarkPaid(obligation.id)"
+                  >
+                    {{ t('limitsAccountingEtc.obligationsView.markPaidButton') }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   </div>

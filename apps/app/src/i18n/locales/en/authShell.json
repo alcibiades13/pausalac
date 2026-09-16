@@ -57,7 +57,7 @@
     "logoutButton": "Log out",
     "navLabel": "Main navigation",
     "navLinks": {
-      "home": "Home",
+      "home": "Dashboard",
       "clients": "Clients",
       "invoices": "Invoices",
       "limits": "Limits",
@@ -71,11 +71,13 @@
     "searchPlaceholder": "Search (coming soon)",
     "searchAriaLabel": "Search — coming soon",
     "backButtonLabel": "Back",
-    "userMenuLabel": "Account"
+    "userMenuLabel": "Account",
+    "quickCreateLabel": "Quick create",
+    "quickCreateButton": "New"
   },
   "breadcrumb": {
     "sections": {
-      "home": "Home",
+      "home": "Dashboard",
       "clients": "Clients",
       "invoices": "Invoices",
       "limits": "Limits",
@@ -103,7 +105,7 @@
     "navLabel": "Main navigation",
     "quickActionLabel": "Quick action",
     "tabs": {
-      "home": "Home",
+      "home": "Dashboard",
       "invoices": "Invoices",
       "finansije": "Finances",
       "vise": "More"

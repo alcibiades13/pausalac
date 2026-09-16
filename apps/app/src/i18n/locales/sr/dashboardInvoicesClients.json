@@ -77,9 +77,6 @@
   },
   "invoicesListView": {
     "title": "Fakture",
-    "newInvoiceButton": "+ Faktura",
-    "newProfakturaButton": "+ Profaktura",
-    "newAvansButton": "+ Avans",
     "statusFilterLabel": "Status:",
     "allStatusesOption": "Sve",
     "typeFilterLabel": "Tip:",

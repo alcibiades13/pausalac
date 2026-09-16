@@ -77,9 +77,6 @@
   },
   "invoicesListView": {
     "title": "Счета",
-    "newInvoiceButton": "+ Счёт",
-    "newProfakturaButton": "+ Проформа",
-    "newAvansButton": "+ Аванс",
     "statusFilterLabel": "Статус:",
     "allStatusesOption": "Все",
     "typeFilterLabel": "Тип:",

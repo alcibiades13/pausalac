@@ -228,77 +228,85 @@ async function onUpload() {
       </form>
     </Card>
 
-    <div class="flex flex-wrap items-end gap-3">
-      <Select v-model="categoryFilter" :label="t('limitsAccountingEtc.documentsView.categoryLabel')" :options="CATEGORY_FILTER_OPTIONS" />
-      <Input v-model="searchTerm" :label="t('limitsAccountingEtc.documentsView.searchLabel')" :placeholder="t('limitsAccountingEtc.documentsView.searchPlaceholder')" />
-    </div>
-
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
       <button class="ml-2 underline" @click="load">{{ t('limitsAccountingEtc.documentsView.retryButton') }}</button>
     </Alert>
 
-    <Card v-else-if="status === 'loading'">
-      <Skeleton :count="3" />
-    </Card>
+    <Card v-else>
+      <div class="flex flex-wrap items-end gap-3 border-b border-border pb-4">
+        <Select v-model="categoryFilter" :label="t('limitsAccountingEtc.documentsView.categoryLabel')" :options="CATEGORY_FILTER_OPTIONS" />
+        <Input
+          v-model="searchTerm"
+          label-sr-only
+          :label="t('limitsAccountingEtc.documentsView.searchLabel')"
+          :placeholder="t('limitsAccountingEtc.documentsView.searchPlaceholder')"
+        />
+      </div>
 
-    <Card v-else-if="documents.length === 0">
-      <EmptyState :title="t('limitsAccountingEtc.documentsView.emptyTitle')" :description="t('limitsAccountingEtc.documentsView.emptyDescription')" />
-    </Card>
+      <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
 
-    <div v-else class="flex flex-col gap-2">
-      <Card
-        v-for="doc in documents"
-        :id="`document-${doc.id}`"
-        :key="doc.id"
-        class="flex flex-col gap-3 sm:flex-row sm:items-center"
-        :class="String(doc.id) === route.query.document ? 'ring-2 ring-primary' : ''"
-      >
-        <div class="flex min-w-0 flex-1 items-center gap-4">
-          <img
-            v-if="isImage(doc)"
-            :src="doc.file_url ?? undefined"
-            class="h-12 w-12 shrink-0 rounded object-cover"
-            :alt="t('limitsAccountingEtc.documentsView.previewAlt', { title: doc.title })"
-          />
-          <div
-            v-else
-            class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl"
-            aria-hidden="true"
-          >
-            📄
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <Badge variant="neutral">{{ CATEGORY_LABELS[doc.category] }}</Badge>
-              <span class="font-medium text-navy">{{ doc.title }}</span>
+      <EmptyState
+        v-else-if="documents.length === 0"
+        class="mt-4"
+        :title="t('limitsAccountingEtc.documentsView.emptyTitle')"
+        :description="t('limitsAccountingEtc.documentsView.emptyDescription')"
+      />
+
+      <ul v-else class="mt-4 flex flex-col divide-y divide-border">
+        <li
+          v-for="doc in documents"
+          :id="`document-${doc.id}`"
+          :key="doc.id"
+          class="flex flex-col gap-3 rounded-lg px-2 py-3 sm:flex-row sm:items-center"
+          :class="String(doc.id) === route.query.document ? 'ring-2 ring-primary' : ''"
+        >
+          <div class="flex min-w-0 flex-1 items-center gap-4">
+            <img
+              v-if="isImage(doc)"
+              :src="doc.file_url ?? undefined"
+              class="h-12 w-12 shrink-0 rounded object-cover"
+              :alt="t('limitsAccountingEtc.documentsView.previewAlt', { title: doc.title })"
+            />
+            <div
+              v-else
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl"
+              aria-hidden="true"
+            >
+              📄
             </div>
-            <p class="text-sm text-text-secondary">
-              {{ doc.original_filename }} · {{ formatSize(doc.size_bytes) }}
-              <span v-if="doc.uploaded_by_name"> · {{ doc.uploaded_by_name }}</span>
-            </p>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <Badge variant="neutral">{{ CATEGORY_LABELS[doc.category] }}</Badge>
+                <span class="font-medium text-navy">{{ doc.title }}</span>
+              </div>
+              <p class="text-sm text-text-secondary">
+                {{ doc.original_filename }} · {{ formatSize(doc.size_bytes) }}
+                <span v-if="doc.uploaded_by_name"> · {{ doc.uploaded_by_name }}</span>
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="flex items-center gap-3 sm:shrink-0">
-          <a
-            v-if="doc.file_url"
-            :href="doc.file_url"
-            target="_blank"
-            rel="noopener"
-            class="text-sm text-primary-dark hover:underline"
-          >
-            {{ t('limitsAccountingEtc.documentsView.openLink') }}
-          </a>
-          <button
-            type="button"
-            class="text-sm text-danger hover:underline disabled:opacity-40"
-            :disabled="deletingId === doc.id"
-            @click="onDelete(doc.id)"
-          >
-            {{ t('limitsAccountingEtc.documentsView.deleteButton') }}
-          </button>
-        </div>
-      </Card>
-    </div>
+          <div class="flex items-center gap-3 sm:shrink-0">
+            <a
+              v-if="doc.file_url"
+              :href="doc.file_url"
+              target="_blank"
+              rel="noopener"
+              class="text-sm text-primary-dark hover:underline"
+            >
+              {{ t('limitsAccountingEtc.documentsView.openLink') }}
+            </a>
+            <button
+              type="button"
+              class="text-sm text-danger hover:underline disabled:opacity-40"
+              :disabled="deletingId === doc.id"
+              @click="onDelete(doc.id)"
+            >
+              {{ t('limitsAccountingEtc.documentsView.deleteButton') }}
+            </button>
+          </div>
+        </li>
+      </ul>
+    </Card>
   </div>
 </template>

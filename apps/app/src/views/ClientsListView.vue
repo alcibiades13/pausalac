@@ -54,24 +54,27 @@ function goPrevious() {
       </RouterLink>
     </div>
 
-    <Input
-      v-model="searchTerm"
-      :label="t('dashboardInvoicesClients.clientsListView.searchLabel')"
-      :placeholder="t('dashboardInvoicesClients.clientsListView.searchPlaceholder')"
-      class="max-w-xs"
-    />
-
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
       <button class="ml-2 underline" @click="load">{{ t('dashboardInvoicesClients.clientsListView.retryButton') }}</button>
     </Alert>
 
-    <Card v-else-if="status === 'loading'">
-      <Skeleton :count="3" />
-    </Card>
+    <Card v-else>
+      <div class="border-b border-border pb-4">
+        <Input
+          v-model="searchTerm"
+          label-sr-only
+          :label="t('dashboardInvoicesClients.clientsListView.searchLabel')"
+          :placeholder="t('dashboardInvoicesClients.clientsListView.searchPlaceholder')"
+          class="max-w-xs"
+        />
+      </div>
 
-    <Card v-else-if="clients.length === 0">
+      <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
+
       <EmptyState
+        v-else-if="clients.length === 0"
+        class="mt-4"
         :title="t('dashboardInvoicesClients.clientsListView.emptyTitle')"
         :description="t('dashboardInvoicesClients.clientsListView.emptyDescription')"
       >
@@ -81,10 +84,8 @@ function goPrevious() {
           </RouterLink>
         </template>
       </EmptyState>
-    </Card>
 
-    <template v-else>
-      <Card>
+      <template v-else>
         <ul class="flex flex-col divide-y divide-border">
           <li v-for="c in clients" :key="c.id" class="py-3">
             <RouterLink
@@ -101,9 +102,9 @@ function goPrevious() {
             </RouterLink>
           </li>
         </ul>
-      </Card>
 
-      <Pagination :has-next="hasNext" :has-previous="hasPrevious" @next="goNext" @previous="goPrevious" />
-    </template>
+        <Pagination class="mt-4" :has-next="hasNext" :has-previous="hasPrevious" @next="goNext" @previous="goPrevious" />
+      </template>
+    </Card>
   </div>
 </template>

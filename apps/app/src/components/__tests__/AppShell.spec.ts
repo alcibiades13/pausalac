@@ -118,7 +118,7 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
     await flushPromises()
 
     const aside = wrapper.get('aside')
-    const labels = ['Početna', 'Klijenti', 'Fakture', 'Limiti', 'KPO', 'Obaveze', 'Dokumenti', 'Računovođa']
+    const labels = ['Dashboard', 'Klijenti', 'Fakture', 'Limiti', 'KPO', 'Obaveze', 'Dokumenti', 'Računovođa']
     for (const label of labels) {
       const link = aside.findAll('a').find((a) => a.text().includes(label))
       expect(link, `missing sidebar link: ${label}`).toBeTruthy()
@@ -136,8 +136,10 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
 
     // Logout lives inside the user-menu dropdown, closed by default —
     // Settings stays in the sidebar footer (see the sidebar-footer test
-    // below), not duplicated here.
-    await desktopHeader.get('[aria-haspopup="menu"]').trigger('click')
+    // below), not duplicated here. The header also has a quick-create
+    // dropdown (also [aria-haspopup="menu"]) further left, so the user
+    // menu is targeted by its own aria-label rather than the first match.
+    await desktopHeader.get('[aria-label="Nalog"]').trigger('click')
     expect(desktopHeader.text()).toContain('Odjavi se')
     expect(desktopHeader.text()).not.toContain('Podešavanja')
   })
@@ -163,7 +165,7 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
     const logoutSpy = vi.spyOn(auth, 'logout').mockResolvedValue()
 
     const desktopHeader = wrapper.findAll('header').find((h) => h.classes().includes('sm:flex'))!
-    await desktopHeader.get('[aria-haspopup="menu"]').trigger('click')
+    await desktopHeader.get('[aria-label="Nalog"]').trigger('click')
     const logoutButton = desktopHeader.findAll('button').find((b) => b.text() === 'Odjavi se')!
     await logoutButton.trigger('click')
     await flushPromises()

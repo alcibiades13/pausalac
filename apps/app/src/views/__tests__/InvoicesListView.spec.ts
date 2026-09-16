@@ -88,13 +88,11 @@ describe('InvoicesListView', () => {
     expect(wrapper.text()).toContain('Ne možemo trenutno.')
   })
 
-  it('offers three explicit create buttons for the three document types', async () => {
+  it('offers a create-invoice CTA in the empty state (the three-type row moved to AppShell\'s global quick-create dropdown)', async () => {
     vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
     const wrapper = mount(InvoicesListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
-    expect(wrapper.text()).toContain('+ Faktura')
-    expect(wrapper.text()).toContain('+ Profaktura')
-    expect(wrapper.text()).toContain('+ Avans')
+    expect(wrapper.text()).toContain('+ Nova faktura')
   })
 
   it('re-fetches with the selected document type when the type filter changes', async () => {

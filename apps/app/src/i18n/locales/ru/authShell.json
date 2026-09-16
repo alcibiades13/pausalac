@@ -57,7 +57,7 @@
     "logoutButton": "Выйти",
     "navLabel": "Основная навигация",
     "navLinks": {
-      "home": "Главная",
+      "home": "Дашборд",
       "clients": "Клиенты",
       "invoices": "Счета",
       "limits": "Лимиты",
@@ -71,11 +71,13 @@
     "searchPlaceholder": "Поиск (скоро)",
     "searchAriaLabel": "Поиск — скоро будет доступен",
     "backButtonLabel": "Назад",
-    "userMenuLabel": "Аккаунт"
+    "userMenuLabel": "Аккаунт",
+    "quickCreateLabel": "Быстрое создание",
+    "quickCreateButton": "Новое"
   },
   "breadcrumb": {
     "sections": {
-      "home": "Главная",
+      "home": "Дашборд",
       "clients": "Клиенты",
       "invoices": "Счета",
       "limits": "Лимиты",
@@ -103,7 +105,7 @@
     "navLabel": "Основная навигация",
     "quickActionLabel": "Быстрое действие",
     "tabs": {
-      "home": "Главная",
+      "home": "Дашборд",
       "invoices": "Счета",
       "finansije": "Финансы",
       "vise": "Ещё"

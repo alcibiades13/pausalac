@@ -57,7 +57,7 @@
     "logoutButton": "Odjavi se",
     "navLabel": "Glavna navigacija",
     "navLinks": {
-      "home": "Početna",
+      "home": "Dashboard",
       "clients": "Klijenti",
       "invoices": "Fakture",
       "limits": "Limiti",
@@ -71,11 +71,13 @@
     "searchPlaceholder": "Pretraga (uskoro)",
     "searchAriaLabel": "Pretraga — uskoro dostupno",
     "backButtonLabel": "Nazad",
-    "userMenuLabel": "Nalog"
+    "userMenuLabel": "Nalog",
+    "quickCreateLabel": "Brzo kreiranje",
+    "quickCreateButton": "Novo"
   },
   "breadcrumb": {
     "sections": {
-      "home": "Početna",
+      "home": "Dashboard",
       "clients": "Klijenti",
       "invoices": "Fakture",
       "limits": "Limiti",
@@ -103,7 +105,7 @@
     "navLabel": "Glavna navigacija",
     "quickActionLabel": "Brza akcija",
     "tabs": {
-      "home": "Početna",
+      "home": "Dashboard",
       "invoices": "Fakture",
       "finansije": "Finansije",
       "vise": "Više"

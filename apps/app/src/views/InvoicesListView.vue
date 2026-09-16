@@ -50,64 +50,48 @@ watch([statusFilter, documentTypeFilter], load)
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-xl font-semibold text-navy">{{ t('dashboardInvoicesClients.invoicesListView.title') }}</h1>
-      <!-- Desktop-only: on mobile these three actions are covered by the
-           global FAB (Phase 6d, MobileBottomNav.vue) — this row was
-           originally a temporary stand-in for it (docs/decisions-log.md). -->
-      <div class="hidden flex-wrap gap-2 sm:flex">
-        <RouterLink :to="{ name: 'invoice-new' }">
-          <Button>{{ t('dashboardInvoicesClients.invoicesListView.newInvoiceButton') }}</Button>
-        </RouterLink>
-        <RouterLink :to="{ name: 'invoice-new-profaktura' }">
-          <Button variant="secondary">{{ t('dashboardInvoicesClients.invoicesListView.newProfakturaButton') }}</Button>
-        </RouterLink>
-        <RouterLink :to="{ name: 'invoice-new-avans' }">
-          <Button variant="secondary">{{ t('dashboardInvoicesClients.invoicesListView.newAvansButton') }}</Button>
-        </RouterLink>
-      </div>
-    </div>
-
-    <div class="flex flex-wrap items-center gap-4">
-      <div class="flex items-center gap-2">
-        <label for="status-filter" class="text-sm text-text-secondary">{{ t('dashboardInvoicesClients.invoicesListView.statusFilterLabel') }}</label>
-        <select
-          id="status-filter"
-          v-model="statusFilter"
-          class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
-        >
-          <option value="">{{ t('dashboardInvoicesClients.invoicesListView.allStatusesOption') }}</option>
-          <option v-for="value in STATUS_OPTIONS" :key="value" :value="value">
-            {{ t(`dashboardInvoicesClients.invoiceStatusBadge.${value}`) }}
-          </option>
-        </select>
-      </div>
-      <div class="flex items-center gap-2">
-        <label for="document-type-filter" class="text-sm text-text-secondary">{{ t('dashboardInvoicesClients.invoicesListView.typeFilterLabel') }}</label>
-        <select
-          id="document-type-filter"
-          v-model="documentTypeFilter"
-          class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
-        >
-          <option value="">{{ t('dashboardInvoicesClients.invoicesListView.allTypesOption') }}</option>
-          <option v-for="value in DOCUMENT_TYPE_OPTIONS" :key="value" :value="value">
-            {{ t(`dashboardInvoicesClients.documentTypeBadge.${value}`) }}
-          </option>
-        </select>
-      </div>
-    </div>
+    <h1 class="text-xl font-semibold text-navy">{{ t('dashboardInvoicesClients.invoicesListView.title') }}</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
       <button class="ml-2 underline" @click="load">{{ t('dashboardInvoicesClients.invoicesListView.retryButton') }}</button>
     </Alert>
 
-    <Card v-else-if="status === 'loading'">
-      <Skeleton :count="3" />
-    </Card>
+    <Card v-else>
+      <div class="flex flex-wrap items-center gap-4 border-b border-border pb-4">
+        <div class="flex items-center gap-2">
+          <label for="status-filter" class="text-sm text-text-secondary">{{ t('dashboardInvoicesClients.invoicesListView.statusFilterLabel') }}</label>
+          <select
+            id="status-filter"
+            v-model="statusFilter"
+            class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <option value="">{{ t('dashboardInvoicesClients.invoicesListView.allStatusesOption') }}</option>
+            <option v-for="value in STATUS_OPTIONS" :key="value" :value="value">
+              {{ t(`dashboardInvoicesClients.invoiceStatusBadge.${value}`) }}
+            </option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <label for="document-type-filter" class="text-sm text-text-secondary">{{ t('dashboardInvoicesClients.invoicesListView.typeFilterLabel') }}</label>
+          <select
+            id="document-type-filter"
+            v-model="documentTypeFilter"
+            class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <option value="">{{ t('dashboardInvoicesClients.invoicesListView.allTypesOption') }}</option>
+            <option v-for="value in DOCUMENT_TYPE_OPTIONS" :key="value" :value="value">
+              {{ t(`dashboardInvoicesClients.documentTypeBadge.${value}`) }}
+            </option>
+          </select>
+        </div>
+      </div>
 
-    <Card v-else-if="invoices.length === 0">
+      <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
+
       <EmptyState
+        v-else-if="invoices.length === 0"
+        class="mt-4"
         :title="t('dashboardInvoicesClients.invoicesListView.emptyTitle')"
         :description="t('dashboardInvoicesClients.invoicesListView.emptyDescription')"
       >
@@ -117,10 +101,8 @@ watch([statusFilter, documentTypeFilter], load)
           </RouterLink>
         </template>
       </EmptyState>
-    </Card>
 
-    <Card v-else>
-      <ul class="flex flex-col divide-y divide-border">
+      <ul v-else class="flex flex-col divide-y divide-border">
         <li v-for="invoice in invoices" :key="invoice.id" class="py-3">
           <RouterLink
             :to="{ name: 'invoice-detail', params: { id: invoice.id } }"

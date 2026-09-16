@@ -54,7 +54,7 @@ describe('MobileBottomNav', () => {
 
     const nav = wrapper.get('nav')
     const links = nav.findAll('a')
-    expect(links.map((l) => l.text())).toEqual(['Početna', 'Fakture', 'Finansije', 'Više'])
+    expect(links.map((l) => l.text())).toEqual(['Dashboard', 'Fakture', 'Finansije', 'Više'])
   })
 
   it('highlights only the active tab, and the rest stay inactive', async () => {
@@ -64,7 +64,7 @@ describe('MobileBottomNav', () => {
 
     const links = wrapper.get('nav').findAll('a')
     const active = links.find((l) => l.text() === 'Fakture')!
-    const inactive = links.find((l) => l.text() === 'Početna')!
+    const inactive = links.find((l) => l.text() === 'Dashboard')!
     expect(active.classes()).toContain('text-primary-dark')
     expect(inactive.classes()).not.toContain('text-primary-dark')
     expect(inactive.classes()).toContain('text-text-secondary')
