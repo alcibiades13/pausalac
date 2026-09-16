@@ -1,1 +1,104 @@
-{}
+{
+  "loginView": {
+    "title": "Вход",
+    "genericError": "Сейчас не можем вас авторизовать. Попробуйте снова.",
+    "emailLabel": "Электронная почта",
+    "passwordLabel": "Пароль",
+    "submitButton": "Войти",
+    "forgotPasswordLink": "Забыли пароль?",
+    "noAccountText": "Нет аккаунта?",
+    "registerLink": "Зарегистрироваться"
+  },
+  "registerView": {
+    "title": "Создать аккаунт",
+    "genericError": "Сейчас не можем создать аккаунт. Попробуйте снова.",
+    "emailLabel": "Электронная почта",
+    "passwordLabel": "Пароль",
+    "passwordHint": "Минимум 8 символов.",
+    "firstNameLabel": "Имя",
+    "lastNameLabel": "Фамилия",
+    "submitButton": "Создать аккаунт",
+    "hasAccountText": "Уже есть аккаунт?",
+    "loginLink": "Войти"
+  },
+  "forgotPasswordView": {
+    "title": "Забыли пароль",
+    "successMessage": "Если аккаунт с таким email существует, мы отправили ссылку для сброса пароля.",
+    "instructions": "Введите адрес электронной почты, и мы отправим вам ссылку для установки нового пароля.",
+    "emailLabel": "Электронная почта",
+    "submitButton": "Отправить ссылку",
+    "backToLoginLink": "Назад к входу"
+  },
+  "resetPasswordView": {
+    "title": "Новый пароль",
+    "invalidLinkMessage": "Эта ссылка недействительна. Запросите новую ссылку для сброса пароля.",
+    "passwordMismatchError": "Пароли не совпадают.",
+    "genericError": "Сейчас не можем изменить пароль. Попробуйте снова.",
+    "newPasswordLabel": "Новый пароль",
+    "passwordHint": "Минимум 8 символов.",
+    "confirmPasswordLabel": "Повторите новый пароль",
+    "submitButton": "Установить новый пароль"
+  },
+  "verifyEmailView": {
+    "title": "Подтверждение email",
+    "invalidLinkError": "Ссылка для подтверждения недействительна.",
+    "verifyingMessage": "Проверяем вашу ссылку...",
+    "successMessage": "Адрес электронной почты успешно подтвержден.",
+    "continueLink": "Перейти на главную",
+    "loginLink": "Перейти ко входу"
+  },
+  "appShell": {
+    "skipToContent": "Перейти к содержимому",
+    "activeCompanyLabel": "Активная компания",
+    "notificationsAriaCount": "Уведомления ({count} непрочитанных)",
+    "notificationsAriaLabel": "Уведомления",
+    "notificationsLinkText": "Уведомления",
+    "settingsLink": "Настройки",
+    "logoutButton": "Выйти",
+    "navLabel": "Основная навигация",
+    "navLinks": {
+      "home": "Главная",
+      "clients": "Клиенты",
+      "invoices": "Счета",
+      "limits": "Лимиты",
+      "kpo": "КПО",
+      "obligations": "Обязательства",
+      "documents": "Документы",
+      "accounting": "Бухгалтер"
+    }
+  },
+  "mobileBottomNav": {
+    "navLabel": "Основная навигация",
+    "quickActionLabel": "Быстрое действие",
+    "tabs": {
+      "home": "Главная",
+      "invoices": "Счета",
+      "finansije": "Финансы",
+      "vise": "Ещё"
+    },
+    "fab": {
+      "newInvoice": "Новый счёт",
+      "proforma": "Проформа-счёт",
+      "advance": "Авансовый счёт",
+      "newClient": "Новый клиент"
+    }
+  },
+  "adminShell": {
+    "title": "System Admin",
+    "backToAppButton": "Назад в приложение",
+    "navLabel": "Админ-навигация",
+    "navLinks": {
+      "admin-users": "Пользователи",
+      "admin-companies": "Компании",
+      "admin-subscriptions": "Подписки",
+      "admin-plans": "Планы",
+      "admin-invoices": "Счета",
+      "admin-documents": "Документы",
+      "admin-tax-obligations": "Налоговые обязательства",
+      "admin-rules": "Регуляторные правила",
+      "admin-notifications": "Уведомления",
+      "admin-audit-log": "Журнал аудита",
+      "admin-integrations": "Интеграции"
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { defineComponent } from 'vue'
 import InvoiceFormView from '../InvoiceFormView.vue'
 import { listClients, type Client } from '@/services/clients'
 import { createInvoice, type Invoice } from '@/services/invoices'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/clients', () => ({
   listClients: vi.fn<typeof listClients>(),
@@ -83,7 +84,7 @@ describe('InvoiceFormView', () => {
 
   it('defaults the line item type to service and submits it with the payload', async () => {
     vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
-    const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoiceFormView, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const select = wrapper.find('select[id]:not([id="client"])')
@@ -102,7 +103,7 @@ describe('InvoiceFormView', () => {
 
   it('submits product when the type is changed', async () => {
     vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
-    const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoiceFormView, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const select = wrapper.find('select[id]:not([id="client"])')
@@ -120,7 +121,7 @@ describe('InvoiceFormView', () => {
 
   it('defaults to document_type invoice and the "Nova faktura" heading when no type prop is given', async () => {
     vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
-    const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoiceFormView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Nova faktura')
 
@@ -134,7 +135,7 @@ describe('InvoiceFormView', () => {
     vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
     const wrapper = mount(InvoiceFormView, {
       props: { documentType: 'profaktura' },
-      global: { plugins: [router] },
+      global: { plugins: [router, i18n] },
     })
     await flushPromises()
     expect(wrapper.text()).toContain('Nova profaktura')
@@ -151,7 +152,7 @@ describe('InvoiceFormView', () => {
     vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
     const wrapper = mount(InvoiceFormView, {
       props: { documentType: 'avans' },
-      global: { plugins: [router] },
+      global: { plugins: [router, i18n] },
     })
     await flushPromises()
     expect(wrapper.text()).toContain('Novi avans')
@@ -175,7 +176,7 @@ describe('InvoiceFormView', () => {
     it('preselects the client named in the ?client= query param', async () => {
       await router.push('/?client=2')
       vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
-      const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+      const wrapper = mount(InvoiceFormView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       const clientSelect = wrapper.find<HTMLSelectElement>('#client')
@@ -185,7 +186,7 @@ describe('InvoiceFormView', () => {
     it('falls back to the first client when ?client= does not match any client', async () => {
       await router.push('/?client=999')
       vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
-      const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+      const wrapper = mount(InvoiceFormView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       const clientSelect = wrapper.find<HTMLSelectElement>('#client')
@@ -195,7 +196,7 @@ describe('InvoiceFormView', () => {
     it('falls back to the first client when there is no ?client= query param', async () => {
       await router.push('/')
       vi.mocked(createInvoice).mockResolvedValue(invoiceResult())
-      const wrapper = mount(InvoiceFormView, { global: { plugins: [router] } })
+      const wrapper = mount(InvoiceFormView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       const clientSelect = wrapper.find<HTMLSelectElement>('#client')
@@ -229,7 +230,7 @@ describe('InvoiceFormView', () => {
       await guardRouter.push('/fakture/nova')
       await guardRouter.isReady()
       const RootComponent = defineComponent({ template: '<router-view />' })
-      const wrapper = mount(RootComponent, { global: { plugins: [guardRouter] } })
+      const wrapper = mount(RootComponent, { global: { plugins: [guardRouter, i18n] } })
       await flushPromises()
 
       await wrapper.find('input[type="text"]').setValue('Konsalting')
@@ -249,7 +250,7 @@ describe('InvoiceFormView', () => {
       await guardRouter.push('/fakture/nova')
       await guardRouter.isReady()
       const RootComponent = defineComponent({ template: '<router-view />' })
-      const wrapper = mount(RootComponent, { global: { plugins: [guardRouter] } })
+      const wrapper = mount(RootComponent, { global: { plugins: [guardRouter, i18n] } })
       await flushPromises()
 
       const confirmSpy = vi.spyOn(window, 'confirm')

@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import ClientsListView from '../ClientsListView.vue'
 import { listClients } from '@/services/clients'
 import { ApiError } from '@/lib/api'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/clients', () => ({
   listClients: vi.fn<typeof listClients>(),
@@ -26,7 +27,7 @@ describe('ClientsListView', () => {
 
   it('shows an empty state when there are no clients', async () => {
     vi.mocked(listClients).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(ClientsListView, { global: { plugins: [router] } })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Još nemaš klijente.')
   })
@@ -54,7 +55,7 @@ describe('ClientsListView', () => {
         },
       ],
     })
-    const wrapper = mount(ClientsListView, { global: { plugins: [router] } })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Test Klijent DOO')
   })
@@ -63,7 +64,7 @@ describe('ClientsListView', () => {
     vi.mocked(listClients).mockRejectedValue(
       new ApiError({ code: 'SERVER_ERROR', message: 'Ne možemo trenutno.', request_id: '1' }),
     )
-    const wrapper = mount(ClientsListView, { global: { plugins: [router] } })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Ne možemo trenutno.')
   })
@@ -91,7 +92,7 @@ describe('ClientsListView', () => {
         },
       ],
     })
-    const wrapper = mount(ClientsListView, { global: { plugins: [router] } })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const link = wrapper.find('a[href="/klijenti/5"]')
@@ -100,7 +101,7 @@ describe('ClientsListView', () => {
 
   it('re-searches from page 1 when the search term changes', async () => {
     vi.mocked(listClients).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(ClientsListView, { global: { plugins: [router] } })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     await wrapper.find('input').setValue('Petar')
@@ -134,7 +135,7 @@ describe('ClientsListView', () => {
         },
       ],
     })
-    const wrapper = mount(ClientsListView, { global: { plugins: [router] } })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     expect(wrapper.text()).not.toContain('Sledeća')
@@ -162,7 +163,7 @@ describe('ClientsListView', () => {
       previous: null,
       results: [clientResult],
     })
-    const wrapper = mount(ClientsListView, { global: { plugins: [router] } })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const nextButton = wrapper.findAll('button').find((b) => b.text() === 'Sledeća')!

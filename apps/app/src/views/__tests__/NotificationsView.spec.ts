@@ -7,6 +7,7 @@ import {
   markNotificationRead,
   type AppNotification,
 } from '@/services/notifications'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/notifications', () => ({
   listNotifications: vi.fn<typeof listNotifications>(),
@@ -38,7 +39,7 @@ function notification(overrides: Partial<AppNotification> = {}): AppNotification
 }
 
 function mountView() {
-  return mount(NotificationsView, { global: { plugins: [router] } })
+  return mount(NotificationsView, { global: { plugins: [router, i18n] } })
 }
 
 describe('NotificationsView', () => {

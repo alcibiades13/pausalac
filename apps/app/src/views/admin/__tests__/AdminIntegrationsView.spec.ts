@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { i18n } from '@/i18n'
 import AdminIntegrationsView from '../AdminIntegrationsView.vue'
 import { getAdminIntegrationsStatus } from '@/services/admin'
 
@@ -20,7 +21,7 @@ describe('AdminIntegrationsView', () => {
       sef: { configured: false, note: 'No provider chosen yet (§39).' },
       checked_at: '2026-01-01T00:00:00Z',
     })
-    const wrapper = mount(AdminIntegrationsView)
+    const wrapper = mount(AdminIntegrationsView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Nije podešeno')
     expect(wrapper.text()).toContain('No provider chosen yet')
@@ -34,7 +35,7 @@ describe('AdminIntegrationsView', () => {
       sef: { configured: false, note: 'No provider chosen yet (§39).' },
       checked_at: '2026-01-01T00:00:00Z',
     })
-    const wrapper = mount(AdminIntegrationsView)
+    const wrapper = mount(AdminIntegrationsView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Podešeno')
   })

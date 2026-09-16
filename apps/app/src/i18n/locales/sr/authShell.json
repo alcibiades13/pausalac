@@ -1,1 +1,104 @@
-{}
+{
+  "loginView": {
+    "title": "Prijava",
+    "genericError": "Ne možemo trenutno da te prijavimo. Pokušaj ponovo.",
+    "emailLabel": "Email adresa",
+    "passwordLabel": "Lozinka",
+    "submitButton": "Prijavi se",
+    "forgotPasswordLink": "Zaboravio/la si lozinku?",
+    "noAccountText": "Nemaš nalog?",
+    "registerLink": "Registruj se"
+  },
+  "registerView": {
+    "title": "Napravi nalog",
+    "genericError": "Ne možemo trenutno da napravimo nalog. Pokušaj ponovo.",
+    "emailLabel": "Email adresa",
+    "passwordLabel": "Lozinka",
+    "passwordHint": "Najmanje 8 karaktera.",
+    "firstNameLabel": "Ime",
+    "lastNameLabel": "Prezime",
+    "submitButton": "Napravi nalog",
+    "hasAccountText": "Već imaš nalog?",
+    "loginLink": "Prijavi se"
+  },
+  "forgotPasswordView": {
+    "title": "Zaboravljena lozinka",
+    "successMessage": "Ako nalog sa ovom email adresom postoji, poslali smo link za resetovanje lozinke.",
+    "instructions": "Unesi email adresu i poslaćemo ti link za postavljanje nove lozinke.",
+    "emailLabel": "Email adresa",
+    "submitButton": "Pošalji link",
+    "backToLoginLink": "Nazad na prijavu"
+  },
+  "resetPasswordView": {
+    "title": "Nova lozinka",
+    "invalidLinkMessage": "Ovaj link nije validan. Zatraži novi link za resetovanje lozinke.",
+    "passwordMismatchError": "Lozinke se ne poklapaju.",
+    "genericError": "Ne možemo trenutno da promenimo lozinku. Pokušaj ponovo.",
+    "newPasswordLabel": "Nova lozinka",
+    "passwordHint": "Najmanje 8 karaktera.",
+    "confirmPasswordLabel": "Ponovi novu lozinku",
+    "submitButton": "Postavi novu lozinku"
+  },
+  "verifyEmailView": {
+    "title": "Potvrda email adrese",
+    "invalidLinkError": "Link za potvrdu nije validan.",
+    "verifyingMessage": "Proveravamo tvoj link...",
+    "successMessage": "Email adresa je uspešno potvrđena.",
+    "continueLink": "Nastavi na početnu",
+    "loginLink": "Idi na prijavu"
+  },
+  "appShell": {
+    "skipToContent": "Preskoči na sadržaj",
+    "activeCompanyLabel": "Aktivna kompanija",
+    "notificationsAriaCount": "Obaveštenja ({count} nepročitanih)",
+    "notificationsAriaLabel": "Obaveštenja",
+    "notificationsLinkText": "Obaveštenja",
+    "settingsLink": "Podešavanja",
+    "logoutButton": "Odjavi se",
+    "navLabel": "Glavna navigacija",
+    "navLinks": {
+      "home": "Početna",
+      "clients": "Klijenti",
+      "invoices": "Fakture",
+      "limits": "Limiti",
+      "kpo": "KPO",
+      "obligations": "Obaveze",
+      "documents": "Dokumenti",
+      "accounting": "Računovođa"
+    }
+  },
+  "mobileBottomNav": {
+    "navLabel": "Glavna navigacija",
+    "quickActionLabel": "Brza akcija",
+    "tabs": {
+      "home": "Početna",
+      "invoices": "Fakture",
+      "finansije": "Finansije",
+      "vise": "Više"
+    },
+    "fab": {
+      "newInvoice": "Nova faktura",
+      "proforma": "Profaktura",
+      "advance": "Avans",
+      "newClient": "Novi klijent"
+    }
+  },
+  "adminShell": {
+    "title": "System Admin",
+    "backToAppButton": "Nazad u aplikaciju",
+    "navLabel": "Admin navigacija",
+    "navLinks": {
+      "admin-users": "Korisnici",
+      "admin-companies": "Kompanije",
+      "admin-subscriptions": "Pretplate",
+      "admin-plans": "Planovi",
+      "admin-invoices": "Fakture",
+      "admin-documents": "Dokumenti",
+      "admin-tax-obligations": "Poreske obaveze",
+      "admin-rules": "Regulatorna pravila",
+      "admin-notifications": "Obaveštenja",
+      "admin-audit-log": "Audit log",
+      "admin-integrations": "Integracije"
+    }
+  }
+}

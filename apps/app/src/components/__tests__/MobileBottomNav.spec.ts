@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import MobileBottomNav from '../MobileBottomNav.vue'
+import { i18n } from '@/i18n'
 
 const stub = { template: '<div/>' }
 const router = createRouter({
@@ -48,7 +49,7 @@ describe('MobileBottomNav', () => {
   })
 
   it('renders the four tabs with the right links', async () => {
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] } })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const nav = wrapper.get('nav')
@@ -58,7 +59,7 @@ describe('MobileBottomNav', () => {
 
   it('highlights only the active tab, and the rest stay inactive', async () => {
     await router.push({ name: 'invoices' })
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] } })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const links = wrapper.get('nav').findAll('a')
@@ -71,7 +72,7 @@ describe('MobileBottomNav', () => {
 
   it('highlights Finansije when on a grouped sub-route like limits', async () => {
     await router.push({ name: 'limits' })
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] } })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const active = wrapper.get('nav').findAll('a').find((l) => l.text() === 'Finansije')!
@@ -80,7 +81,7 @@ describe('MobileBottomNav', () => {
 
   it('highlights Više when on a grouped sub-route like settings', async () => {
     await router.push({ name: 'settings' })
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] } })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     const active = wrapper.get('nav').findAll('a').find((l) => l.text() === 'Više')!
@@ -88,7 +89,7 @@ describe('MobileBottomNav', () => {
   })
 
   it('opens the quick-create sheet with exactly the four non-excluded items in order', async () => {
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] } })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
@@ -110,7 +111,7 @@ describe('MobileBottomNav', () => {
   })
 
   it('closes the sheet when the backdrop is clicked', async () => {
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] } })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
@@ -124,7 +125,7 @@ describe('MobileBottomNav', () => {
   })
 
   it('closes the sheet on navigation', async () => {
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] } })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
@@ -137,7 +138,7 @@ describe('MobileBottomNav', () => {
   })
 
   it('exposes real dialog semantics on the sheet (master prompt §55 keyboard navigation)', async () => {
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] }, attachTo: document.body })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] }, attachTo: document.body })
     await flushPromises()
 
     await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
@@ -149,7 +150,7 @@ describe('MobileBottomNav', () => {
   })
 
   it('moves focus into the sheet when it opens', async () => {
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] }, attachTo: document.body })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] }, attachTo: document.body })
     await flushPromises()
 
     await wrapper.get('[aria-label="Brza akcija"]').trigger('click')
@@ -159,7 +160,7 @@ describe('MobileBottomNav', () => {
   })
 
   it('closes the sheet when Escape is pressed', async () => {
-    wrapper = mount(MobileBottomNav, { global: { plugins: [router] }, attachTo: document.body })
+    wrapper = mount(MobileBottomNav, { global: { plugins: [router, i18n] }, attachTo: document.body })
     await flushPromises()
 
     await wrapper.get('[aria-label="Brza akcija"]').trigger('click')

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Alert } from '@pausalac/ui'
 import AuthLayout from '@/components/AuthLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
@@ -24,7 +26,7 @@ async function onSubmit() {
     await router.push(redirect ?? { name: 'home' })
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da te prijavimo. Pokušaj ponovo.'
+      error instanceof ApiError ? error.message : t('authShell.loginView.genericError')
   } finally {
     loading.value = false
   }
@@ -32,14 +34,14 @@ async function onSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Prijava">
+  <AuthLayout :title="t('authShell.loginView.title')">
     <Card>
       <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
         <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
         <Input
           v-model="email"
           type="email"
-          label="Email adresa"
+          :label="t('authShell.loginView.emailLabel')"
           autocomplete="email"
           required
           :disabled="loading"
@@ -47,21 +49,21 @@ async function onSubmit() {
         <Input
           v-model="password"
           type="password"
-          label="Lozinka"
+          :label="t('authShell.loginView.passwordLabel')"
           autocomplete="current-password"
           required
           :disabled="loading"
         />
-        <Button type="submit" :loading="loading">Prijavi se</Button>
+        <Button type="submit" :loading="loading">{{ t('authShell.loginView.submitButton') }}</Button>
       </form>
       <div class="mt-4 flex flex-col gap-1 text-center text-sm text-text-secondary">
         <RouterLink :to="{ name: 'forgot-password' }" class="text-primary underline">
-          Zaboravio/la si lozinku?
+          {{ t('authShell.loginView.forgotPasswordLink') }}
         </RouterLink>
         <span>
-          Nemaš nalog?
+          {{ t('authShell.loginView.noAccountText') }}
           <RouterLink :to="{ name: 'register' }" class="text-primary underline">
-            Registruj se
+            {{ t('authShell.loginView.registerLink') }}
           </RouterLink>
         </span>
       </div>

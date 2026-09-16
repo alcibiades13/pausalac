@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Alert, Skeleton } from '@pausalac/ui'
 import { getLimits, simulateLimits, type Limits, type LimitsSimulation } from '@/services/limits'
 import { ApiError } from '@/lib/api'
 import LimitTracker from '@/components/LimitTracker.vue'
+
+const { t } = useI18n()
 
 const limits = ref<Limits | null>(null)
 const status = ref<'loading' | 'ready' | 'error'>('loading')
@@ -15,7 +18,7 @@ async function load() {
     limits.value = await getLimits()
     status.value = 'ready'
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo limite.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.limitsView.loadError')
     status.value = 'error'
   }
 }
@@ -36,7 +39,7 @@ async function onSimulate() {
   try {
     simulation.value = await simulateLimits(hypotheticalAmount.value)
   } catch (error) {
-    simulateError.value = error instanceof ApiError ? error.message : 'Ne možemo trenutno da izračunamo simulaciju.'
+    simulateError.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.limitsView.simulateError')
   } finally {
     simulating.value = false
   }
@@ -45,11 +48,11 @@ async function onSimulate() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Limiti</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('limitsAccountingEtc.limitsView.title') }}</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">Pokušaj ponovo</button>
+      <button class="ml-2 underline" @click="load">{{ t('limitsAccountingEtc.limitsView.retryButton') }}</button>
     </Alert>
 
     <Card v-else-if="status === 'loading'">
@@ -59,49 +62,49 @@ async function onSimulate() {
     <template v-else-if="limits">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
-          <LimitTracker label="Paušalni limit" :tracker="limits.pausal_limit" />
+          <LimitTracker :label="t('limitsAccountingEtc.limitsView.pausalLimitLabel')" :tracker="limits.pausal_limit" />
         </Card>
         <Card>
-          <LimitTracker label="PDV prag" :tracker="limits.vat_threshold" />
+          <LimitTracker :label="t('limitsAccountingEtc.limitsView.vatThresholdLabel')" :tracker="limits.vat_threshold" />
         </Card>
       </div>
 
       <Card>
-        <h2 class="mb-1 text-base font-semibold text-navy">Simulacija — ništa se ne čuva</h2>
+        <h2 class="mb-1 text-base font-semibold text-navy">{{ t('limitsAccountingEtc.limitsView.simulationTitle') }}</h2>
         <p class="mb-4 text-sm text-text-secondary">
-          Unesi iznos hipotetičke fakture da vidiš kako bi uticala na oba limita.
+          {{ t('limitsAccountingEtc.limitsView.simulationDescription') }}
         </p>
         <form class="flex flex-col gap-4 sm:flex-row sm:items-end" @submit.prevent="onSimulate">
           <Input
             v-model="hypotheticalAmount"
-            label="Iznos hipotetičke fakture"
+            :label="t('limitsAccountingEtc.limitsView.hypotheticalAmountLabel')"
             placeholder="800000.00"
             required
             :disabled="simulating"
             class="sm:max-w-xs"
           />
           <div>
-            <Button type="submit" :loading="simulating">Simuliraj</Button>
+            <Button type="submit" :loading="simulating">{{ t('limitsAccountingEtc.limitsView.simulateButton') }}</Button>
           </div>
         </form>
         <Alert v-if="simulateError" variant="danger" class="mt-4">{{ simulateError }}</Alert>
 
         <div v-if="simulation" class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
-            <p class="mb-2 text-sm font-medium text-text-secondary">Pre</p>
-            <LimitTracker label="Paušalni limit" :tracker="simulation.before.pausal_limit" />
+            <p class="mb-2 text-sm font-medium text-text-secondary">{{ t('limitsAccountingEtc.limitsView.beforeLabel') }}</p>
+            <LimitTracker :label="t('limitsAccountingEtc.limitsView.pausalLimitLabel')" :tracker="simulation.before.pausal_limit" />
           </div>
           <div>
-            <p class="mb-2 text-sm font-medium text-text-secondary">Posle</p>
-            <LimitTracker label="Paušalni limit" :tracker="simulation.after.pausal_limit" />
+            <p class="mb-2 text-sm font-medium text-text-secondary">{{ t('limitsAccountingEtc.limitsView.afterLabel') }}</p>
+            <LimitTracker :label="t('limitsAccountingEtc.limitsView.pausalLimitLabel')" :tracker="simulation.after.pausal_limit" />
           </div>
           <div>
-            <p class="mb-2 text-sm font-medium text-text-secondary">Pre</p>
-            <LimitTracker label="PDV prag" :tracker="simulation.before.vat_threshold" />
+            <p class="mb-2 text-sm font-medium text-text-secondary">{{ t('limitsAccountingEtc.limitsView.beforeLabel') }}</p>
+            <LimitTracker :label="t('limitsAccountingEtc.limitsView.vatThresholdLabel')" :tracker="simulation.before.vat_threshold" />
           </div>
           <div>
-            <p class="mb-2 text-sm font-medium text-text-secondary">Posle</p>
-            <LimitTracker label="PDV prag" :tracker="simulation.after.vat_threshold" />
+            <p class="mb-2 text-sm font-medium text-text-secondary">{{ t('limitsAccountingEtc.limitsView.afterLabel') }}</p>
+            <LimitTracker :label="t('limitsAccountingEtc.limitsView.vatThresholdLabel')" :tracker="simulation.after.vat_threshold" />
           </div>
         </div>
       </Card>

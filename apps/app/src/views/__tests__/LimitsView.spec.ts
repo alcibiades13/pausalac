@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import LimitsView from '../LimitsView.vue'
 import { getLimits, simulateLimits } from '@/services/limits'
 import type { LimitTrackerData, Limits } from '@/services/limits'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/limits', () => ({
   getLimits: vi.fn<typeof getLimits>(),
@@ -45,7 +46,7 @@ describe('LimitsView', () => {
 
   it('renders both trackers from getLimits', async () => {
     vi.mocked(getLimits).mockResolvedValue(limits())
-    const wrapper = mount(LimitsView)
+    const wrapper = mount(LimitsView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Paušalni limit')
     expect(wrapper.text()).toContain('PDV prag')
@@ -67,7 +68,7 @@ describe('LimitsView', () => {
         }),
       },
     })
-    const wrapper = mount(LimitsView)
+    const wrapper = mount(LimitsView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     await wrapper.find('input').setValue('800000.00')
@@ -82,7 +83,7 @@ describe('LimitsView', () => {
 
   it('shows an error state with a retry option when loading fails', async () => {
     vi.mocked(getLimits).mockRejectedValue(new Error('boom'))
-    const wrapper = mount(LimitsView)
+    const wrapper = mount(LimitsView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Ne možemo trenutno da učitamo limite.')
   })

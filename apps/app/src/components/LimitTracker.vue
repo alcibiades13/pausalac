@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { MoneyDisplay, Progress } from '@pausalac/ui'
 import type { LimitTrackerData } from '@/services/limits'
 
@@ -7,6 +8,8 @@ const props = defineProps<{
   label: string
   tracker: LimitTrackerData
 }>()
+
+const { t } = useI18n()
 
 // 'ok' (the common, default state — most companies most of the time)
 // renders in the neutral primary color rather than a saturated success
@@ -20,13 +23,15 @@ const BAR_VARIANT: Record<string, 'primary' | 'warning' | 'danger'> = {
   critical: 'danger',
 }
 
-const PERIOD_LABEL: Record<string, string> = {
-  calendar_year: 'kalendarska godina',
-  trailing_12_months: 'poslednjih 12 meseci',
+const PERIOD_LABEL_KEY: Record<string, string> = {
+  calendar_year: 'limitsAccountingEtc.limitTracker.periodCalendarYear',
+  trailing_12_months: 'limitsAccountingEtc.limitTracker.periodTrailing12Months',
 }
 
 const barVariant = computed(() => BAR_VARIANT[props.tracker.warning_level] ?? 'primary')
-const periodLabel = computed(() => PERIOD_LABEL[props.tracker.period.type] ?? props.tracker.period.type)
+const periodLabel = computed(() =>
+  PERIOD_LABEL_KEY[props.tracker.period.type] ? t(PERIOD_LABEL_KEY[props.tracker.period.type]!) : props.tracker.period.type,
+)
 </script>
 
 <template>
@@ -43,12 +48,12 @@ const periodLabel = computed(() => PERIOD_LABEL[props.tracker.period.type] ?? pr
     <Progress :value="tracker.percentage" :variant="barVariant" :label="label" />
     <div class="flex items-baseline justify-between text-sm text-text-secondary">
       <span>{{ tracker.percentage }}%</span>
-      <span>Preostalo: <MoneyDisplay :amount="tracker.remaining" :currency="tracker.currency" /></span>
+      <span>{{ t('limitsAccountingEtc.limitTracker.remainingLabel') }} <MoneyDisplay :amount="tracker.remaining" :currency="tracker.currency" /></span>
     </div>
     <p v-if="tracker.projection" class="text-sm text-text-secondary">
-      Procena do kraja perioda:
+      {{ t('limitsAccountingEtc.limitTracker.projectionLabel') }}
       <MoneyDisplay :amount="tracker.projection.estimated_period_end" :currency="tracker.currency" />
-      (procena)
+      {{ t('limitsAccountingEtc.limitTracker.projectionSuffix') }}
     </p>
   </div>
 </template>

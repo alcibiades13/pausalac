@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Card, Alert, Badge, Button, EmptyState, Skeleton } from '@pausalac/ui'
 import {
   listClientConnections,
@@ -10,22 +11,24 @@ import {
 } from '@/services/accounting'
 import { ApiError } from '@/lib/api'
 
-const STATUS_LABELS: Record<ClientConnection['status'], string> = {
-  pending: 'Na čekanju',
-  active: 'Aktivna',
-  declined: 'Odbijena',
-  revoked: 'Opozvana',
-}
+const { t } = useI18n()
+
+const STATUS_LABELS = computed<Record<ClientConnection['status'], string>>(() => ({
+  pending: t('limitsAccountingEtc.accountingView.statusPending'),
+  active: t('limitsAccountingEtc.accountingView.statusActive'),
+  declined: t('limitsAccountingEtc.accountingView.statusDeclined'),
+  revoked: t('limitsAccountingEtc.accountingView.statusRevoked'),
+}))
 const STATUS_VARIANTS: Record<ClientConnection['status'], 'neutral' | 'success' | 'danger'> = {
   pending: 'neutral',
   active: 'success',
   declined: 'danger',
   revoked: 'danger',
 }
-const ROLE_LABELS: Record<ClientConnection['granted_role'], string> = {
-  accountant: 'Računovođa',
-  accountant_admin: 'Računovođa (admin)',
-}
+const ROLE_LABELS = computed<Record<ClientConnection['granted_role'], string>>(() => ({
+  accountant: t('limitsAccountingEtc.accountingView.roleAccountant'),
+  accountant_admin: t('limitsAccountingEtc.accountingView.roleAccountantAdmin'),
+}))
 
 const connections = ref<ClientConnection[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
@@ -38,7 +41,7 @@ async function load() {
     status.value = 'ready'
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo podatke.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.accountingView.loadError')
     status.value = 'error'
   }
 }
@@ -80,11 +83,11 @@ async function onRevoke(id: number) {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Moj računovođa</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('limitsAccountingEtc.accountingView.title') }}</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">Pokušaj ponovo</button>
+      <button class="ml-2 underline" @click="load">{{ t('limitsAccountingEtc.accountingView.retryButton') }}</button>
     </Alert>
 
     <Card v-else-if="status === 'loading'">
@@ -93,8 +96,8 @@ async function onRevoke(id: number) {
 
     <Card v-else-if="connections.length === 0">
       <EmptyState
-        title="Još nema povezane računovodstvene agencije."
-        description="Kada te agencija pozove, zahtev će se pojaviti ovde."
+        :title="t('limitsAccountingEtc.accountingView.emptyTitle')"
+        :description="t('limitsAccountingEtc.accountingView.emptyDescription')"
       />
     </Card>
 
@@ -112,14 +115,14 @@ async function onRevoke(id: number) {
 
         <div v-if="connection.status === 'pending'" class="flex gap-2">
           <Button :loading="actingId === connection.id" @click="onAccept(connection.id)">
-            Prihvati
+            {{ t('limitsAccountingEtc.accountingView.acceptButton') }}
           </Button>
           <Button
             variant="ghost"
             :loading="actingId === connection.id"
             @click="onDecline(connection.id)"
           >
-            Odbij
+            {{ t('limitsAccountingEtc.accountingView.declineButton') }}
           </Button>
         </div>
         <div v-else-if="connection.status === 'active'">
@@ -129,7 +132,7 @@ async function onRevoke(id: number) {
             :disabled="actingId === connection.id"
             @click="onRevoke(connection.id)"
           >
-            Opozovi pristup
+            {{ t('limitsAccountingEtc.accountingView.revokeButton') }}
           </button>
         </div>
       </Card>

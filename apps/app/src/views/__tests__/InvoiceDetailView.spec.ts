@@ -5,6 +5,7 @@ import InvoiceDetailView from '../InvoiceDetailView.vue'
 import { getInvoice, convertInvoice, duplicateInvoice, type Invoice } from '@/services/invoices'
 import { listPayments } from '@/services/payments'
 import { listDocuments, type AppDocument } from '@/services/documents'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/invoices', () => ({
   getInvoice: vi.fn<typeof getInvoice>(),
@@ -82,7 +83,7 @@ async function mountDetail(invoice: Invoice, documents: AppDocument[] = []) {
   })
   const wrapper = mount(InvoiceDetailView, {
     props: { id: String(invoice.id) },
-    global: { plugins: [router] },
+    global: { plugins: [router, i18n] },
   })
   await flushPromises()
   return wrapper

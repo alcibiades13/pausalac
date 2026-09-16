@@ -5,6 +5,7 @@ import { defineComponent } from 'vue'
 import ClientFormView from '../ClientFormView.vue'
 import { createClient, getClient, updateClient, type Client } from '@/services/clients'
 import { ApiError } from '@/lib/api'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/clients', () => ({
   createClient: vi.fn<typeof createClient>(),
@@ -67,7 +68,7 @@ describe('ClientFormView', () => {
       const router = buildRouter()
       await router.push('/klijenti/novi')
       await router.isReady()
-      const wrapper = mount(ClientFormView, { global: { plugins: [router] } })
+      const wrapper = mount(ClientFormView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       await wrapper.find('#client_type').setValue('company')
@@ -93,7 +94,7 @@ describe('ClientFormView', () => {
       const router = buildRouter()
       await router.push('/klijenti/novi')
       await router.isReady()
-      const wrapper = mount(ClientFormView, { global: { plugins: [router] } })
+      const wrapper = mount(ClientFormView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       await wrapper.find('form').trigger('submit.prevent')
@@ -110,7 +111,7 @@ describe('ClientFormView', () => {
       const router = buildRouter()
       await router.push('/klijenti/1/izmeni')
       await router.isReady()
-      const wrapper = mount(ClientFormView, { props: { id: '1' }, global: { plugins: [router] } })
+      const wrapper = mount(ClientFormView, { props: { id: '1' }, global: { plugins: [router, i18n] } })
       await flushPromises()
 
       const nameInput = wrapper.find<HTMLInputElement>('input')
@@ -123,7 +124,7 @@ describe('ClientFormView', () => {
       const router = buildRouter()
       await router.push('/klijenti/1/izmeni')
       await router.isReady()
-      const wrapper = mount(ClientFormView, { props: { id: '1' }, global: { plugins: [router] } })
+      const wrapper = mount(ClientFormView, { props: { id: '1' }, global: { plugins: [router, i18n] } })
       await flushPromises()
 
       await wrapper.find('form').trigger('submit.prevent')
@@ -141,7 +142,7 @@ describe('ClientFormView', () => {
       await router.push('/klijenti/1/izmeni')
       await router.isReady()
       const RootComponent = defineComponent({ template: '<router-view />' })
-      const wrapper = mount(RootComponent, { global: { plugins: [router] } })
+      const wrapper = mount(RootComponent, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       const nameInput = wrapper.find<HTMLInputElement>('input')
@@ -163,7 +164,7 @@ describe('ClientFormView', () => {
       await router.push('/klijenti/1/izmeni')
       await router.isReady()
       const RootComponent = defineComponent({ template: '<router-view />' })
-      const wrapper = mount(RootComponent, { global: { plugins: [router] } })
+      const wrapper = mount(RootComponent, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       const confirmSpy = vi.spyOn(window, 'confirm')

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import AccountingView from '../AccountingView.vue'
+import { i18n } from '@/i18n'
 import {
   listClientConnections,
   acceptConnection,
@@ -40,7 +41,7 @@ describe('AccountingView', () => {
 
   it('shows an empty state when there are no connections', async () => {
     vi.mocked(listClientConnections).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(AccountingView)
+    const wrapper = mount(AccountingView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Još nema povezane računovodstvene agencije.')
   })
@@ -52,7 +53,7 @@ describe('AccountingView', () => {
       previous: null,
       results: [connection()],
     })
-    const wrapper = mount(AccountingView)
+    const wrapper = mount(AccountingView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Agencija Prime')
     expect(wrapper.text()).toContain('Na čekanju')
@@ -69,7 +70,7 @@ describe('AccountingView', () => {
     })
     vi.mocked(acceptConnection).mockResolvedValue(connection({ status: 'active' }))
 
-    const wrapper = mount(AccountingView)
+    const wrapper = mount(AccountingView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const acceptButton = wrapper.findAll('button').find((b) => b.text() === 'Prihvati')
@@ -87,7 +88,7 @@ describe('AccountingView', () => {
       previous: null,
       results: [connection({ status: 'active' })],
     })
-    const wrapper = mount(AccountingView)
+    const wrapper = mount(AccountingView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Aktivna')
     expect(wrapper.text()).toContain('Opozovi pristup')
@@ -102,7 +103,7 @@ describe('AccountingView', () => {
     })
     vi.mocked(revokeConnection).mockResolvedValue(connection({ status: 'revoked' }))
 
-    const wrapper = mount(AccountingView)
+    const wrapper = mount(AccountingView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     await wrapper.find('button').trigger('click')

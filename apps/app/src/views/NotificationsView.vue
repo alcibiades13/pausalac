@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Card, Alert, EmptyState, Badge, Skeleton } from '@pausalac/ui'
 import {
   listNotifications,
@@ -9,16 +10,18 @@ import {
 } from '@/services/notifications'
 import { ApiError } from '@/lib/api'
 
+const { t } = useI18n()
+
 const PRIORITY_VARIANTS: Record<NotificationPriority, 'danger' | 'warning' | 'info'> = {
   critical: 'danger',
   attention: 'warning',
   informational: 'info',
 }
-const PRIORITY_LABELS: Record<NotificationPriority, string> = {
-  critical: 'Kritično',
-  attention: 'Pažnja',
-  informational: 'Informativno',
-}
+const PRIORITY_LABELS = computed<Record<NotificationPriority, string>>(() => ({
+  critical: t('limitsAccountingEtc.notificationsView.priorityCritical'),
+  attention: t('limitsAccountingEtc.notificationsView.priorityAttention'),
+  informational: t('limitsAccountingEtc.notificationsView.priorityInformational'),
+}))
 
 const notifications = ref<AppNotification[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
@@ -30,7 +33,7 @@ async function load() {
     notifications.value = (await listNotifications()).results
     status.value = 'ready'
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo obaveštenja.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.notificationsView.loadError')
     status.value = 'error'
   }
 }
@@ -52,11 +55,11 @@ async function onMarkRead(notification: AppNotification) {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Obaveštenja</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('limitsAccountingEtc.notificationsView.title') }}</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">Pokušaj ponovo</button>
+      <button class="ml-2 underline" @click="load">{{ t('limitsAccountingEtc.notificationsView.retryButton') }}</button>
     </Alert>
 
     <Card v-else-if="status === 'loading'">
@@ -64,7 +67,7 @@ async function onMarkRead(notification: AppNotification) {
     </Card>
 
     <Card v-else-if="notifications.length === 0">
-      <EmptyState title="Nema obaveštenja." description="Ovde će se pojaviti stvari koje zahtevaju tvoju pažnju." />
+      <EmptyState :title="t('limitsAccountingEtc.notificationsView.emptyTitle')" :description="t('limitsAccountingEtc.notificationsView.emptyDescription')" />
     </Card>
 
     <div v-else class="flex flex-col gap-2">
@@ -83,7 +86,7 @@ async function onMarkRead(notification: AppNotification) {
                 {{ notification.title }}
               </span>
               <span v-if="!notification.read_at" class="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />
-              <span v-if="!notification.read_at" class="sr-only">(Nepročitano)</span>
+              <span v-if="!notification.read_at" class="sr-only">{{ t('limitsAccountingEtc.notificationsView.unreadSrOnly') }}</span>
             </div>
             <p class="text-sm text-text-secondary">{{ notification.message }}</p>
             <RouterLink
@@ -91,7 +94,7 @@ async function onMarkRead(notification: AppNotification) {
               :to="{ name: notification.action_route, query: notification.action_query }"
               class="text-sm text-primary hover:underline"
             >
-              Pogledaj →
+              {{ t('limitsAccountingEtc.notificationsView.viewLink') }}
             </RouterLink>
           </div>
           <button
@@ -101,7 +104,7 @@ async function onMarkRead(notification: AppNotification) {
             :disabled="markingReadId === notification.id"
             @click="onMarkRead(notification)"
           >
-            Označi kao pročitano
+            {{ t('limitsAccountingEtc.notificationsView.markReadButton') }}
           </button>
         </div>
       </Card>

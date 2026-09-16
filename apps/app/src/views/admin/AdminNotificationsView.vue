@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Alert, Badge, Button , DataTable, type DataTableColumn } from '@pausalac/ui'
 import { listAdminNotifications, type AdminNotification } from '@/services/admin'
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
+
+const { t } = useI18n()
 
 const notifications = ref<AdminNotification[]>([])
 const loading = ref(true)
@@ -12,17 +15,17 @@ const page = ref(1)
 const hasNext = ref(false)
 const hasPrevious = ref(false)
 
-const columns: DataTableColumn<AdminNotification>[] = [
-  { key: 'company_name', label: 'Kompanija' },
-  { key: 'recipient_email', label: 'Primalac' },
-  { key: 'event_type', label: 'Događaj' },
-  { key: 'channel', label: 'Kanal' },
+const columns = computed<DataTableColumn<AdminNotification>[]>(() => [
+  { key: 'company_name', label: t('admin.adminNotificationsView.companyColumn') },
+  { key: 'recipient_email', label: t('admin.adminNotificationsView.recipientColumn') },
+  { key: 'event_type', label: t('admin.adminNotificationsView.eventColumn') },
+  { key: 'channel', label: t('admin.adminNotificationsView.channelColumn') },
   {
     key: 'created_at',
-    label: 'Datum',
+    label: t('admin.adminNotificationsView.dateColumn'),
     format: (r) => formatDate(r.created_at),
   },
-]
+])
 
 async function load() {
   loading.value = true
@@ -34,7 +37,7 @@ async function load() {
     hasPrevious.value = result.previous !== null
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo obaveštenja.'
+      error instanceof ApiError ? error.message : t('admin.adminNotificationsView.loadError')
   } finally {
     loading.value = false
   }
@@ -54,7 +57,7 @@ onMounted(load)
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Obaveštenja</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('admin.adminNotificationsView.title') }}</h1>
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
@@ -62,7 +65,7 @@ onMounted(load)
       :columns="columns"
       :rows="notifications"
       :loading="loading"
-      empty-title="Nema obaveštenja."
+      :empty-title="t('admin.adminNotificationsView.emptyTitle')"
     >
       <template #actions="{ row }">
         <Badge :variant="row.status === 'failed' ? 'danger' : 'neutral'">{{ row.status }}</Badge>
@@ -70,8 +73,8 @@ onMounted(load)
     </DataTable>
 
     <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>
-      <Button variant="secondary" :disabled="!hasNext" @click="goNext">Sledeća</Button>
+      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">{{ t('admin.adminNotificationsView.previousButton') }}</Button>
+      <Button variant="secondary" :disabled="!hasNext" @click="goNext">{{ t('admin.adminNotificationsView.nextButton') }}</Button>
     </div>
   </div>
 </template>

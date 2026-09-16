@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { i18n } from '@/i18n'
 import AdminCompaniesView from '../AdminCompaniesView.vue'
 import { listAdminCompanies, listAdminCompanyMembers } from '@/services/admin'
 
@@ -32,7 +33,7 @@ describe('AdminCompaniesView', () => {
         },
       ],
     })
-    const wrapper = mount(AdminCompaniesView)
+    const wrapper = mount(AdminCompaniesView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Firma A')
   })
@@ -59,7 +60,7 @@ describe('AdminCompaniesView', () => {
       { user_email: 'vlasnik@pausalac.rs', role: 'owner', status: 'active' },
     ])
 
-    const wrapper = mount(AdminCompaniesView)
+    const wrapper = mount(AdminCompaniesView, { global: { plugins: [i18n] } })
     await flushPromises()
     await wrapper.find('button').trigger('click')
     await flushPromises()

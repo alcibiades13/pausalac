@@ -6,6 +6,7 @@ import HomeView from '../HomeView.vue'
 import { useAuthStore, type Company, type Membership } from '@/stores/auth'
 import { getDashboard } from '@/services/analytics'
 import type { LimitTrackerData, Limits } from '@/services/limits'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/analytics', () => ({
   getDashboard: vi.fn<typeof getDashboard>(),
@@ -90,7 +91,7 @@ function mountHome() {
     language: 'sr',
     memberships: [membership()],
   }
-  return mount(HomeView, { global: { plugins: [pinia, router] } })
+  return mount(HomeView, { global: { plugins: [pinia, router, i18n] } })
 }
 
 describe('HomeView (dashboard)', () => {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import SubscriptionView from '../SubscriptionView.vue'
+import { i18n } from '@/i18n'
 import {
   listPlans,
   getCurrentSubscription,
@@ -60,7 +61,7 @@ describe('SubscriptionView', () => {
 
   it('shows the trial status and days remaining', async () => {
     vi.mocked(getCurrentSubscription).mockResolvedValue(subscription())
-    const wrapper = mount(SubscriptionView)
+    const wrapper = mount(SubscriptionView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Probni period')
     expect(wrapper.text()).toContain('ističe za 5 dan(a)')
@@ -68,7 +69,7 @@ describe('SubscriptionView', () => {
 
   it('renders all three plans', async () => {
     vi.mocked(getCurrentSubscription).mockResolvedValue(subscription())
-    const wrapper = mount(SubscriptionView)
+    const wrapper = mount(SubscriptionView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Starter')
     expect(wrapper.text()).toContain('Professional')
@@ -82,7 +83,7 @@ describe('SubscriptionView', () => {
       subscription({ status: 'active', plan: PLANS[1]! }),
     )
 
-    const wrapper = mount(SubscriptionView)
+    const wrapper = mount(SubscriptionView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const buttons = wrapper.findAll('button').filter((b) => b.text() === 'Izaberi')
@@ -100,7 +101,7 @@ describe('SubscriptionView', () => {
     )
     vi.mocked(cancelSubscription).mockResolvedValue(subscription({ status: 'cancelled' }))
 
-    const wrapper = mount(SubscriptionView)
+    const wrapper = mount(SubscriptionView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     expect(wrapper.text()).toContain('Sledeće obnavljanje: 1. 10. 2026.')
@@ -114,7 +115,7 @@ describe('SubscriptionView', () => {
 
   it('shows an error state with a retry option when loading fails', async () => {
     vi.mocked(getCurrentSubscription).mockRejectedValue(new Error('boom'))
-    const wrapper = mount(SubscriptionView)
+    const wrapper = mount(SubscriptionView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Ne možemo trenutno da učitamo pretplatu.')
   })

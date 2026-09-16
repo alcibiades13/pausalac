@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Select, Alert, Badge, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import {
   listOrganizations,
@@ -25,21 +26,22 @@ import { ApiError } from '@/lib/api'
 
 const router = useRouter()
 const company = useCompanyStore()
+const { t } = useI18n()
 
-const STAFF_ROLE_OPTIONS: { value: OrgStaffRole; label: string }[] = [
-  { value: 'staff', label: 'Zaposleni' },
-  { value: 'admin', label: 'Administrator' },
-]
-const GRANTED_ROLE_OPTIONS: { value: GrantedRole; label: string }[] = [
-  { value: 'accountant', label: 'Računovođa' },
-  { value: 'accountant_admin', label: 'Računovođa (admin)' },
-]
-const CONNECTION_STATUS_LABELS: Record<OrganizationConnection['status'], string> = {
-  pending: 'Na čekanju',
-  active: 'Aktivna',
-  declined: 'Odbijena',
-  revoked: 'Opozvana',
-}
+const STAFF_ROLE_OPTIONS = computed<{ value: OrgStaffRole; label: string }[]>(() => [
+  { value: 'staff', label: t('limitsAccountingEtc.accountingOrganizationView.staffRoleStaff') },
+  { value: 'admin', label: t('limitsAccountingEtc.accountingOrganizationView.staffRoleAdmin') },
+])
+const GRANTED_ROLE_OPTIONS = computed<{ value: GrantedRole; label: string }[]>(() => [
+  { value: 'accountant', label: t('limitsAccountingEtc.accountingOrganizationView.roleAccountant') },
+  { value: 'accountant_admin', label: t('limitsAccountingEtc.accountingOrganizationView.roleAccountantAdmin') },
+])
+const CONNECTION_STATUS_LABELS = computed<Record<OrganizationConnection['status'], string>>(() => ({
+  pending: t('limitsAccountingEtc.accountingOrganizationView.statusPending'),
+  active: t('limitsAccountingEtc.accountingOrganizationView.statusActive'),
+  declined: t('limitsAccountingEtc.accountingOrganizationView.statusDeclined'),
+  revoked: t('limitsAccountingEtc.accountingOrganizationView.statusRevoked'),
+}))
 const CONNECTION_STATUS_VARIANTS: Record<
   OrganizationConnection['status'],
   'neutral' | 'success' | 'danger'
@@ -49,11 +51,11 @@ const CONNECTION_STATUS_VARIANTS: Record<
   declined: 'danger',
   revoked: 'danger',
 }
-const PORTFOLIO_STATUS_LABELS: Record<PortfolioStatus, string> = {
-  ok: 'OK',
-  attention: 'Pažnja',
-  critical: 'Kritično',
-}
+const PORTFOLIO_STATUS_LABELS = computed<Record<PortfolioStatus, string>>(() => ({
+  ok: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusOk'),
+  attention: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusAttention'),
+  critical: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusCritical'),
+}))
 const PORTFOLIO_STATUS_VARIANTS: Record<PortfolioStatus, 'success' | 'warning' | 'danger'> = {
   ok: 'success',
   attention: 'warning',
@@ -65,18 +67,18 @@ const LIMIT_VARIANTS: Record<string, 'neutral' | 'warning' | 'danger'> = {
   warning: 'warning',
   critical: 'danger',
 }
-const PORTFOLIO_STATUS_FILTER_OPTIONS: { value: PortfolioStatus | ''; label: string }[] = [
-  { value: '', label: 'Svi statusi' },
-  { value: 'ok', label: 'OK' },
-  { value: 'attention', label: 'Pažnja' },
-  { value: 'critical', label: 'Kritično' },
-]
-const PORTFOLIO_ORDERING_OPTIONS: { value: 'name' | '-name' | 'revenue' | '-revenue'; label: string }[] = [
-  { value: 'name', label: 'Naziv (A-Š)' },
-  { value: '-name', label: 'Naziv (Š-A)' },
-  { value: '-revenue', label: 'Prihod (opadajuće)' },
-  { value: 'revenue', label: 'Prihod (rastuće)' },
-]
+const PORTFOLIO_STATUS_FILTER_OPTIONS = computed<{ value: PortfolioStatus | ''; label: string }[]>(() => [
+  { value: '', label: t('limitsAccountingEtc.accountingOrganizationView.portfolioAllStatuses') },
+  { value: 'ok', label: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusOk') },
+  { value: 'attention', label: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusAttention') },
+  { value: 'critical', label: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusCritical') },
+])
+const PORTFOLIO_ORDERING_OPTIONS = computed<{ value: 'name' | '-name' | 'revenue' | '-revenue'; label: string }[]>(() => [
+  { value: 'name', label: t('limitsAccountingEtc.accountingOrganizationView.sortNameAsc') },
+  { value: '-name', label: t('limitsAccountingEtc.accountingOrganizationView.sortNameDesc') },
+  { value: '-revenue', label: t('limitsAccountingEtc.accountingOrganizationView.sortRevenueDesc') },
+  { value: 'revenue', label: t('limitsAccountingEtc.accountingOrganizationView.sortRevenueAsc') },
+])
 
 // --- organization: load-or-create ---------------------------------------
 
@@ -95,7 +97,7 @@ async function loadOrganization() {
     }
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo podatke.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.accountingOrganizationView.loadError')
     status.value = 'error'
   }
 }
@@ -113,7 +115,7 @@ async function onCreateOrganization() {
     organization.value = await createOrganization(createForm.value)
   } catch (error) {
     createError.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da sačuvamo agenciju.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.accountingOrganizationView.createError')
   } finally {
     creating.value = false
   }
@@ -144,7 +146,7 @@ async function onAddStaff() {
     await loadStaff()
   } catch (error) {
     staffError.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da dodamo zaposlenog.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.accountingOrganizationView.staffError')
   } finally {
     addingStaff.value = false
   }
@@ -192,7 +194,7 @@ async function onInviteClient() {
     await loadConnections()
   } catch (error) {
     connectionError.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da pošaljemo zahtev.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.accountingOrganizationView.connectionError')
   } finally {
     invitingClient.value = false
   }
@@ -230,7 +232,7 @@ async function loadPortfolio() {
     portfolioErrorMessage.value =
       error instanceof ApiError
         ? error.message
-        : 'Ne možemo trenutno da učitamo pregled klijenata.'
+        : t('limitsAccountingEtc.accountingOrganizationView.portfolioLoadError')
     portfolioStatus.value = 'error'
   }
 }
@@ -264,11 +266,11 @@ async function onOpenClient(companyId: number) {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Računovodstvena agencija</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('limitsAccountingEtc.accountingOrganizationView.title') }}</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="loadOrganization">Pokušaj ponovo</button>
+      <button class="ml-2 underline" @click="loadOrganization">{{ t('limitsAccountingEtc.accountingOrganizationView.retryButton') }}</button>
     </Alert>
 
     <Card v-else-if="status === 'loading'">
@@ -276,19 +278,19 @@ async function onOpenClient(companyId: number) {
     </Card>
 
     <Card v-else-if="!organization">
-      <h2 class="mb-1 text-base font-semibold text-navy">Osnuj agenciju</h2>
+      <h2 class="mb-1 text-base font-semibold text-navy">{{ t('limitsAccountingEtc.accountingOrganizationView.createTitle') }}</h2>
       <p class="mb-4 text-sm text-text-secondary">
-        Registruj svoju računovodstvenu agenciju da bi mogla da se poveže sa klijentima.
+        {{ t('limitsAccountingEtc.accountingOrganizationView.createDescription') }}
       </p>
       <form class="flex flex-col gap-4" @submit.prevent="onCreateOrganization">
         <Alert v-if="createError" variant="danger">{{ createError }}</Alert>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Input v-model="createForm.name" label="Naziv agencije" required />
-          <Input v-model="createForm.contact_email" type="email" label="Kontakt email" />
-          <Input v-model="createForm.pib" label="PIB (opciono)" />
+          <Input v-model="createForm.name" :label="t('limitsAccountingEtc.accountingOrganizationView.orgNameLabel')" required />
+          <Input v-model="createForm.contact_email" type="email" :label="t('limitsAccountingEtc.accountingOrganizationView.contactEmailLabel')" />
+          <Input v-model="createForm.pib" :label="t('limitsAccountingEtc.accountingOrganizationView.pibLabel')" />
         </div>
         <div>
-          <Button type="submit" :loading="creating">Osnuj agenciju</Button>
+          <Button type="submit" :loading="creating">{{ t('limitsAccountingEtc.accountingOrganizationView.createButton') }}</Button>
         </div>
       </form>
     </Card>
@@ -300,7 +302,7 @@ async function onOpenClient(companyId: number) {
       </Card>
 
       <Card>
-        <h2 class="mb-3 text-base font-semibold text-navy">Zaposleni</h2>
+        <h2 class="mb-3 text-base font-semibold text-navy">{{ t('limitsAccountingEtc.accountingOrganizationView.staffTitle') }}</h2>
 
         <template v-if="isAdmin">
           <Alert v-if="staffError" variant="danger" class="mb-3">{{ staffError }}</Alert>
@@ -308,16 +310,16 @@ async function onOpenClient(companyId: number) {
             <Input
               v-model="staffForm.email"
               type="email"
-              label="Email zaposlenog"
+              :label="t('limitsAccountingEtc.accountingOrganizationView.staffEmailLabel')"
               required
               class="flex-1 sm:max-w-xs"
             />
-            <Select v-model="staffForm.role" label="Uloga" :options="STAFF_ROLE_OPTIONS" />
-            <Button type="submit" :loading="addingStaff">Dodaj</Button>
+            <Select v-model="staffForm.role" :label="t('limitsAccountingEtc.accountingOrganizationView.staffRoleLabel')" :options="STAFF_ROLE_OPTIONS" />
+            <Button type="submit" :loading="addingStaff">{{ t('limitsAccountingEtc.accountingOrganizationView.addButton') }}</Button>
           </form>
         </template>
 
-        <EmptyState v-if="staff.length === 0" title="Još nema zaposlenih." />
+        <EmptyState v-if="staff.length === 0" :title="t('limitsAccountingEtc.accountingOrganizationView.emptyStaffTitle')" />
         <ul v-else class="flex flex-col divide-y divide-border">
           <li
             v-for="member in staff"
@@ -327,7 +329,7 @@ async function onOpenClient(companyId: number) {
             <div>
               <p class="text-sm text-navy">{{ member.user_email }}</p>
               <p class="text-xs text-text-secondary">
-                {{ member.role === 'admin' ? 'Administrator' : 'Zaposleni' }}
+                {{ member.role === 'admin' ? t('limitsAccountingEtc.accountingOrganizationView.staffRoleAdmin') : t('limitsAccountingEtc.accountingOrganizationView.staffRoleStaff') }}
               </p>
             </div>
             <button
@@ -337,33 +339,33 @@ async function onOpenClient(companyId: number) {
               :disabled="removingStaffId === member.id"
               @click="onRemoveStaff(member.id)"
             >
-              Ukloni
+              {{ t('limitsAccountingEtc.accountingOrganizationView.removeButton') }}
             </button>
           </li>
         </ul>
       </Card>
 
       <Card>
-        <h2 class="mb-3 text-base font-semibold text-navy">Klijenti</h2>
+        <h2 class="mb-3 text-base font-semibold text-navy">{{ t('limitsAccountingEtc.accountingOrganizationView.clientsTitle') }}</h2>
 
         <form class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end" @submit.prevent="onInviteClient">
           <Input
             v-model="connectionForm.company_pib"
-            label="PIB klijenta"
+            :label="t('limitsAccountingEtc.accountingOrganizationView.clientPibLabel')"
             required
             class="flex-1 sm:max-w-xs"
           />
           <Select
             v-model="connectionForm.granted_role"
-            label="Nivo pristupa"
+            :label="t('limitsAccountingEtc.accountingOrganizationView.accessLevelLabel')"
             :options="GRANTED_ROLE_OPTIONS"
           />
-          <Button type="submit" :loading="invitingClient">Pozovi klijenta</Button>
+          <Button type="submit" :loading="invitingClient">{{ t('limitsAccountingEtc.accountingOrganizationView.inviteButton') }}</Button>
         </form>
         <Alert v-if="connectionError" variant="danger" class="mb-3">{{ connectionError }}</Alert>
 
         <div v-if="pendingConnections.length" class="mb-6">
-          <h3 class="mb-2 text-sm font-medium text-text-secondary">Na čekanju</h3>
+          <h3 class="mb-2 text-sm font-medium text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.pendingTitle') }}</h3>
           <ul class="flex flex-col divide-y divide-border">
             <li
               v-for="connection in pendingConnections"
@@ -383,62 +385,62 @@ async function onOpenClient(companyId: number) {
 
         <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">Ukupno</p>
+            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryTotal') }}</p>
             <p class="text-xl font-semibold text-navy">{{ portfolioSummary.total }}</p>
           </div>
           <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">OK</p>
+            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryOk') }}</p>
             <p class="text-xl font-semibold text-success">{{ portfolioSummary.ok }}</p>
           </div>
           <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">Pažnja</p>
+            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryAttention') }}</p>
             <p class="text-xl font-semibold text-warning">{{ portfolioSummary.attention }}</p>
           </div>
           <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">Kritično</p>
+            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryCritical') }}</p>
             <p class="text-xl font-semibold text-danger">{{ portfolioSummary.critical }}</p>
           </div>
         </div>
 
         <div class="mb-3 flex flex-wrap items-end gap-3">
-          <Input v-model="portfolioSearch" label="Pretraga" placeholder="Naziv klijenta..." />
+          <Input v-model="portfolioSearch" :label="t('limitsAccountingEtc.accountingOrganizationView.portfolioSearchLabel')" :placeholder="t('limitsAccountingEtc.accountingOrganizationView.portfolioSearchPlaceholder')" />
           <Select
             v-model="portfolioStatusFilter"
-            label="Status"
+            :label="t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusLabel')"
             :options="PORTFOLIO_STATUS_FILTER_OPTIONS"
           />
           <Select
             v-model="portfolioOrdering"
-            label="Sortiraj po"
+            :label="t('limitsAccountingEtc.accountingOrganizationView.sortByLabel')"
             :options="PORTFOLIO_ORDERING_OPTIONS"
           />
         </div>
 
         <Alert v-if="portfolioStatus === 'error'" variant="danger">
           {{ portfolioErrorMessage }}
-          <button class="ml-2 underline" @click="loadPortfolio">Pokušaj ponovo</button>
+          <button class="ml-2 underline" @click="loadPortfolio">{{ t('limitsAccountingEtc.accountingOrganizationView.retryButton') }}</button>
         </Alert>
 
         <Skeleton v-else-if="portfolioStatus === 'loading'" :count="3" />
 
         <EmptyState
           v-else-if="portfolioRows.length === 0"
-          title="Nema aktivnih klijenata."
-          description="Kada klijent prihvati zahtev za povezivanje, pojaviće se ovde."
+          :title="t('limitsAccountingEtc.accountingOrganizationView.emptyPortfolioTitle')"
+          :description="t('limitsAccountingEtc.accountingOrganizationView.emptyPortfolioDescription')"
         />
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
-                <th class="py-2 pr-3">Klijent</th>
-                <th class="py-2 pr-3">Status</th>
-                <th class="py-2 pr-3 text-right">Prihod (YTD)</th>
-                <th class="py-2 pr-3">Limiti</th>
-                <th class="py-2 pr-3">Sledeća obaveza</th>
-                <th class="py-2 pr-3 text-right">Kašnjenja</th>
-                <th class="py-2 pr-3 text-right">Nedostaju dok.</th>
-                <th class="py-2 pr-3">Integracije</th>
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnClient') }}</th>
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnStatus') }}</th>
+                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.accountingOrganizationView.columnRevenueYtd') }}</th>
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnLimits') }}</th>
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnNextObligation') }}</th>
+                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.accountingOrganizationView.columnOverdue') }}</th>
+                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.accountingOrganizationView.columnMissingDocs') }}</th>
+                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnIntegrations') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -463,10 +465,10 @@ async function onOpenClient(companyId: number) {
                 <td class="py-2 pr-3">
                   <div class="flex gap-1">
                     <Badge :variant="LIMIT_VARIANTS[row.pausal_limit.warning_level ?? 'ok']">
-                      Paušal {{ row.pausal_limit.percentage ?? '—' }}%
+                      {{ t('limitsAccountingEtc.accountingOrganizationView.pausalBadge', { percentage: row.pausal_limit.percentage ?? '—' }) }}
                     </Badge>
                     <Badge :variant="LIMIT_VARIANTS[row.vat_threshold.warning_level ?? 'ok']">
-                      PDV {{ row.vat_threshold.percentage ?? '—' }}%
+                      {{ t('limitsAccountingEtc.accountingOrganizationView.vatBadge', { percentage: row.vat_threshold.percentage ?? '—' }) }}
                     </Badge>
                   </div>
                 </td>
@@ -487,7 +489,7 @@ async function onOpenClient(companyId: number) {
               :disabled="!portfolioHasPrevious"
               @click="onPrevPortfolioPage"
             >
-              Prethodna
+              {{ t('limitsAccountingEtc.accountingOrganizationView.prevPage') }}
             </button>
             <button
               type="button"
@@ -495,7 +497,7 @@ async function onOpenClient(companyId: number) {
               :disabled="!portfolioHasNext"
               @click="onNextPortfolioPage"
             >
-              Sledeća
+              {{ t('limitsAccountingEtc.accountingOrganizationView.nextPage') }}
             </button>
           </div>
         </div>

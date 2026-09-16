@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Alert, Button, Card , DataTable, type DataTableColumn } from '@pausalac/ui'
 import {
   listAdminCompanies,
@@ -9,6 +10,8 @@ import {
 } from '@/services/admin'
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
+
+const { t } = useI18n()
 
 const companies = ref<AdminCompany[]>([])
 const loading = ref(true)
@@ -21,16 +24,16 @@ const membersFor = ref<AdminCompany | null>(null)
 const members = ref<AdminMembership[]>([])
 const membersLoading = ref(false)
 
-const columns: DataTableColumn<AdminCompany>[] = [
-  { key: 'name', label: 'Naziv' },
-  { key: 'pib', label: 'PIB' },
-  { key: 'city', label: 'Grad' },
+const columns = computed<DataTableColumn<AdminCompany>[]>(() => [
+  { key: 'name', label: t('admin.adminCompaniesView.nameColumn') },
+  { key: 'pib', label: t('admin.adminCompaniesView.pibColumn') },
+  { key: 'city', label: t('admin.adminCompaniesView.cityColumn') },
   {
     key: 'created_at',
-    label: 'Registrovana',
+    label: t('admin.adminCompaniesView.registeredColumn'),
     format: (r) => formatDate(r.created_at),
   },
-]
+])
 
 async function load() {
   loading.value = true
@@ -41,7 +44,7 @@ async function load() {
     hasNext.value = result.next !== null
     hasPrevious.value = result.previous !== null
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo kompanije.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminCompaniesView.loadError')
   } finally {
     loading.value = false
   }
@@ -73,7 +76,7 @@ onMounted(load)
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Kompanije</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('admin.adminCompaniesView.title') }}</h1>
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
@@ -81,28 +84,28 @@ onMounted(load)
       :columns="columns"
       :rows="companies"
       :loading="loading"
-      empty-title="Nema kompanija."
+      :empty-title="t('admin.adminCompaniesView.emptyTitle')"
     >
       <template #actions="{ row }">
-        <Button variant="secondary" @click="onShowMembers(row)">Članovi</Button>
+        <Button variant="secondary" @click="onShowMembers(row)">{{ t('admin.adminCompaniesView.membersButton') }}</Button>
       </template>
     </DataTable>
 
     <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">Prethodna</Button>
-      <Button variant="secondary" :disabled="!hasNext" @click="goNext">Sledeća</Button>
+      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">{{ t('admin.adminCompaniesView.previousButton') }}</Button>
+      <Button variant="secondary" :disabled="!hasNext" @click="goNext">{{ t('admin.adminCompaniesView.nextButton') }}</Button>
     </div>
 
     <Card v-if="membersFor">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-base font-semibold text-navy">Članovi — {{ membersFor.name }}</h2>
-        <button class="text-sm text-text-secondary underline" @click="membersFor = null">Zatvori</button>
+        <h2 class="text-base font-semibold text-navy">{{ t('admin.adminCompaniesView.membersHeading', { name: membersFor.name }) }}</h2>
+        <button class="text-sm text-text-secondary underline" @click="membersFor = null">{{ t('admin.adminCompaniesView.closeButton') }}</button>
       </div>
-      <p v-if="membersLoading" class="text-sm text-text-secondary">Učitavanje...</p>
-      <p v-else-if="members.length === 0" class="text-sm text-text-secondary">Nema članova.</p>
+      <p v-if="membersLoading" class="text-sm text-text-secondary">{{ t('admin.adminCompaniesView.loadingMembers') }}</p>
+      <p v-else-if="members.length === 0" class="text-sm text-text-secondary">{{ t('admin.adminCompaniesView.noMembers') }}</p>
       <ul v-else class="flex flex-col divide-y divide-border">
         <li v-for="(m, i) in members" :key="i" class="py-2 text-sm text-navy">
-          {{ m.user_email }} — {{ m.role }} ({{ m.status }})
+          {{ t('admin.adminCompaniesView.memberLine', { email: m.user_email, role: m.role, status: m.status }) }}
         </li>
       </ul>
     </Card>

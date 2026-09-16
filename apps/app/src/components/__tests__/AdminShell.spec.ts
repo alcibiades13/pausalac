@@ -14,7 +14,7 @@ function staffUser() {
     last_name: '',
     is_email_verified: true,
     is_staff: true,
-    language: 'sr',
+    language: 'sr' as const,
     memberships: [],
   }
 }

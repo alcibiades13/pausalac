@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import ViseView from '../ViseView.vue'
+import { i18n } from '@/i18n'
 
 const stub = { template: '<div/>' }
 const router = createRouter({
@@ -28,7 +29,7 @@ describe('ViseView', () => {
   })
 
   it('links to every remaining destination and offers a logout action', () => {
-    const wrapper = mount(ViseView, { global: { plugins: [router] } })
+    const wrapper = mount(ViseView, { global: { plugins: [router, i18n] } })
     const hrefs = wrapper.findAll('a').map((a) => a.attributes('href'))
     expect(hrefs).toEqual([
       '/klijenti',

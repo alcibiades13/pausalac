@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Alert } from '@pausalac/ui'
 import AuthLayout from '@/components/AuthLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -37,7 +39,7 @@ async function onSubmit() {
         password: error.fieldError('password') ?? '',
       }
     } else {
-      errorMessage.value = 'Ne možemo trenutno da napravimo nalog. Pokušaj ponovo.'
+      errorMessage.value = t('authShell.registerView.genericError')
     }
   } finally {
     loading.value = false
@@ -46,14 +48,14 @@ async function onSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Napravi nalog">
+  <AuthLayout :title="t('authShell.registerView.title')">
     <Card>
       <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
         <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
         <Input
           v-model="email"
           type="email"
-          label="Email adresa"
+          :label="t('authShell.registerView.emailLabel')"
           autocomplete="email"
           required
           :disabled="loading"
@@ -62,22 +64,22 @@ async function onSubmit() {
         <Input
           v-model="password"
           type="password"
-          label="Lozinka"
+          :label="t('authShell.registerView.passwordLabel')"
           autocomplete="new-password"
-          hint="Najmanje 8 karaktera."
+          :hint="t('authShell.registerView.passwordHint')"
           required
           :disabled="loading"
           :error="fieldErrors.password"
         />
         <div class="grid grid-cols-2 gap-4">
-          <Input v-model="firstName" label="Ime" autocomplete="given-name" :disabled="loading" />
-          <Input v-model="lastName" label="Prezime" autocomplete="family-name" :disabled="loading" />
+          <Input v-model="firstName" :label="t('authShell.registerView.firstNameLabel')" autocomplete="given-name" :disabled="loading" />
+          <Input v-model="lastName" :label="t('authShell.registerView.lastNameLabel')" autocomplete="family-name" :disabled="loading" />
         </div>
-        <Button type="submit" :loading="loading">Napravi nalog</Button>
+        <Button type="submit" :loading="loading">{{ t('authShell.registerView.submitButton') }}</Button>
       </form>
       <p class="mt-4 text-center text-sm text-text-secondary">
-        Već imaš nalog?
-        <RouterLink :to="{ name: 'login' }" class="text-primary underline">Prijavi se</RouterLink>
+        {{ t('authShell.registerView.hasAccountText') }}
+        <RouterLink :to="{ name: 'login' }" class="text-primary underline">{{ t('authShell.registerView.loginLink') }}</RouterLink>
       </p>
     </Card>
   </AuthLayout>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Alert, Badge, Button, Card, Input, Select , DataTable, type DataTableColumn } from '@pausalac/ui'
 import {
   createAdminPlan,
@@ -8,6 +9,8 @@ import {
 } from '@/services/admin'
 import type { Plan } from '@/services/subscriptions'
 import { ApiError } from '@/lib/api'
+
+const { t } = useI18n()
 
 type AdminPlan = Plan & { is_active: boolean }
 
@@ -27,11 +30,11 @@ const form = ref({
   is_active: 'true',
 })
 
-const columns: DataTableColumn<AdminPlan>[] = [
-  { key: 'identifier', label: 'Identifikator' },
-  { key: 'name', label: 'Naziv' },
-  { key: 'price', label: 'Cena', format: (r) => `${r.price} ${r.currency}` },
-]
+const columns = computed<DataTableColumn<AdminPlan>[]>(() => [
+  { key: 'identifier', label: t('admin.adminPlansView.identifierLabel') },
+  { key: 'name', label: t('admin.adminPlansView.nameLabel') },
+  { key: 'price', label: t('admin.adminPlansView.priceLabel'), format: (r) => `${r.price} ${r.currency}` },
+])
 
 async function load() {
   loading.value = true
@@ -39,7 +42,7 @@ async function load() {
   try {
     plans.value = (await listAdminPlans()).results
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo planove.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminPlansView.loadError')
   } finally {
     loading.value = false
   }
@@ -92,7 +95,7 @@ async function onSubmit() {
     formOpen.value = false
     await load()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Čuvanje nije uspelo.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminPlansView.saveError')
   } finally {
     saving.value = false
   }
@@ -104,52 +107,51 @@ onMounted(load)
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-xl font-semibold text-navy">Planovi</h1>
-      <Button @click="onNew">+ Novi plan</Button>
+      <h1 class="text-xl font-semibold text-navy">{{ t('admin.adminPlansView.title') }}</h1>
+      <Button @click="onNew">{{ t('admin.adminPlansView.newPlanButton') }}</Button>
     </div>
     <p class="text-sm text-text-secondary">
-      Cena ovde je jedini izvor istine za sve klijentske ekrane (master prompt §50) — nema
-      hardkodovanih cena u frontendu.
+      {{ t('admin.adminPlansView.description') }}
     </p>
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
     <Card v-if="formOpen">
       <h2 class="mb-3 text-base font-semibold text-navy">
-        {{ editingId ? 'Izmeni plan' : 'Novi plan' }}
+        {{ editingId ? t('admin.adminPlansView.editPlanHeading') : t('admin.adminPlansView.newPlanHeading') }}
       </h2>
       <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input v-model="form.identifier" label="Identifikator" :disabled="!!editingId || saving" required />
-          <Input v-model="form.name" label="Naziv" :disabled="saving" required />
-          <Input v-model="form.price" label="Cena" :disabled="saving" required />
-          <Input v-model="form.currency" label="Valuta" :disabled="saving" required />
+          <Input v-model="form.identifier" :label="t('admin.adminPlansView.identifierLabel')" :disabled="!!editingId || saving" required />
+          <Input v-model="form.name" :label="t('admin.adminPlansView.nameLabel')" :disabled="saving" required />
+          <Input v-model="form.price" :label="t('admin.adminPlansView.priceLabel')" :disabled="saving" required />
+          <Input v-model="form.currency" :label="t('admin.adminPlansView.currencyLabel')" :disabled="saving" required />
           <Select
             v-model="form.is_active"
-            label="Status"
+            :label="t('admin.adminPlansView.statusLabel')"
             :options="[
-              { value: 'true', label: 'Dostupan za izbor' },
-              { value: 'false', label: 'Nedostupan' },
+              { value: 'true', label: t('admin.adminPlansView.statusActiveOption') },
+              { value: 'false', label: t('admin.adminPlansView.statusInactiveOption') },
             ]"
             :disabled="saving"
           />
         </div>
         <div class="flex gap-2">
-          <Button type="submit" :loading="saving">Sačuvaj</Button>
+          <Button type="submit" :loading="saving">{{ t('admin.adminPlansView.saveButton') }}</Button>
           <Button type="button" variant="secondary" :disabled="saving" @click="formOpen = false">
-            Otkaži
+            {{ t('admin.adminPlansView.cancelButton') }}
           </Button>
         </div>
       </form>
     </Card>
 
-    <DataTable :columns="columns" :rows="plans" :loading="loading" empty-title="Nema planova.">
+    <DataTable :columns="columns" :rows="plans" :loading="loading" :empty-title="t('admin.adminPlansView.emptyTitle')">
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.is_active ? 'success' : 'neutral'">
-            {{ row.is_active ? 'Dostupan' : 'Nedostupan' }}
+            {{ row.is_active ? t('admin.adminPlansView.activeBadge') : t('admin.adminPlansView.inactiveBadge') }}
           </Badge>
-          <Button variant="secondary" @click="onEdit(row)">Izmeni</Button>
+          <Button variant="secondary" @click="onEdit(row)">{{ t('admin.adminPlansView.editButton') }}</Button>
         </div>
       </template>
     </DataTable>

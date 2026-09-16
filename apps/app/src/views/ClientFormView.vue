@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Alert, Skeleton } from '@pausalac/ui'
 import { createClient, getClient, updateClient, type ClientPayload } from '@/services/clients'
 import { ApiError } from '@/lib/api'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 
+const { t } = useI18n()
 const props = defineProps<{ id?: string }>()
 const router = useRouter()
 const isEditing = computed(() => Boolean(props.id))
@@ -38,7 +40,7 @@ onMounted(async () => {
     form.value = { ...client }
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo klijenta.'
+      error instanceof ApiError ? error.message : t('dashboardInvoicesClients.clientFormView.loadError')
   } finally {
     loading.value = false
     markClean()
@@ -66,7 +68,7 @@ async function onSubmit() {
         errorMessage.value = error.message
       }
     } else {
-      errorMessage.value = 'Ne možemo trenutno da sačuvamo klijenta. Pokušaj ponovo.'
+      errorMessage.value = t('dashboardInvoicesClients.clientFormView.saveError')
     }
   } finally {
     saving.value = false

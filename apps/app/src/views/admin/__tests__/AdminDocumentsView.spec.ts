@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { i18n } from '@/i18n'
 import AdminDocumentsView from '../AdminDocumentsView.vue'
 import { listAdminDocuments } from '@/services/admin'
 
@@ -31,7 +32,7 @@ describe('AdminDocumentsView', () => {
         },
       ],
     })
-    const wrapper = mount(AdminDocumentsView)
+    const wrapper = mount(AdminDocumentsView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Firma A')
     expect(wrapper.text()).toContain('Ugovor')

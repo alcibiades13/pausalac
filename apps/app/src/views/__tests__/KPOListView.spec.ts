@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import KPOListView from '../KPOListView.vue'
 import { listKpoEntries, type KPOEntry } from '@/services/kpo'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/kpo', () => ({
   listKpoEntries: vi.fn<typeof listKpoEntries>(),
@@ -27,7 +28,7 @@ function entry(overrides: Partial<KPOEntry> = {}): KPOEntry {
 function mountView() {
   const pinia = createPinia()
   setActivePinia(pinia)
-  return mount(KPOListView, { global: { plugins: [pinia] } })
+  return mount(KPOListView, { global: { plugins: [pinia, i18n] } })
 }
 
 describe('KPOListView', () => {

@@ -18,6 +18,7 @@ import {
   type ClientPortfolioRow,
 } from '@/services/accounting'
 import { useCompanyStore } from '@/stores/company'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/accounting', () => ({
   listOrganizations: vi.fn<typeof listOrganizations>(),
@@ -109,7 +110,7 @@ const EMPTY_PORTFOLIO_PAGE = {
 function mountView() {
   const pinia = createPinia()
   setActivePinia(pinia)
-  return mount(AccountingOrganizationView, { global: { plugins: [pinia, router] } })
+  return mount(AccountingOrganizationView, { global: { plugins: [pinia, router, i18n] } })
 }
 
 describe('AccountingOrganizationView', () => {

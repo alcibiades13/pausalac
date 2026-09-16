@@ -6,6 +6,7 @@ import { listDocuments, uploadDocument, deleteDocument, type AppDocument } from 
 import { listTaxResolutions } from '@/services/taxes'
 import { listClients, type Client } from '@/services/clients'
 import { listInvoices, type Invoice } from '@/services/invoices'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/documents', () => ({
   listDocuments: vi.fn<typeof listDocuments>(),
@@ -101,7 +102,7 @@ function invoice(overrides: Partial<Invoice> = {}): Invoice {
 }
 
 function mountView() {
-  return mount(DocumentsView, { global: { plugins: [router] } })
+  return mount(DocumentsView, { global: { plugins: [router, i18n] } })
 }
 
 describe('DocumentsView', () => {
@@ -237,7 +238,7 @@ describe('DocumentsView', () => {
       })
 
       await router.push('/?document=2')
-      const wrapper = mount(DocumentsView, { global: { plugins: [router] } })
+      const wrapper = mount(DocumentsView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       const highlighted = wrapper.find('#document-2')

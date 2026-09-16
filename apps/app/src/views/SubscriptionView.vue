@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Alert, Badge, Skeleton } from '@pausalac/ui'
 import {
   listPlans,
@@ -13,13 +14,15 @@ import {
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
 
-const STATUS_LABELS: Record<SubscriptionStatus, string> = {
-  trialing: 'Probni period',
-  active: 'Aktivna',
-  grace_period: 'Period odlaganja',
-  cancelled: 'Otkazana',
-  expired: 'Istekla',
-}
+const { t } = useI18n()
+
+const STATUS_LABELS = computed<Record<SubscriptionStatus, string>>(() => ({
+  trialing: t('limitsAccountingEtc.subscriptionView.statusTrialing'),
+  active: t('limitsAccountingEtc.subscriptionView.statusActive'),
+  grace_period: t('limitsAccountingEtc.subscriptionView.statusGracePeriod'),
+  cancelled: t('limitsAccountingEtc.subscriptionView.statusCancelled'),
+  expired: t('limitsAccountingEtc.subscriptionView.statusExpired'),
+}))
 const STATUS_VARIANTS: Record<SubscriptionStatus, 'neutral' | 'success' | 'warning' | 'danger'> = {
   trialing: 'neutral',
   active: 'success',
@@ -42,7 +45,7 @@ async function load() {
     status.value = 'ready'
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo pretplatu.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.subscriptionView.loadError')
     status.value = 'error'
   }
 }
@@ -65,7 +68,7 @@ async function onActivate(plan: Plan) {
     subscription.value = await activatePlan(plan.id)
   } catch (error) {
     actionError.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da aktiviramo plan.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.subscriptionView.activateError')
   } finally {
     activatingPlanId.value = null
   }
@@ -80,7 +83,7 @@ async function onCancel() {
     subscription.value = await cancelSubscription()
   } catch (error) {
     actionError.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da otkažemo pretplatu.'
+      error instanceof ApiError ? error.message : t('limitsAccountingEtc.subscriptionView.cancelError')
   } finally {
     cancelling.value = false
   }
@@ -89,11 +92,11 @@ async function onCancel() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Pretplata</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('limitsAccountingEtc.subscriptionView.title') }}</h1>
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">Pokušaj ponovo</button>
+      <button class="ml-2 underline" @click="load">{{ t('limitsAccountingEtc.subscriptionView.retryButton') }}</button>
     </Alert>
 
     <Card v-else-if="status === 'loading'">
@@ -114,15 +117,15 @@ async function onCancel() {
             </div>
             <p v-if="subscription.status === 'trialing'" class="text-sm text-text-secondary">
               <template v-if="trialDaysLeft !== null && trialDaysLeft > 0">
-                Probni period ističe za {{ trialDaysLeft }} dan(a).
+                {{ t('limitsAccountingEtc.subscriptionView.trialEndsIn', { days: trialDaysLeft }) }}
               </template>
-              <template v-else>Probni period je istekao.</template>
+              <template v-else>{{ t('limitsAccountingEtc.subscriptionView.trialExpired') }}</template>
             </p>
             <p v-else-if="subscription.status === 'active' && subscription.current_period_end" class="text-sm text-text-secondary">
-              Sledeće obnavljanje: {{ formatDate(subscription.current_period_end) }}
+              {{ t('limitsAccountingEtc.subscriptionView.nextRenewal') }} {{ formatDate(subscription.current_period_end) }}
             </p>
             <p v-else-if="subscription.status === 'expired' || subscription.status === 'cancelled'" class="text-sm text-danger">
-              Pretplata nije aktivna — izaberi plan da nastaviš da izdaješ fakture.
+              {{ t('limitsAccountingEtc.subscriptionView.inactiveWarning') }}
             </p>
           </div>
           <Button
@@ -131,7 +134,7 @@ async function onCancel() {
             :loading="cancelling"
             @click="onCancel"
           >
-            Otkaži pretplatu
+            {{ t('limitsAccountingEtc.subscriptionView.cancelButton') }}
           </Button>
         </div>
       </Card>
@@ -143,7 +146,7 @@ async function onCancel() {
           <div>
             <h2 class="font-display text-base font-semibold text-navy">{{ plan.name }}</h2>
             <p class="mt-1 text-2xl font-semibold text-navy">
-              {{ plan.price }} <span class="text-sm font-normal text-text-secondary">{{ plan.currency }}/mes</span>
+              {{ plan.price }} <span class="text-sm font-normal text-text-secondary">{{ plan.currency }}/{{ t('limitsAccountingEtc.subscriptionView.perMonthSuffix') }}</span>
             </p>
           </div>
           <Button
@@ -151,9 +154,9 @@ async function onCancel() {
             :loading="activatingPlanId === plan.id"
             @click="onActivate(plan)"
           >
-            Izaberi
+            {{ t('limitsAccountingEtc.subscriptionView.activateButton') }}
           </Button>
-          <Button v-else variant="secondary" disabled>Trenutni plan</Button>
+          <Button v-else variant="secondary" disabled>{{ t('limitsAccountingEtc.subscriptionView.currentPlanButton') }}</Button>
         </Card>
       </div>
     </template>

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { i18n } from '@/i18n'
 import AdminAuditLogView from '../AdminAuditLogView.vue'
 import { listAdminAuditLog } from '@/services/admin'
 
@@ -33,7 +34,7 @@ describe('AdminAuditLogView', () => {
         },
       ],
     })
-    const wrapper = mount(AdminAuditLogView)
+    const wrapper = mount(AdminAuditLogView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('super@pausalac.rs')
     expect(wrapper.text()).toContain('admin_updated')
@@ -60,7 +61,7 @@ describe('AdminAuditLogView', () => {
         },
       ],
     })
-    const wrapper = mount(AdminAuditLogView)
+    const wrapper = mount(AdminAuditLogView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('sistem')
   })

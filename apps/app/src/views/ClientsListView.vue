@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Alert, EmptyState, Skeleton, Pagination } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import { ApiError } from '@/lib/api'
 
+const { t } = useI18n()
 const clients = ref<Client[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 const errorMessage = ref('')
@@ -22,7 +24,7 @@ async function load() {
     status.value = 'ready'
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo klijente.'
+      error instanceof ApiError ? error.message : t('dashboardInvoicesClients.clientsListView.loadError')
     status.value = 'error'
   }
 }
@@ -46,17 +48,22 @@ function goPrevious() {
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-xl font-semibold text-navy">Klijenti</h1>
+      <h1 class="text-xl font-semibold text-navy">{{ t('dashboardInvoicesClients.clientsListView.title') }}</h1>
       <RouterLink :to="{ name: 'client-new' }">
-        <Button>+ Novi klijent</Button>
+        <Button>{{ t('dashboardInvoicesClients.clientsListView.newClientButton') }}</Button>
       </RouterLink>
     </div>
 
-    <Input v-model="searchTerm" label="Pretraga" placeholder="Naziv, PIB, email..." class="max-w-xs" />
+    <Input
+      v-model="searchTerm"
+      :label="t('dashboardInvoicesClients.clientsListView.searchLabel')"
+      :placeholder="t('dashboardInvoicesClients.clientsListView.searchPlaceholder')"
+      class="max-w-xs"
+    />
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">Pokušaj ponovo</button>
+      <button class="ml-2 underline" @click="load">{{ t('dashboardInvoicesClients.clientsListView.retryButton') }}</button>
     </Alert>
 
     <Card v-else-if="status === 'loading'">
@@ -65,12 +72,12 @@ function goPrevious() {
 
     <Card v-else-if="clients.length === 0">
       <EmptyState
-        title="Još nemaš klijente."
-        description="Prvi klijent može biti dodat za manje od minuta."
+        :title="t('dashboardInvoicesClients.clientsListView.emptyTitle')"
+        :description="t('dashboardInvoicesClients.clientsListView.emptyDescription')"
       >
         <template #action>
           <RouterLink :to="{ name: 'client-new' }">
-            <Button>+ Novi klijent</Button>
+            <Button>{{ t('dashboardInvoicesClients.clientsListView.newClientButton') }}</Button>
           </RouterLink>
         </template>
       </EmptyState>
@@ -89,7 +96,7 @@ function goPrevious() {
                 <p class="text-sm text-text-secondary">{{ c.email || c.phone || '—' }}</p>
               </div>
               <span class="text-sm text-text-secondary">
-                {{ c.client_type === 'company' ? 'Pravno lice' : 'Fizičko lice' }}
+                {{ t(`dashboardInvoicesClients.clientsListView.clientTypeLabels.${c.client_type}`) }}
               </span>
             </RouterLink>
           </li>

@@ -10,6 +10,7 @@ import {
   type TaxObligation,
   type TaxResolution,
 } from '@/services/taxes'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/taxes', () => ({
   createTaxResolution: vi.fn<typeof createTaxResolution>(),
@@ -58,7 +59,7 @@ function mountView() {
     history: createMemoryHistory(),
     routes: [{ path: '/', component: { template: '<div />' } }],
   })
-  return mount(ObligationsView, { global: { plugins: [pinia, router] } })
+  return mount(ObligationsView, { global: { plugins: [pinia, router, i18n] } })
 }
 
 describe('ObligationsView', () => {
@@ -141,7 +142,7 @@ describe('ObligationsView', () => {
         routes: [{ path: '/', component: { template: '<div/>' } }],
       })
       await router.push('/?status=overdue')
-      const wrapper = mount(ObligationsView, { global: { plugins: [pinia, router] } })
+      const wrapper = mount(ObligationsView, { global: { plugins: [pinia, router, i18n] } })
       await flushPromises()
 
       expect(listTaxObligations).toHaveBeenCalledWith(expect.objectContaining({ status: 'overdue' }))

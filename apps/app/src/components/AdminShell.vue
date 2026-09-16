@@ -6,27 +6,31 @@
  * ever see, not a mode of the regular product nav.
  */
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Button } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 import AppSidebar from './AppSidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
+// `name` doubles as the i18n key under authShell.adminShell.navLinks.*
+// (see template) since it's already a unique per-entry identifier.
 const NAV_LINKS = [
-  { name: 'admin-users', label: 'Korisnici' },
-  { name: 'admin-companies', label: 'Kompanije' },
-  { name: 'admin-subscriptions', label: 'Pretplate' },
-  { name: 'admin-plans', label: 'Planovi' },
-  { name: 'admin-invoices', label: 'Fakture' },
-  { name: 'admin-documents', label: 'Dokumenti' },
-  { name: 'admin-tax-obligations', label: 'Poreske obaveze' },
-  { name: 'admin-rules', label: 'Regulatorna pravila' },
-  { name: 'admin-notifications', label: 'Obaveštenja' },
-  { name: 'admin-audit-log', label: 'Audit log' },
-  { name: 'admin-integrations', label: 'Integracije' },
+  { name: 'admin-users' },
+  { name: 'admin-companies' },
+  { name: 'admin-subscriptions' },
+  { name: 'admin-plans' },
+  { name: 'admin-invoices' },
+  { name: 'admin-documents' },
+  { name: 'admin-tax-obligations' },
+  { name: 'admin-rules' },
+  { name: 'admin-notifications' },
+  { name: 'admin-audit-log' },
+  { name: 'admin-integrations' },
 ]
 
 function navLinkClass(routeName: string, mobile = false): string {
@@ -54,18 +58,18 @@ async function onExit() {
       <div class="flex items-center justify-between gap-3 px-4 py-3">
         <span class="flex items-center gap-2">
           <span class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-navy to-text-secondary" aria-hidden="true" />
-          <span class="font-display text-base font-semibold text-navy">System Admin</span>
+          <span class="font-display text-base font-semibold text-navy">{{ t('authShell.adminShell.title') }}</span>
         </span>
-        <Button variant="ghost" @click="onExit">Nazad u aplikaciju</Button>
+        <Button variant="ghost" @click="onExit">{{ t('authShell.adminShell.backToAppButton') }}</Button>
       </div>
-      <nav class="flex items-center gap-1 overflow-x-auto px-4 pb-2" aria-label="Admin navigacija">
+      <nav class="flex items-center gap-1 overflow-x-auto px-4 pb-2" :aria-label="t('authShell.adminShell.navLabel')">
         <RouterLink
           v-for="link in NAV_LINKS"
           :key="link.name"
           :to="{ name: link.name }"
           :class="navLinkClass(link.name, true)"
         >
-          {{ link.label }}
+          {{ t('authShell.adminShell.navLinks.' + link.name) }}
         </RouterLink>
       </nav>
     </header>
@@ -73,10 +77,10 @@ async function onExit() {
     <!-- Tablet/desktop: same AppSidebar chrome AppShell.vue uses, text-only
          (no icons — 11 hand-drawn, visually-unverified icons for a
          rarely-used internal tool isn't a good trade). -->
-    <AppSidebar nav-label="Admin navigacija">
+    <AppSidebar :nav-label="t('authShell.adminShell.navLabel')">
       <template #header>
         <span class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-navy to-text-secondary" aria-hidden="true" />
-        <span class="font-display text-base font-semibold text-navy">System Admin</span>
+        <span class="font-display text-base font-semibold text-navy">{{ t('authShell.adminShell.title') }}</span>
       </template>
 
       <RouterLink
@@ -85,7 +89,7 @@ async function onExit() {
         :to="{ name: link.name }"
         :class="navLinkClass(link.name)"
       >
-        {{ link.label }}
+        {{ t('authShell.adminShell.navLinks.' + link.name) }}
       </RouterLink>
 
       <template #footer>
@@ -98,7 +102,7 @@ async function onExit() {
           class="rounded-lg px-3 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary"
           @click="onExit"
         >
-          Nazad u aplikaciju
+          {{ t('authShell.adminShell.backToAppButton') }}
         </button>
       </template>
     </AppSidebar>

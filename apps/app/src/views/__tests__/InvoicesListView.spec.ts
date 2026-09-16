@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import InvoicesListView from '../InvoicesListView.vue'
 import { listInvoices } from '@/services/invoices'
 import { ApiError } from '@/lib/api'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/invoices', () => ({
   listInvoices: vi.fn<typeof listInvoices>(),
@@ -31,7 +32,7 @@ describe('InvoicesListView', () => {
 
   it('shows an empty state when there are no invoices', async () => {
     vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoicesListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Još nemaš fakture.')
   })
@@ -70,7 +71,7 @@ describe('InvoicesListView', () => {
         },
       ],
     })
-    const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoicesListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('INV-2026-001')
     expect(wrapper.text()).toContain('Test Klijent')
@@ -82,14 +83,14 @@ describe('InvoicesListView', () => {
     vi.mocked(listInvoices).mockRejectedValue(
       new ApiError({ code: 'SERVER_ERROR', message: 'Ne možemo trenutno.', request_id: '1' }),
     )
-    const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoicesListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Ne možemo trenutno.')
   })
 
   it('offers three explicit create buttons for the three document types', async () => {
     vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoicesListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('+ Faktura')
     expect(wrapper.text()).toContain('+ Profaktura')
@@ -98,7 +99,7 @@ describe('InvoicesListView', () => {
 
   it('re-fetches with the selected document type when the type filter changes', async () => {
     vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+    const wrapper = mount(InvoicesListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
 
     await wrapper.find('#document-type-filter').setValue('profaktura')
@@ -113,7 +114,7 @@ describe('InvoicesListView', () => {
     it('seeds the status filter from a ?status= query param', async () => {
       vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
       await router.push('/?status=overdue')
-      const wrapper = mount(InvoicesListView, { global: { plugins: [router] } })
+      const wrapper = mount(InvoicesListView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       expect(listInvoices).toHaveBeenCalledWith(expect.objectContaining({ status: 'overdue' }))
@@ -124,7 +125,7 @@ describe('InvoicesListView', () => {
     it('defaults to no status filter when there is no query param', async () => {
       vi.mocked(listInvoices).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
       await router.push('/')
-      mount(InvoicesListView, { global: { plugins: [router] } })
+      mount(InvoicesListView, { global: { plugins: [router, i18n] } })
       await flushPromises()
 
       expect(listInvoices).toHaveBeenCalledWith(expect.objectContaining({ status: undefined }))

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Alert, Badge, Card, Skeleton } from '@pausalac/ui'
 import { getAdminIntegrationsStatus, type AdminIntegrationsStatus } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+
+const { t } = useI18n()
 
 const status = ref<AdminIntegrationsStatus | null>(null)
 const loading = ref(true)
@@ -15,7 +18,7 @@ async function load() {
     status.value = await getAdminIntegrationsStatus()
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo status integracija.'
+      error instanceof ApiError ? error.message : t('admin.adminIntegrationsView.loadError')
   } finally {
     loading.value = false
   }
@@ -26,11 +29,9 @@ onMounted(load)
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Integracije</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('admin.adminIntegrationsView.title') }}</h1>
     <p class="text-sm text-text-secondary">
-      Stvarno stanje konfiguracije, ne lažna lista integracija koje ne postoje — SEF/fiskalizacija
-      nema izabranog provajdera (master prompt §39), Sentry i produkt-analitika su ožičeni ali
-      neaktivni seamovi dok se ne postavi provajder (Faza 6a).
+      {{ t('admin.adminIntegrationsView.description') }}
     </p>
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
@@ -42,27 +43,27 @@ onMounted(load)
     <Card v-else-if="status">
       <ul class="flex flex-col divide-y divide-border">
         <li class="flex items-center justify-between py-3">
-          <span class="text-sm text-navy">Sentry (greške)</span>
+          <span class="text-sm text-navy">{{ t('admin.adminIntegrationsView.sentryLabel') }}</span>
           <Badge :variant="status.sentry.configured ? 'success' : 'neutral'">
-            {{ status.sentry.configured ? 'Podešeno' : 'Nije podešeno' }}
+            {{ status.sentry.configured ? t('admin.adminIntegrationsView.configuredBadge') : t('admin.adminIntegrationsView.notConfiguredBadge') }}
           </Badge>
         </li>
         <li class="flex items-center justify-between py-3">
-          <span class="text-sm text-navy">Skladište fajlova</span>
+          <span class="text-sm text-navy">{{ t('admin.adminIntegrationsView.storageLabel') }}</span>
           <Badge :variant="status.storage.configured ? 'success' : 'danger'">
-            {{ status.storage.configured ? 'Dostupno' : 'Nedostupno' }}
+            {{ status.storage.configured ? t('admin.adminIntegrationsView.availableBadge') : t('admin.adminIntegrationsView.unavailableBadge') }}
           </Badge>
         </li>
         <li class="flex items-center justify-between py-3">
-          <span class="text-sm text-navy">Email server</span>
+          <span class="text-sm text-navy">{{ t('admin.adminIntegrationsView.emailServerLabel') }}</span>
           <Badge :variant="status.email.configured ? 'success' : 'neutral'">
-            {{ status.email.configured ? 'Podešeno' : 'Nije podešeno' }}
+            {{ status.email.configured ? t('admin.adminIntegrationsView.configuredBadge') : t('admin.adminIntegrationsView.notConfiguredBadge') }}
           </Badge>
         </li>
         <li class="flex flex-col gap-1 py-3">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-navy">SEF / fiskalizacija</span>
-            <Badge variant="neutral">Nije podešeno</Badge>
+            <span class="text-sm text-navy">{{ t('admin.adminIntegrationsView.sefLabel') }}</span>
+            <Badge variant="neutral">{{ t('admin.adminIntegrationsView.notConfiguredBadge') }}</Badge>
           </div>
           <p class="text-xs text-text-secondary">{{ status.sef.note }}</p>
         </li>

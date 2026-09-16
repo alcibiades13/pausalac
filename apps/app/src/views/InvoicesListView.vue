@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Alert, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
 import { listInvoices, type Invoice, type InvoiceDocumentType, type InvoiceStatus } from '@/services/invoices'
 import { STATUS_LABELS } from '@/lib/invoiceStatus'
@@ -9,6 +10,7 @@ import { ApiError } from '@/lib/api'
 import InvoiceStatusBadge from '@/components/InvoiceStatusBadge.vue'
 import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const invoices = ref<Invoice[]>([])
 const status = ref<'loading' | 'ready' | 'error'>('loading')
@@ -20,8 +22,11 @@ const documentTypeFilter = ref<InvoiceDocumentType | ''>(
   (route.query.document_type as InvoiceDocumentType | undefined) ?? '',
 )
 
-const STATUS_OPTIONS = Object.entries(STATUS_LABELS) as [InvoiceStatus, string][]
-const DOCUMENT_TYPE_OPTIONS = Object.entries(DOCUMENT_TYPE_LABELS) as [InvoiceDocumentType, string][]
+// Only the backend status/document-type identifiers (the Record keys) are
+// used here — the Serbian label VALUES in these lib files are bypassed in
+// favor of t() lookups below, so the dropdown options are translatable.
+const STATUS_OPTIONS = Object.keys(STATUS_LABELS) as InvoiceStatus[]
+const DOCUMENT_TYPE_OPTIONS = Object.keys(DOCUMENT_TYPE_LABELS) as InvoiceDocumentType[]
 
 async function load() {
   status.value = 'loading'
@@ -34,7 +39,7 @@ async function load() {
     status.value = 'ready'
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo fakture.'
+      error instanceof ApiError ? error.message : t('dashboardInvoicesClients.invoicesListView.loadError')
     status.value = 'error'
   }
 }
@@ -46,45 +51,47 @@ watch([statusFilter, documentTypeFilter], load)
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-xl font-semibold text-navy">Fakture</h1>
+      <h1 class="text-xl font-semibold text-navy">{{ t('dashboardInvoicesClients.invoicesListView.title') }}</h1>
       <!-- Desktop-only: on mobile these three actions are covered by the
            global FAB (Phase 6d, MobileBottomNav.vue) — this row was
            originally a temporary stand-in for it (docs/decisions-log.md). -->
       <div class="hidden flex-wrap gap-2 sm:flex">
         <RouterLink :to="{ name: 'invoice-new' }">
-          <Button>+ Faktura</Button>
+          <Button>{{ t('dashboardInvoicesClients.invoicesListView.newInvoiceButton') }}</Button>
         </RouterLink>
         <RouterLink :to="{ name: 'invoice-new-profaktura' }">
-          <Button variant="secondary">+ Profaktura</Button>
+          <Button variant="secondary">{{ t('dashboardInvoicesClients.invoicesListView.newProfakturaButton') }}</Button>
         </RouterLink>
         <RouterLink :to="{ name: 'invoice-new-avans' }">
-          <Button variant="secondary">+ Avans</Button>
+          <Button variant="secondary">{{ t('dashboardInvoicesClients.invoicesListView.newAvansButton') }}</Button>
         </RouterLink>
       </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-4">
       <div class="flex items-center gap-2">
-        <label for="status-filter" class="text-sm text-text-secondary">Status:</label>
+        <label for="status-filter" class="text-sm text-text-secondary">{{ t('dashboardInvoicesClients.invoicesListView.statusFilterLabel') }}</label>
         <select
           id="status-filter"
           v-model="statusFilter"
           class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
-          <option value="">Sve</option>
-          <option v-for="[value, label] in STATUS_OPTIONS" :key="value" :value="value">{{ label }}</option>
+          <option value="">{{ t('dashboardInvoicesClients.invoicesListView.allStatusesOption') }}</option>
+          <option v-for="value in STATUS_OPTIONS" :key="value" :value="value">
+            {{ t(`dashboardInvoicesClients.invoiceStatusBadge.${value}`) }}
+          </option>
         </select>
       </div>
       <div class="flex items-center gap-2">
-        <label for="document-type-filter" class="text-sm text-text-secondary">Tip:</label>
+        <label for="document-type-filter" class="text-sm text-text-secondary">{{ t('dashboardInvoicesClients.invoicesListView.typeFilterLabel') }}</label>
         <select
           id="document-type-filter"
           v-model="documentTypeFilter"
           class="rounded-lg border border-border bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
-          <option value="">Svi</option>
-          <option v-for="[value, label] in DOCUMENT_TYPE_OPTIONS" :key="value" :value="value">
-            {{ label }}
+          <option value="">{{ t('dashboardInvoicesClients.invoicesListView.allTypesOption') }}</option>
+          <option v-for="value in DOCUMENT_TYPE_OPTIONS" :key="value" :value="value">
+            {{ t(`dashboardInvoicesClients.documentTypeBadge.${value}`) }}
           </option>
         </select>
       </div>
@@ -92,7 +99,7 @@ watch([statusFilter, documentTypeFilter], load)
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">Pokušaj ponovo</button>
+      <button class="ml-2 underline" @click="load">{{ t('dashboardInvoicesClients.invoicesListView.retryButton') }}</button>
     </Alert>
 
     <Card v-else-if="status === 'loading'">
@@ -101,12 +108,12 @@ watch([statusFilter, documentTypeFilter], load)
 
     <Card v-else-if="invoices.length === 0">
       <EmptyState
-        title="Još nemaš fakture."
-        description="Prva faktura može biti gotova za manje od minuta."
+        :title="t('dashboardInvoicesClients.invoicesListView.emptyTitle')"
+        :description="t('dashboardInvoicesClients.invoicesListView.emptyDescription')"
       >
         <template #action>
           <RouterLink :to="{ name: 'invoice-new' }">
-            <Button>+ Nova faktura</Button>
+            <Button>{{ t('dashboardInvoicesClients.invoicesListView.newInvoiceCta') }}</Button>
           </RouterLink>
         </template>
       </EmptyState>
@@ -121,7 +128,7 @@ watch([statusFilter, documentTypeFilter], load)
           >
             <div>
               <p class="font-mono font-medium text-navy">
-                {{ invoice.invoice_number ?? `Nacrt #${invoice.id}` }}
+                {{ invoice.invoice_number ?? t('dashboardInvoicesClients.invoicesListView.draftNumberFallback', { id: invoice.id }) }}
               </p>
               <p class="text-sm text-text-secondary">{{ invoice.client_name }}</p>
             </div>

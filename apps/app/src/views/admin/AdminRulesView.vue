@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Alert, Badge, Button, Card, Input , DataTable, type DataTableColumn } from '@pausalac/ui'
 import {
   approveAdminRegulatoryRule,
@@ -8,6 +9,8 @@ import {
   type AdminRegulatoryRule,
 } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+
+const { t } = useI18n()
 
 const rules = ref<AdminRegulatoryRule[]>([])
 const loading = ref(true)
@@ -25,12 +28,12 @@ const form = ref({
   notes: '',
 })
 
-const columns: DataTableColumn<AdminRegulatoryRule>[] = [
-  { key: 'identifier', label: 'Identifikator' },
-  { key: 'version', label: 'Verzija' },
-  { key: 'effective_from', label: 'Važi od' },
-  { key: 'source', label: 'Izvor' },
-]
+const columns = computed<DataTableColumn<AdminRegulatoryRule>[]>(() => [
+  { key: 'identifier', label: t('admin.adminRulesView.identifierLabel') },
+  { key: 'version', label: t('admin.adminRulesView.versionLabel') },
+  { key: 'effective_from', label: t('admin.adminRulesView.effectiveFromLabel') },
+  { key: 'source', label: t('admin.adminRulesView.sourceLabel') },
+])
 
 async function load() {
   loading.value = true
@@ -39,7 +42,7 @@ async function load() {
     rules.value = (await listAdminRegulatoryRules()).results
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo pravila.'
+      error instanceof ApiError ? error.message : t('admin.adminRulesView.loadError')
   } finally {
     loading.value = false
   }
@@ -58,7 +61,7 @@ async function onSubmit() {
     try {
       config = JSON.parse(form.value.configJson)
     } catch {
-      errorMessage.value = 'Konfiguracija mora biti ispravan JSON.'
+      errorMessage.value = t('admin.adminRulesView.invalidJsonError')
       saving.value = false
       return
     }
@@ -73,7 +76,7 @@ async function onSubmit() {
     formOpen.value = false
     await load()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Čuvanje nije uspelo.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminRulesView.saveError')
   } finally {
     saving.value = false
   }
@@ -86,7 +89,7 @@ async function onApprove(rule: AdminRegulatoryRule) {
     await approveAdminRegulatoryRule(rule.id)
     await load()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Potvrda nije uspela.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminRulesView.approveError')
   } finally {
     actingOnId.value = null
   }
@@ -98,41 +101,40 @@ onMounted(load)
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-xl font-semibold text-navy">Regulatorna pravila</h1>
-      <Button @click="onNew">+ Nova verzija</Button>
+      <h1 class="text-xl font-semibold text-navy">{{ t('admin.adminRulesView.title') }}</h1>
+      <Button @click="onNew">{{ t('admin.adminRulesView.newVersionButton') }}</Button>
     </div>
     <p class="text-sm text-text-secondary">
-      Verzije se samo dodaju, nikad ne menjaju (master prompt §81/82) — nova verzija je uvek nov
-      red; "Potvrdi" samo označava postojeći red kao potvrđen, sa audit zapisom.
+      {{ t('admin.adminRulesView.description') }}
     </p>
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
     <Card v-if="formOpen">
-      <h2 class="mb-3 text-base font-semibold text-navy">Nova verzija pravila</h2>
+      <h2 class="mb-3 text-base font-semibold text-navy">{{ t('admin.adminRulesView.newRuleHeading') }}</h2>
       <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input v-model="form.identifier" label="Identifikator" :disabled="saving" required />
-          <Input v-model="form.version" label="Verzija" type="number" :disabled="saving" required />
-          <Input v-model="form.effective_from" label="Važi od" type="date" :disabled="saving" required />
-          <Input v-model="form.source" label="Izvor" :disabled="saving" required />
+          <Input v-model="form.identifier" :label="t('admin.adminRulesView.identifierLabel')" :disabled="saving" required />
+          <Input v-model="form.version" :label="t('admin.adminRulesView.versionLabel')" type="number" :disabled="saving" required />
+          <Input v-model="form.effective_from" :label="t('admin.adminRulesView.effectiveFromLabel')" type="date" :disabled="saving" required />
+          <Input v-model="form.source" :label="t('admin.adminRulesView.sourceLabel')" :disabled="saving" required />
         </div>
-        <Input v-model="form.configJson" label="Konfiguracija (JSON)" :disabled="saving" required />
-        <Input v-model="form.notes" label="Napomene" :disabled="saving" />
+        <Input v-model="form.configJson" :label="t('admin.adminRulesView.configJsonLabel')" :disabled="saving" required />
+        <Input v-model="form.notes" :label="t('admin.adminRulesView.notesLabel')" :disabled="saving" />
         <div class="flex gap-2">
-          <Button type="submit" :loading="saving">Sačuvaj</Button>
+          <Button type="submit" :loading="saving">{{ t('admin.adminRulesView.saveButton') }}</Button>
           <Button type="button" variant="secondary" :disabled="saving" @click="formOpen = false">
-            Otkaži
+            {{ t('admin.adminRulesView.cancelButton') }}
           </Button>
         </div>
       </form>
     </Card>
 
-    <DataTable :columns="columns" :rows="rules" :loading="loading" empty-title="Nema pravila.">
+    <DataTable :columns="columns" :rows="rules" :loading="loading" :empty-title="t('admin.adminRulesView.emptyTitle')">
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.approval_status === 'confirmed' ? 'success' : 'warning'">
-            {{ row.approval_status === 'confirmed' ? 'Potvrđeno' : 'Nepotvrđeno' }}
+            {{ row.approval_status === 'confirmed' ? t('admin.adminRulesView.confirmedBadge') : t('admin.adminRulesView.unconfirmedBadge') }}
           </Badge>
           <Button
             v-if="row.approval_status !== 'confirmed'"
@@ -140,7 +142,7 @@ onMounted(load)
             :loading="actingOnId === row.id"
             @click="onApprove(row)"
           >
-            Potvrdi
+            {{ t('admin.adminRulesView.confirmButton') }}
           </Button>
         </div>
       </template>

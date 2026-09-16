@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import AttentionItem from '../AttentionItem.vue'
+import { i18n } from '@/i18n'
 
 const router = createRouter({
   history: createMemoryHistory(),
@@ -15,7 +16,7 @@ describe('AttentionItem', () => {
   it('renders the message and links to the given route', async () => {
     await router.push('/')
     const wrapper = mount(AttentionItem, {
-      global: { plugins: [router] },
+      global: { plugins: [router, i18n] },
       props: {
         item: {
           type: 'overdue_invoices',

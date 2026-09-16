@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Alert } from '@pausalac/ui'
 import AuthLayout from '@/components/AuthLayout.vue'
 import { requestPasswordReset } from '@/services/passwordReset'
 
+const { t } = useI18n()
 const email = ref('')
 const loading = ref(false)
 const submitted = ref(false)
@@ -23,27 +25,27 @@ async function onSubmit() {
 </script>
 
 <template>
-  <AuthLayout title="Zaboravljena lozinka">
+  <AuthLayout :title="t('authShell.forgotPasswordView.title')">
     <Card>
       <Alert v-if="submitted" variant="success">
-        Ako nalog sa ovom email adresom postoji, poslali smo link za resetovanje lozinke.
+        {{ t('authShell.forgotPasswordView.successMessage') }}
       </Alert>
       <form v-else class="flex flex-col gap-4" @submit.prevent="onSubmit">
         <p class="text-sm text-text-secondary">
-          Unesi email adresu i poslaćemo ti link za postavljanje nove lozinke.
+          {{ t('authShell.forgotPasswordView.instructions') }}
         </p>
         <Input
           v-model="email"
           type="email"
-          label="Email adresa"
+          :label="t('authShell.forgotPasswordView.emailLabel')"
           autocomplete="email"
           required
           :disabled="loading"
         />
-        <Button type="submit" :loading="loading">Pošalji link</Button>
+        <Button type="submit" :loading="loading">{{ t('authShell.forgotPasswordView.submitButton') }}</Button>
       </form>
       <p class="mt-4 text-center text-sm text-text-secondary">
-        <RouterLink :to="{ name: 'login' }" class="text-primary underline">Nazad na prijavu</RouterLink>
+        <RouterLink :to="{ name: 'login' }" class="text-primary underline">{{ t('authShell.forgotPasswordView.backToLoginLink') }}</RouterLink>
       </p>
     </Card>
   </AuthLayout>

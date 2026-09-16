@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Select, Alert, Skeleton, MoneyInput } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import {
@@ -14,6 +15,7 @@ import DocumentTypeBadge from '@/components/DocumentTypeBadge.vue'
 import { ApiError } from '@/lib/api'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 
+const { t } = useI18n()
 const props = withDefaults(
   defineProps<{ id?: string; documentType?: InvoiceDocumentType }>(),
   { documentType: 'invoice' },
@@ -27,16 +29,8 @@ const isEditing = computed(() => Boolean(props.id))
 // changing it anyway).
 const documentType = ref<InvoiceDocumentType>(props.documentType)
 
-const FORM_TITLES: Record<InvoiceDocumentType, string> = {
-  invoice: 'Nova faktura',
-  profaktura: 'Nova profaktura',
-  avans: 'Novi avans',
-}
-const EDIT_TITLES: Record<InvoiceDocumentType, string> = {
-  invoice: 'Izmeni fakturu',
-  profaktura: 'Izmeni profakturu',
-  avans: 'Izmeni avans',
-}
+// Title lookups go through t() per document type — the keys below are the
+// backend document-type identifiers, translated on demand in the template.
 
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10)
@@ -57,10 +51,10 @@ const form = ref<InvoiceDraftPayload>({
   items: [{ description: '', item_type: 'service', quantity: '1', unit_price: '' }],
 })
 
-const ITEM_TYPE_OPTIONS = [
-  { value: 'service', label: 'Usluga' },
-  { value: 'product', label: 'Proizvod' },
-]
+const ITEM_TYPE_OPTIONS = computed(() => [
+  { value: 'service', label: t('dashboardInvoicesClients.invoiceFormView.itemTypeLabels.service') },
+  { value: 'product', label: t('dashboardInvoicesClients.invoiceFormView.itemTypeLabels.product') },
+])
 
 const clients = ref<Client[]>([])
 const loading = ref(false)
@@ -123,7 +117,7 @@ onMounted(async () => {
     }
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo podatke.'
+      error instanceof ApiError ? error.message : t('dashboardInvoicesClients.invoiceFormView.loadError')
   } finally {
     loading.value = false
     markClean()
@@ -150,7 +144,7 @@ async function onSubmit() {
       }
       errorMessage.value = error.message
     } else {
-      errorMessage.value = 'Ne možemo trenutno da sačuvamo fakturu. Pokušaj ponovo.'
+      errorMessage.value = t('dashboardInvoicesClients.invoiceFormView.saveError')
     }
   } finally {
     saving.value = false
@@ -162,7 +156,11 @@ async function onSubmit() {
   <div>
     <div class="mb-6 flex items-center gap-3">
       <h1 class="text-xl font-semibold text-navy">
-        {{ isEditing ? EDIT_TITLES[documentType] : FORM_TITLES[documentType] }}
+        {{
+          isEditing
+            ? t(`dashboardInvoicesClients.invoiceFormView.editTitles.${documentType}`)
+            : t(`dashboardInvoicesClients.invoiceFormView.formTitles.${documentType}`)
+        }}
       </h1>
       <DocumentTypeBadge v-if="documentType !== 'invoice'" :type="documentType" />
     </div>
@@ -176,35 +174,35 @@ async function onSubmit() {
         <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium text-navy" for="client">Klijent</label>
+          <label class="text-sm font-medium text-navy" for="client">{{ t('dashboardInvoicesClients.invoiceFormView.clientLabel') }}</label>
           <select
             id="client"
             v-model="form.client"
             required
             class="rounded-lg border border-border bg-white px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
-            <option v-if="clients.length === 0" :value="0" disabled>Nema klijenata</option>
+            <option v-if="clients.length === 0" :value="0" disabled>{{ t('dashboardInvoicesClients.invoiceFormView.noClientsOption') }}</option>
             <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
           <p v-if="clients.length === 0" class="text-sm text-text-secondary">
             <RouterLink :to="{ name: 'client-new' }" class="text-primary hover:underline">
-              Dodaj klijenta
+              {{ t('dashboardInvoicesClients.invoiceFormView.addClientLink') }}
             </RouterLink>
-            pre nego što napraviš fakturu.
+            {{ t('dashboardInvoicesClients.invoiceFormView.addClientSuffix') }}
           </p>
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Input v-model="form.issue_date" type="date" label="Datum izdavanja" required />
-          <Input v-model="form.due_date" type="date" label="Rok plaćanja" required />
-          <Input v-model="form.service_date" type="date" label="Datum prometa" required />
+          <Input v-model="form.issue_date" type="date" :label="t('dashboardInvoicesClients.invoiceFormView.issueDateLabel')" required />
+          <Input v-model="form.due_date" type="date" :label="t('dashboardInvoicesClients.invoiceFormView.dueDateLabel')" required />
+          <Input v-model="form.service_date" type="date" :label="t('dashboardInvoicesClients.invoiceFormView.serviceDateLabel')" required />
         </div>
 
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-navy">Stavke</span>
+            <span class="text-sm font-medium text-navy">{{ t('dashboardInvoicesClients.invoiceFormView.itemsLabel') }}</span>
             <button type="button" class="text-sm text-primary hover:underline" @click="addLineItem">
-              + Dodaj stavku
+              {{ t('dashboardInvoicesClients.invoiceFormView.addItemButton') }}
             </button>
           </div>
 
@@ -214,16 +212,21 @@ async function onSubmit() {
             class="grid grid-cols-12 items-end gap-2 border-b border-border pb-3"
           >
             <div class="col-span-12 sm:col-span-5">
-              <Input v-model="item.description" label="Opis" required :error="fieldErrors[`items.${index}.description`]" />
+              <Input
+                v-model="item.description"
+                :label="t('dashboardInvoicesClients.invoiceFormView.descriptionLabel')"
+                required
+                :error="fieldErrors[`items.${index}.description`]"
+              />
             </div>
             <div class="col-span-6 sm:col-span-2">
-              <Select v-model="item.item_type" label="Vrsta" :options="ITEM_TYPE_OPTIONS" />
+              <Select v-model="item.item_type" :label="t('dashboardInvoicesClients.invoiceFormView.typeLabel')" :options="ITEM_TYPE_OPTIONS" />
             </div>
             <div class="col-span-3 sm:col-span-2">
-              <Input v-model="item.quantity" type="number" label="Količina" required />
+              <Input v-model="item.quantity" type="number" :label="t('dashboardInvoicesClients.invoiceFormView.quantityLabel')" required />
             </div>
             <div class="col-span-6 sm:col-span-2">
-              <MoneyInput v-model="item.unit_price" label="Cena" required />
+              <MoneyInput v-model="item.unit_price" :label="t('dashboardInvoicesClients.invoiceFormView.priceLabel')" required />
             </div>
             <div class="col-span-3 sm:col-span-1">
               <button
@@ -232,18 +235,19 @@ async function onSubmit() {
                 :disabled="form.items.length === 1"
                 @click="removeLineItem(index)"
               >
-                Ukloni
+                {{ t('dashboardInvoicesClients.invoiceFormView.removeButton') }}
               </button>
             </div>
           </div>
 
           <p class="text-right text-sm font-medium text-navy">
-            Ukupno: {{ grandTotal.toLocaleString('sr-RS', { minimumFractionDigits: 2 }) }}
+            {{ t('dashboardInvoicesClients.invoiceFormView.totalLabel') }}
+            {{ grandTotal.toLocaleString('sr-RS', { minimumFractionDigits: 2 }) }}
           </p>
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium text-navy" for="notes">Napomene</label>
+          <label class="text-sm font-medium text-navy" for="notes">{{ t('dashboardInvoicesClients.invoiceFormView.notesLabel') }}</label>
           <textarea
             id="notes"
             v-model="form.notes"
@@ -254,10 +258,10 @@ async function onSubmit() {
 
         <div class="flex gap-3">
           <Button type="submit" :loading="saving" :disabled="clients.length === 0">
-            Sačuvaj kao nacrt
+            {{ t('dashboardInvoicesClients.invoiceFormView.saveDraftButton') }}
           </Button>
           <RouterLink :to="{ name: 'invoices' }">
-            <Button variant="ghost" type="button">Otkaži</Button>
+            <Button variant="ghost" type="button">{{ t('dashboardInvoicesClients.invoiceFormView.cancelButton') }}</Button>
           </RouterLink>
         </div>
       </form>

@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { Badge } from '@pausalac/ui'
+import { useI18n } from 'vue-i18n'
 import type { AttentionItem } from '@/services/analytics'
 
 defineProps<{ item: AttentionItem }>()
 
+const { t } = useI18n()
+
+// Emoji lookup, not translatable text — leave the values as-is.
 const ICON_BY_TYPE: Record<string, string> = {
   overdue_invoices: '🔴',
   email_unverified: '✉️',
@@ -21,6 +25,6 @@ const ICON_BY_TYPE: Record<string, string> = {
   >
     <span aria-hidden="true">{{ ICON_BY_TYPE[item.type] ?? '•' }}</span>
     <span class="flex-1 text-sm text-navy">{{ item.message }}</span>
-    <Badge variant="warning">Pogledaj</Badge>
+    <Badge variant="warning">{{ t('limitsAccountingEtc.attentionItem.viewBadge') }}</Badge>
   </RouterLink>
 </template>

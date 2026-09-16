@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { i18n } from '@/i18n'
 import AdminPlansView from '../AdminPlansView.vue'
 import { createAdminPlan, listAdminPlans, updateAdminPlan } from '@/services/admin'
 
@@ -36,7 +37,7 @@ describe('AdminPlansView', () => {
       previous: null,
       results: [plan()],
     })
-    const wrapper = mount(AdminPlansView)
+    const wrapper = mount(AdminPlansView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Starter')
     expect(wrapper.text()).toContain('1500.00 RSD')
@@ -51,7 +52,7 @@ describe('AdminPlansView', () => {
     })
     vi.mocked(updateAdminPlan).mockResolvedValue(plan())
 
-    const wrapper = mount(AdminPlansView)
+    const wrapper = mount(AdminPlansView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const editButton = wrapper.findAll('button').find((b) => b.text() === 'Izmeni')!
@@ -74,7 +75,7 @@ describe('AdminPlansView', () => {
     vi.mocked(listAdminPlans).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
     vi.mocked(createAdminPlan).mockResolvedValue(plan())
 
-    const wrapper = mount(AdminPlansView)
+    const wrapper = mount(AdminPlansView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const newButton = wrapper.findAll('button').find((b) => b.text().includes('Novi plan'))!

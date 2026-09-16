@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import LimitTracker from '../LimitTracker.vue'
 import type { LimitTrackerData } from '@/services/limits'
+import { i18n } from '@/i18n'
 
 function tracker(overrides: Partial<LimitTrackerData> = {}): LimitTrackerData {
   return {
@@ -21,7 +22,7 @@ function tracker(overrides: Partial<LimitTrackerData> = {}): LimitTrackerData {
 
 describe('LimitTracker', () => {
   it('renders the label, percentage and remaining amount', () => {
-    const wrapper = mount(LimitTracker, { props: { label: 'Paušalni limit', tracker: tracker() } })
+    const wrapper = mount(LimitTracker, { global: { plugins: [i18n] }, props: { label: 'Paušalni limit', tracker: tracker() } })
     expect(wrapper.text()).toContain('Paušalni limit')
     expect(wrapper.text()).toContain('47%')
     expect(wrapper.text()).toContain('kalendarska godina')
@@ -29,6 +30,7 @@ describe('LimitTracker', () => {
 
   it('shows the projection line when present, suffixed as an estimate', () => {
     const wrapper = mount(LimitTracker, {
+      global: { plugins: [i18n] },
       props: {
         label: 'Paušalni limit',
         tracker: tracker({ projection: { estimated_period_end: '5200000.00', label: 'procena' } }),
@@ -38,12 +40,13 @@ describe('LimitTracker', () => {
   })
 
   it('omits the projection line when absent', () => {
-    const wrapper = mount(LimitTracker, { props: { label: 'PDV prag', tracker: tracker({ projection: null }) } })
+    const wrapper = mount(LimitTracker, { global: { plugins: [i18n] }, props: { label: 'PDV prag', tracker: tracker({ projection: null }) } })
     expect(wrapper.text()).not.toContain('Procena do kraja perioda')
   })
 
   it('shows the trailing-12-months period label for the VAT tracker', () => {
     const wrapper = mount(LimitTracker, {
+      global: { plugins: [i18n] },
       props: {
         label: 'PDV prag',
         tracker: tracker({ period: { type: 'trailing_12_months', start: '2025-09-14', end: '2026-09-14' } }),

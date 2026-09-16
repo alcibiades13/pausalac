@@ -1,1 +1,104 @@
-{}
+{
+  "loginView": {
+    "title": "Login",
+    "genericError": "We can't sign you in right now. Please try again.",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "submitButton": "Log in",
+    "forgotPasswordLink": "Forgot your password?",
+    "noAccountText": "Don't have an account?",
+    "registerLink": "Sign up"
+  },
+  "registerView": {
+    "title": "Create an account",
+    "genericError": "We can't create your account right now. Please try again.",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "passwordHint": "At least 8 characters.",
+    "firstNameLabel": "First name",
+    "lastNameLabel": "Last name",
+    "submitButton": "Create account",
+    "hasAccountText": "Already have an account?",
+    "loginLink": "Log in"
+  },
+  "forgotPasswordView": {
+    "title": "Forgot password",
+    "successMessage": "If an account with this email address exists, we've sent a password reset link.",
+    "instructions": "Enter your email address and we'll send you a link to set a new password.",
+    "emailLabel": "Email address",
+    "submitButton": "Send link",
+    "backToLoginLink": "Back to login"
+  },
+  "resetPasswordView": {
+    "title": "New password",
+    "invalidLinkMessage": "This link is not valid. Request a new password reset link.",
+    "passwordMismatchError": "Passwords don't match.",
+    "genericError": "We can't change your password right now. Please try again.",
+    "newPasswordLabel": "New password",
+    "passwordHint": "At least 8 characters.",
+    "confirmPasswordLabel": "Repeat new password",
+    "submitButton": "Set new password"
+  },
+  "verifyEmailView": {
+    "title": "Email verification",
+    "invalidLinkError": "This verification link is not valid.",
+    "verifyingMessage": "Checking your link...",
+    "successMessage": "Your email address has been verified.",
+    "continueLink": "Continue to home",
+    "loginLink": "Go to login"
+  },
+  "appShell": {
+    "skipToContent": "Skip to content",
+    "activeCompanyLabel": "Active company",
+    "notificationsAriaCount": "Notifications ({count} unread)",
+    "notificationsAriaLabel": "Notifications",
+    "notificationsLinkText": "Notifications",
+    "settingsLink": "Settings",
+    "logoutButton": "Log out",
+    "navLabel": "Main navigation",
+    "navLinks": {
+      "home": "Home",
+      "clients": "Clients",
+      "invoices": "Invoices",
+      "limits": "Limits",
+      "kpo": "KPO",
+      "obligations": "Obligations",
+      "documents": "Documents",
+      "accounting": "Accountant"
+    }
+  },
+  "mobileBottomNav": {
+    "navLabel": "Main navigation",
+    "quickActionLabel": "Quick action",
+    "tabs": {
+      "home": "Home",
+      "invoices": "Invoices",
+      "finansije": "Finances",
+      "vise": "More"
+    },
+    "fab": {
+      "newInvoice": "New invoice",
+      "proforma": "Proforma invoice",
+      "advance": "Advance invoice",
+      "newClient": "New client"
+    }
+  },
+  "adminShell": {
+    "title": "System Admin",
+    "backToAppButton": "Back to app",
+    "navLabel": "Admin navigation",
+    "navLinks": {
+      "admin-users": "Users",
+      "admin-companies": "Companies",
+      "admin-subscriptions": "Subscriptions",
+      "admin-plans": "Plans",
+      "admin-invoices": "Invoices",
+      "admin-documents": "Documents",
+      "admin-tax-obligations": "Tax obligations",
+      "admin-rules": "Regulatory rules",
+      "admin-notifications": "Notifications",
+      "admin-audit-log": "Audit log",
+      "admin-integrations": "Integrations"
+    }
+  }
+}

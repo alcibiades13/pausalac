@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Card, Alert } from '@pausalac/ui'
 import AuthLayout from '@/components/AuthLayout.vue'
 import { verifyEmail } from '@/services/passwordReset'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/lib/api'
 
+const { t } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
 
@@ -18,7 +20,7 @@ onMounted(async () => {
   const token = typeof route.query.token === 'string' ? route.query.token : ''
   if (!token) {
     state.value = 'error'
-    errorMessage.value = 'Link za potvrdu nije validan.'
+    errorMessage.value = t('authShell.verifyEmailView.invalidLinkError')
     return
   }
   try {
@@ -31,17 +33,18 @@ onMounted(async () => {
     }
   } catch (error) {
     state.value = 'error'
-    errorMessage.value = error instanceof ApiError ? error.message : 'Link za potvrdu nije validan.'
+    errorMessage.value =
+      error instanceof ApiError ? error.message : t('authShell.verifyEmailView.invalidLinkError')
   }
 })
 </script>
 
 <template>
-  <AuthLayout title="Potvrda email adrese">
+  <AuthLayout :title="t('authShell.verifyEmailView.title')">
     <Card>
-      <Alert v-if="state === 'verifying'" variant="info">Proveravamo tvoj link...</Alert>
+      <Alert v-if="state === 'verifying'" variant="info">{{ t('authShell.verifyEmailView.verifyingMessage') }}</Alert>
       <Alert v-else-if="state === 'success'" variant="success">
-        Email adresa je uspešno potvrđena.
+        {{ t('authShell.verifyEmailView.successMessage') }}
       </Alert>
       <Alert v-else variant="danger">{{ errorMessage }}</Alert>
       <p class="mt-4 text-center text-sm">
@@ -49,7 +52,7 @@ onMounted(async () => {
           :to="auth.isAuthenticated ? { name: 'home' } : { name: 'login' }"
           class="text-primary hover:underline"
         >
-          {{ auth.isAuthenticated ? 'Nastavi na početnu' : 'Idi na prijavu' }}
+          {{ auth.isAuthenticated ? t('authShell.verifyEmailView.continueLink') : t('authShell.verifyEmailView.loginLink') }}
         </RouterLink>
       </p>
     </Card>

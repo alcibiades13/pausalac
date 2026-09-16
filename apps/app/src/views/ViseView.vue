@@ -11,9 +11,11 @@
  * doesn't actually have everything defeats its own purpose.
  */
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Card } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -43,16 +45,19 @@ const ICON_PATHS: Record<string, string[]> = {
   ],
 }
 
+// Labels are looked up via t() per item in the template — never tm(), which
+// has a known bug in this codebase (see apps/web's incident) of rendering
+// the compiled message AST as literal text instead of the translated string.
 const LINKS = [
-  { name: 'clients', label: 'Klijenti' },
-  { name: 'limits', label: 'Limiti' },
-  { name: 'kpo', label: 'KPO' },
-  { name: 'obligations', label: 'Obaveze' },
-  { name: 'documents', label: 'Dokumenti' },
-  { name: 'accounting', label: 'Računovođa' },
-  { name: 'subscription', label: 'Pretplata' },
-  { name: 'settings', label: 'Podešavanja' },
-  { name: 'notifications', label: 'Obaveštenja' },
+  { name: 'clients' },
+  { name: 'limits' },
+  { name: 'kpo' },
+  { name: 'obligations' },
+  { name: 'documents' },
+  { name: 'accounting' },
+  { name: 'subscription' },
+  { name: 'settings' },
+  { name: 'notifications' },
 ]
 
 async function onLogout() {
@@ -63,7 +68,7 @@ async function onLogout() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Više</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('dashboardInvoicesClients.viseView.title') }}</h1>
 
     <Card>
       <ul class="flex flex-col divide-y divide-border">
@@ -75,7 +80,7 @@ async function onLogout() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-text-secondary" aria-hidden="true">
               <path v-for="d in ICON_PATHS[link.name]" :key="d" stroke-linecap="round" stroke-linejoin="round" :d="d" />
             </svg>
-            <span class="flex-1">{{ link.label }}</span>
+            <span class="flex-1">{{ t(`dashboardInvoicesClients.viseView.links.${link.name}`) }}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-text-secondary" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6" />
             </svg>
@@ -90,7 +95,7 @@ async function onLogout() {
         class="w-full rounded-lg px-2 py-2 text-left text-sm text-danger hover:bg-background"
         @click="onLogout"
       >
-        Odjavi se
+        {{ t('dashboardInvoicesClients.viseView.logoutButton') }}
       </button>
     </Card>
   </div>

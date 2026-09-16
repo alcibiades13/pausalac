@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { i18n } from '@/i18n'
 import AdminUsersView from '../AdminUsersView.vue'
 import {
   deactivateAdminUser,
@@ -22,7 +23,6 @@ function user(overrides: Partial<AdminUser> = {}): AdminUser {
     last_name: 'Markovic',
     is_active: true,
     is_staff: false,
-    language: 'sr',
     is_superuser: false,
     date_joined: '2026-01-01T00:00:00Z',
     email_verified_at: null,
@@ -44,7 +44,7 @@ describe('AdminUsersView', () => {
       previous: null,
       results: [user()],
     })
-    const wrapper = mount(AdminUsersView)
+    const wrapper = mount(AdminUsersView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('marko@pausalac.rs')
     expect(wrapper.text()).toContain('Aktivan')
@@ -59,7 +59,7 @@ describe('AdminUsersView', () => {
     })
     vi.mocked(deactivateAdminUser).mockResolvedValue(user({ is_active: false }))
 
-    const wrapper = mount(AdminUsersView)
+    const wrapper = mount(AdminUsersView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     await wrapper.find('button').trigger('click')
@@ -78,7 +78,7 @@ describe('AdminUsersView', () => {
     })
     vi.mocked(reactivateAdminUser).mockResolvedValue(user({ is_active: true }))
 
-    const wrapper = mount(AdminUsersView)
+    const wrapper = mount(AdminUsersView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     expect(wrapper.text()).toContain('Deaktiviran')

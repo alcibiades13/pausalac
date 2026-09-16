@@ -9,8 +9,10 @@
  */
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Drawer } from '@pausalac/ui'
 
+const { t } = useI18n()
 const route = useRoute()
 const fabOpen = ref(false)
 
@@ -49,12 +51,14 @@ function tabClass(key: string): string {
 }
 
 // §7's FAB order minus the two already-excluded items (Fiskalni račun,
-// Novi trošak — see file docstring).
+// Novi trošak — see file docstring). `labelKey` looks up
+// authShell.mobileBottomNav.fab.* in the template via t() per item —
+// never tm() (see src/i18n/index.ts docstring on that bug).
 const FAB_ITEMS = [
-  { label: 'Nova faktura', to: { name: 'invoice-new' } },
-  { label: 'Profaktura', to: { name: 'invoice-new-profaktura' } },
-  { label: 'Avans', to: { name: 'invoice-new-avans' } },
-  { label: 'Novi klijent', to: { name: 'client-new' } },
+  { labelKey: 'newInvoice', to: { name: 'invoice-new' } },
+  { labelKey: 'proforma', to: { name: 'invoice-new-profaktura' } },
+  { labelKey: 'advance', to: { name: 'invoice-new-avans' } },
+  { labelKey: 'newClient', to: { name: 'client-new' } },
 ]
 
 watch(
@@ -68,14 +72,14 @@ watch(
 <template>
   <nav
     class="fixed inset-x-0 bottom-0 z-20 flex items-stretch justify-around border-t border-border bg-surface sm:hidden"
-    aria-label="Glavna navigacija"
+    :aria-label="t('authShell.mobileBottomNav.navLabel')"
   >
     <RouterLink :to="{ name: 'home' }" class="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px]" :class="tabClass('home')">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 10.5 12 4l8 6.5" />
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 9.5V20a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1V9.5" />
       </svg>
-      <span>Početna</span>
+      <span>{{ t('authShell.mobileBottomNav.tabs.home') }}</span>
     </RouterLink>
 
     <RouterLink :to="{ name: 'invoices' }" class="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px]" :class="tabClass('invoices')">
@@ -84,7 +88,7 @@ watch(
         <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5" />
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6M9 17h6" />
       </svg>
-      <span>Fakture</span>
+      <span>{{ t('authShell.mobileBottomNav.tabs.invoices') }}</span>
     </RouterLink>
 
     <div class="flex flex-1 items-center justify-center">
@@ -92,7 +96,7 @@ watch(
         type="button"
         class="relative -mt-6 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark text-white shadow-lg shadow-primary/30"
         :aria-expanded="fabOpen"
-        aria-label="Brza akcija"
+        :aria-label="t('authShell.mobileBottomNav.quickActionLabel')"
         @click="fabOpen = !fabOpen"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -107,7 +111,7 @@ watch(
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-4" />
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a2 2 0 0 1 0-4Z" />
       </svg>
-      <span>Finansije</span>
+      <span>{{ t('authShell.mobileBottomNav.tabs.finansije') }}</span>
     </RouterLink>
 
     <RouterLink :to="{ name: 'vise' }" class="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px]" :class="tabClass('vise')">
@@ -116,23 +120,23 @@ watch(
         <circle cx="12" cy="12" r="1.6" />
         <circle cx="19" cy="12" r="1.6" />
       </svg>
-      <span>Više</span>
+      <span>{{ t('authShell.mobileBottomNav.tabs.vise') }}</span>
     </RouterLink>
   </nav>
 
   <Drawer
     :open="fabOpen"
-    label="Brza akcija"
+    :label="t('authShell.mobileBottomNav.quickActionLabel')"
     container-class="sm:hidden"
     @update:open="fabOpen = $event"
   >
     <RouterLink
       v-for="item in FAB_ITEMS"
-      :key="item.label"
+      :key="item.labelKey"
       :to="item.to"
       class="rounded-lg px-4 py-3 text-sm font-medium text-navy hover:bg-background"
     >
-      {{ item.label }}
+      {{ t('authShell.mobileBottomNav.fab.' + item.labelKey) }}
     </RouterLink>
   </Drawer>
 </template>

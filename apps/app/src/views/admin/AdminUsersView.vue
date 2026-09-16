@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Alert, Badge, Button, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import {
   deactivateAdminUser,
@@ -10,6 +11,8 @@ import {
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
 
+const { t } = useI18n()
+
 const users = ref<AdminUser[]>([])
 const loading = ref(true)
 const errorMessage = ref('')
@@ -18,15 +21,15 @@ const page = ref(1)
 const hasNext = ref(false)
 const hasPrevious = ref(false)
 
-const columns: DataTableColumn<AdminUser>[] = [
-  { key: 'email', label: 'Email' },
-  { key: 'name', label: 'Ime', format: (r) => `${r.first_name} ${r.last_name}`.trim() || '—' },
+const columns = computed<DataTableColumn<AdminUser>[]>(() => [
+  { key: 'email', label: t('admin.adminUsersView.emailColumn') },
+  { key: 'name', label: t('admin.adminUsersView.nameColumn'), format: (r) => `${r.first_name} ${r.last_name}`.trim() || '—' },
   {
     key: 'date_joined',
-    label: 'Registrovan',
+    label: t('admin.adminUsersView.registeredColumn'),
     format: (r) => formatDate(r.date_joined),
   },
-]
+])
 
 async function load() {
   loading.value = true
@@ -38,7 +41,7 @@ async function load() {
     hasPrevious.value = result.previous !== null
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Ne možemo trenutno da učitamo korisnike.'
+      error instanceof ApiError ? error.message : t('admin.adminUsersView.loadError')
   } finally {
     loading.value = false
   }
@@ -54,7 +57,7 @@ async function onToggle(user: AdminUser) {
     }
     await load()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Akcija nije uspela.'
+    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminUsersView.actionError')
   } finally {
     actingOnId.value = null
   }
@@ -74,22 +77,22 @@ onMounted(load)
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Korisnici</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('admin.adminUsersView.title') }}</h1>
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <DataTable :columns="columns" :rows="users" :loading="loading" empty-title="Nema korisnika.">
+    <DataTable :columns="columns" :rows="users" :loading="loading" :empty-title="t('admin.adminUsersView.emptyTitle')">
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.is_active ? 'success' : 'neutral'">
-            {{ row.is_active ? 'Aktivan' : 'Deaktiviran' }}
+            {{ row.is_active ? t('admin.adminUsersView.activeBadge') : t('admin.adminUsersView.deactivatedBadge') }}
           </Badge>
           <Button
             variant="secondary"
             :loading="actingOnId === row.id"
             @click="onToggle(row)"
           >
-            {{ row.is_active ? 'Deaktiviraj' : 'Reaktiviraj' }}
+            {{ row.is_active ? t('admin.adminUsersView.deactivateButton') : t('admin.adminUsersView.reactivateButton') }}
           </Button>
         </div>
       </template>

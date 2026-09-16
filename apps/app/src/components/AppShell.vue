@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
 import { listNotifications } from '@/services/notifications'
@@ -8,6 +9,7 @@ import MobileBottomNav from './MobileBottomNav.vue'
 import AppSidebar from './AppSidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const company = useCompanyStore()
 const router = useRouter()
@@ -15,34 +17,31 @@ const route = useRoute()
 
 // Each entry's `icon` is one <path>'s `d` attribute (all icons share the
 // same 24x24/stroke-2/round-cap convention MobileBottomNav.vue already
-// established) — Početna/Fakture reuse that file's exact paths.
+// established) — Početna/Fakture reuse that file's exact paths. `name`
+// doubles as the i18n key under authShell.appShell.navLinks.* (see
+// template) since it's already a unique per-entry identifier.
 const NAV_LINKS = [
   {
     name: 'home',
-    label: 'Početna',
     icon: 'M4 10.5 12 4l8 6.5;M6 9.5V20a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1V9.5',
   },
-  { name: 'clients', label: 'Klijenti', icon: 'M5 20a7 7 0 0 1 14 0' },
+  { name: 'clients', icon: 'M5 20a7 7 0 0 1 14 0' },
   {
     name: 'invoices',
-    label: 'Fakture',
     icon: 'M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z;M14 3v5h5;M9 13h6M9 17h6',
   },
-  { name: 'limits', label: 'Limiti', icon: 'M4 20V11M12 20V4M20 20v-6' },
+  { name: 'limits', icon: 'M4 20V11M12 20V4M20 20v-6' },
   {
     name: 'kpo',
-    label: 'KPO',
     icon: 'M4 6.5A1.5 1.5 0 0 1 5.5 5H11v14H5.5A1.5 1.5 0 0 1 4 17.5v-11Z;M20 6.5A1.5 1.5 0 0 0 18.5 5H13v14h5.5a1.5 1.5 0 0 0 1.5-1.5v-11Z',
   },
-  { name: 'obligations', label: 'Obaveze', icon: 'M4 10h16M8 3v4M16 3v4' },
+  { name: 'obligations', icon: 'M4 10h16M8 3v4M16 3v4' },
   {
     name: 'documents',
-    label: 'Dokumenti',
     icon: 'M4 7.5A1.5 1.5 0 0 1 5.5 6H10l2 2h6.5A1.5 1.5 0 0 1 20 9.5v8A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-10Z',
   },
   {
     name: 'accounting',
-    label: 'Računovođa',
     icon: 'M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2;M3 13h18',
   },
 ]
@@ -106,7 +105,7 @@ async function onLogout() {
       href="#main-content"
       class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
     >
-      Preskoči na sadržaj
+      {{ t('authShell.appShell.skipToContent') }}
     </a>
 
     <!-- Mobile-only top bar: logo/company-switcher + notification bell.
@@ -122,7 +121,7 @@ async function onLogout() {
           <select
             v-if="company.companies.length > 1"
             :value="company.currentCompanyId ?? undefined"
-            aria-label="Aktivna kompanija"
+            :aria-label="t('authShell.appShell.activeCompanyLabel')"
             class="max-w-[9rem] truncate rounded-lg border border-transparent bg-transparent py-0.5 font-display text-base font-semibold text-navy hover:border-border focus:border-primary focus:outline-none"
             @change="onSwitchCompany"
           >
@@ -136,7 +135,7 @@ async function onLogout() {
         <RouterLink
           :to="{ name: 'notifications' }"
           class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-navy hover:bg-background"
-          :aria-label="unreadCount > 0 ? `Obaveštenja (${unreadCount} nepročitanih)` : 'Obaveštenja'"
+          :aria-label="unreadCount > 0 ? t('authShell.appShell.notificationsAriaCount', { count: unreadCount }) : t('authShell.appShell.notificationsAriaLabel')"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
@@ -159,7 +158,7 @@ async function onLogout() {
     <!-- Tablet/desktop: persistent left sidebar (hidden below sm:, see
          AppSidebar.vue). Logo/switcher up top, nav in the middle,
          notifications/settings/logout pinned to the bottom. -->
-    <AppSidebar>
+    <AppSidebar :nav-label="t('authShell.appShell.navLabel')">
       <template #header>
         <span
           class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-primary to-primary-dark"
@@ -168,7 +167,7 @@ async function onLogout() {
         <select
           v-if="company.companies.length > 1"
           :value="company.currentCompanyId ?? undefined"
-          aria-label="Aktivna kompanija"
+          :aria-label="t('authShell.appShell.activeCompanyLabel')"
           class="min-w-0 flex-1 truncate rounded-lg border border-transparent bg-transparent py-0.5 font-display text-base font-semibold text-navy hover:border-border focus:border-primary focus:outline-none"
           @change="onSwitchCompany"
         >
@@ -194,14 +193,14 @@ async function onLogout() {
             :d="d"
           />
         </svg>
-        {{ link.label }}
+        {{ t('authShell.appShell.navLinks.' + link.name) }}
       </RouterLink>
 
       <template #footer>
         <RouterLink
           :to="{ name: 'notifications' }"
           :class="navLinkClass('notifications')"
-          :aria-label="unreadCount > 0 ? `Obaveštenja (${unreadCount} nepročitanih)` : 'Obaveštenja'"
+          :aria-label="unreadCount > 0 ? t('authShell.appShell.notificationsAriaCount', { count: unreadCount }) : t('authShell.appShell.notificationsAriaLabel')"
         >
           <span class="relative flex shrink-0 items-center justify-center">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -219,7 +218,7 @@ async function onLogout() {
               {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
           </span>
-          Obaveštenja
+          {{ t('authShell.appShell.notificationsLinkText') }}
         </RouterLink>
         <RouterLink :to="{ name: 'settings' }" :class="navLinkClass('settings')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0" aria-hidden="true">
@@ -228,7 +227,7 @@ async function onLogout() {
             <circle cx="7" cy="12" r="2" />
             <circle cx="16" cy="18" r="2" />
           </svg>
-          Podešavanja
+          {{ t('authShell.appShell.settingsLink') }}
         </RouterLink>
         <div class="px-3 py-2">
           <LanguageSwitcher />
@@ -243,7 +242,7 @@ async function onLogout() {
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 16l5-4-5-4" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H3" />
           </svg>
-          Odjavi se
+          {{ t('authShell.appShell.logoutButton') }}
         </button>
       </template>
     </AppSidebar>

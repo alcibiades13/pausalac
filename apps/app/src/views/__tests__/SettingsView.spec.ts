@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import SettingsView from '../SettingsView.vue'
 import { useAuthStore, type Membership } from '@/stores/auth'
 import { updateCompany } from '@/services/companies'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/companies', () => ({
   updateCompany: vi.fn<typeof updateCompany>(),
@@ -56,7 +57,7 @@ describe('SettingsView', () => {
     // otherwise fails in jsdom with no backend to talk to.
     auth.refreshMe = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
 
-    const wrapper = mount(SettingsView, { global: { plugins: [pinia] } })
+    const wrapper = mount(SettingsView, { global: { plugins: [pinia, i18n] } })
     const pibInput = wrapper.find('input[type="text"]')
     expect((pibInput.element as HTMLInputElement).value).toBe('123456789')
 

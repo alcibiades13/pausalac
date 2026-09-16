@@ -6,6 +6,7 @@ import { getClient, getClientSummary, type Client, type ClientSummary } from '@/
 import { listInvoices, type Invoice } from '@/services/invoices'
 import { listDocuments, type AppDocument } from '@/services/documents'
 import { ApiError } from '@/lib/api'
+import { i18n } from '@/i18n'
 
 vi.mock('@/services/clients', () => ({
   getClient: vi.fn<typeof getClient>(),
@@ -115,7 +116,7 @@ function doc(overrides: Partial<AppDocument> = {}): AppDocument {
 async function mountDetail(id = '1') {
   const wrapper = mount(ClientDetailView, {
     props: { id },
-    global: { plugins: [router] },
+    global: { plugins: [router, i18n] },
   })
   await flushPromises()
   return wrapper

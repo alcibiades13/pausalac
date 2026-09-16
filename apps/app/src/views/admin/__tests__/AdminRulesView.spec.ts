@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { i18n } from '@/i18n'
 import AdminRulesView from '../AdminRulesView.vue'
 import {
   approveAdminRegulatoryRule,
@@ -43,7 +44,7 @@ describe('AdminRulesView', () => {
       previous: null,
       results: [rule()],
     })
-    const wrapper = mount(AdminRulesView)
+    const wrapper = mount(AdminRulesView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('turnover_limit')
     expect(wrapper.text()).toContain('Nepotvrđeno')
@@ -59,7 +60,7 @@ describe('AdminRulesView', () => {
     })
     vi.mocked(approveAdminRegulatoryRule).mockResolvedValue(rule({ approval_status: 'confirmed' }))
 
-    const wrapper = mount(AdminRulesView)
+    const wrapper = mount(AdminRulesView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const approveButton = wrapper.findAll('button').find((b) => b.text() === 'Potvrdi')!
@@ -77,7 +78,7 @@ describe('AdminRulesView', () => {
       previous: null,
       results: [rule({ approval_status: 'confirmed' })],
     })
-    const wrapper = mount(AdminRulesView)
+    const wrapper = mount(AdminRulesView, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.text()).toContain('Potvrđeno')
     expect(wrapper.findAll('button').some((b) => b.text() === 'Potvrdi')).toBe(false)
@@ -92,7 +93,7 @@ describe('AdminRulesView', () => {
     })
     vi.mocked(createAdminRegulatoryRule).mockResolvedValue(rule())
 
-    const wrapper = mount(AdminRulesView)
+    const wrapper = mount(AdminRulesView, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const newButton = wrapper.findAll('button').find((b) => b.text().includes('Nova verzija'))!

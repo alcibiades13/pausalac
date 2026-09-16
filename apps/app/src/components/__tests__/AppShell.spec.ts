@@ -19,7 +19,7 @@ function authenticatedUser() {
     last_name: '',
     is_email_verified: true,
     is_staff: false,
-    language: 'sr',
+    language: 'sr' as const,
     memberships: [
       {
         role: 'owner' as const,

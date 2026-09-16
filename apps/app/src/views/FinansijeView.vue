@@ -7,40 +7,43 @@
  * existing pages that are genuinely "finance" in nature, rather than
  * aliasing the tab to one of them (which would misrepresent what's there).
  */
+import { useI18n } from 'vue-i18n'
 import { Button, Card } from '@pausalac/ui'
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-xl font-semibold text-navy">Finansije</h1>
+    <h1 class="text-xl font-semibold text-navy">{{ t('dashboardInvoicesClients.finansijeView.title') }}</h1>
 
     <Card>
-      <h2 class="mb-1 text-base font-semibold text-navy">Limiti</h2>
+      <h2 class="mb-1 text-base font-semibold text-navy">{{ t('dashboardInvoicesClients.finansijeView.limitsTitle') }}</h2>
       <p class="mb-3 text-sm text-text-secondary">
-        Prati godišnji limit prometa i prag za registraciju u sistem PDV-a.
+        {{ t('dashboardInvoicesClients.finansijeView.limitsDescription') }}
       </p>
       <RouterLink :to="{ name: 'limits' }">
-        <Button variant="secondary">Otvori</Button>
+        <Button variant="secondary">{{ t('dashboardInvoicesClients.finansijeView.openButton') }}</Button>
       </RouterLink>
     </Card>
 
     <Card>
-      <h2 class="mb-1 text-base font-semibold text-navy">KPO</h2>
+      <h2 class="mb-1 text-base font-semibold text-navy">{{ t('dashboardInvoicesClients.finansijeView.kpoTitle') }}</h2>
       <p class="mb-3 text-sm text-text-secondary">
-        Knjiga prometa ostvarenog obavljanjem delatnosti — hronološka evidencija prometa.
+        {{ t('dashboardInvoicesClients.finansijeView.kpoDescription') }}
       </p>
       <RouterLink :to="{ name: 'kpo' }">
-        <Button variant="secondary">Otvori</Button>
+        <Button variant="secondary">{{ t('dashboardInvoicesClients.finansijeView.openButton') }}</Button>
       </RouterLink>
     </Card>
 
     <Card>
-      <h2 class="mb-1 text-base font-semibold text-navy">Obaveze</h2>
+      <h2 class="mb-1 text-base font-semibold text-navy">{{ t('dashboardInvoicesClients.finansijeView.obligationsTitle') }}</h2>
       <p class="mb-3 text-sm text-text-secondary">
-        Poreske i doprinosne obaveze i njihovi rokovi plaćanja.
+        {{ t('dashboardInvoicesClients.finansijeView.obligationsDescription') }}
       </p>
       <RouterLink :to="{ name: 'obligations' }">
-        <Button variant="secondary">Otvori</Button>
+        <Button variant="secondary">{{ t('dashboardInvoicesClients.finansijeView.openButton') }}</Button>
       </RouterLink>
     </Card>
   </div>
