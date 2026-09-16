@@ -37,10 +37,9 @@ const STEP_NUMBERS = ['01', '02', '03']
 
       <div class="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-10">
         <div class="flex flex-col gap-6 text-center lg:text-left">
-          <h1 class="font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
-            <span class="text-navy">{{ t('home.hero.titleMain') }}</span>{{ ' ' }}<span class="text-text-secondary">{{
-              t('home.hero.titleAccent')
-            }}</span>
+          <h1 class="font-display text-5xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+            <span class="text-navy">{{ t('home.hero.titleMain') }}</span><br />
+            <span class="text-text-secondary">{{ t('home.hero.titleAccent') }}</span>
           </h1>
 
           <p class="max-w-xl text-lg text-text-secondary lg:mx-0">
@@ -125,12 +124,14 @@ const STEP_NUMBERS = ['01', '02', '03']
     </section>
 
     <!-- Attention Center deep-dive -->
-    <section v-reveal class="mx-auto w-full max-w-3xl px-4 text-center sm:px-6">
-      <Kicker :text="t('home.kickers.jedanStatus')" class="mb-4 justify-center" />
-      <h2 class="font-display text-2xl font-semibold text-navy">{{ t('home.attention.heading') }}</h2>
-      <p class="mt-4 text-text-secondary">
-        {{ t('home.attention.body') }}
-      </p>
+    <section v-reveal class="border-y border-border bg-surface py-20 text-center">
+      <div class="mx-auto w-full max-w-3xl px-4 sm:px-6">
+        <Kicker :text="t('home.kickers.jedanStatus')" class="mb-4 justify-center" />
+        <h2 class="font-display text-2xl font-semibold text-navy">{{ t('home.attention.heading') }}</h2>
+        <p class="mt-4 text-text-secondary">
+          {{ t('home.attention.body') }}
+        </p>
+      </div>
     </section>
 
     <!-- Fakturisanje flow -->
@@ -164,41 +165,43 @@ const STEP_NUMBERS = ['01', '02', '03']
     </section>
 
     <!-- Poređenje -->
-    <section class="mx-auto w-full max-w-4xl px-4 sm:px-6">
-      <Kicker v-reveal :text="t('home.kickers.poredjenje')" class="mb-6 justify-center" />
-      <h2 v-reveal class="mb-8 text-center font-display text-2xl font-semibold text-navy">
-        {{ t('home.comparison.heading') }}
-      </h2>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div v-reveal class="rounded-2xl border border-border bg-surface p-6">
-          <h3 class="mb-4 text-sm font-semibold text-text-secondary">{{ t('home.comparison.withoutTitle') }}</h3>
-          <ul class="flex flex-col gap-3">
-            <li
-              v-for="(item, i) in tm('home.comparison.withoutItems')"
-              :key="i"
-              class="flex items-start gap-3 text-sm text-text-secondary"
-            >
-              <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-danger/10 text-danger">
-                <Icon name="x-mark" :size="12" />
-              </span>
-              {{ rt(item) }}
-            </li>
-          </ul>
-        </div>
-        <div v-reveal class="rounded-2xl border-2 border-navy bg-surface p-6">
-          <h3 class="mb-4 text-sm font-semibold text-navy">{{ t('home.comparison.withTitle') }}</h3>
-          <ul class="flex flex-col gap-3">
-            <li
-              v-for="(item, i) in tm('home.comparison.withItems')"
-              :key="i"
-              class="flex items-start gap-3 text-sm text-navy"
-            >
-              <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
-                <Icon name="check" :size="12" />
-              </span>
-              {{ rt(item) }}
-            </li>
-          </ul>
+    <section class="border-y border-border bg-surface py-20">
+      <div class="mx-auto w-full max-w-4xl px-4 sm:px-6">
+        <Kicker v-reveal :text="t('home.kickers.poredjenje')" class="mb-6 justify-center" />
+        <h2 v-reveal class="mb-8 text-center font-display text-2xl font-semibold text-navy">
+          {{ t('home.comparison.heading') }}
+        </h2>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div v-reveal class="rounded-2xl border border-border bg-background p-6">
+            <h3 class="mb-4 text-sm font-semibold text-text-secondary">{{ t('home.comparison.withoutTitle') }}</h3>
+            <ul class="flex flex-col gap-3">
+              <li
+                v-for="(item, i) in tm('home.comparison.withoutItems')"
+                :key="i"
+                class="flex items-start gap-3 text-sm text-text-secondary"
+              >
+                <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-danger/10 text-danger">
+                  <Icon name="x-mark" :size="12" />
+                </span>
+                {{ rt(item) }}
+              </li>
+            </ul>
+          </div>
+          <div v-reveal class="rounded-2xl border-2 border-navy bg-background p-6">
+            <h3 class="mb-4 text-sm font-semibold text-navy">{{ t('home.comparison.withTitle') }}</h3>
+            <ul class="flex flex-col gap-3">
+              <li
+                v-for="(item, i) in tm('home.comparison.withItems')"
+                :key="i"
+                class="flex items-start gap-3 text-sm text-navy"
+              >
+                <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
+                  <Icon name="check" :size="12" />
+                </span>
+                {{ rt(item) }}
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
