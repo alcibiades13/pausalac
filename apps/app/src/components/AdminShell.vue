@@ -9,6 +9,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button } from '@pausalac/ui'
 import { useAuthStore } from '@/stores/auth'
 import AppSidebar from './AppSidebar.vue'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -89,6 +90,9 @@ async function onExit() {
 
       <template #footer>
         <p class="truncate px-3 py-1 text-xs text-text-secondary">{{ auth.user?.email }}</p>
+        <div class="px-3 py-2">
+          <LanguageSwitcher />
+        </div>
         <button
           type="button"
           class="rounded-lg px-3 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary"

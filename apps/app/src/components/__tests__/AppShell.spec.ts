@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import AppShell from '../AppShell.vue'
 import router from '@/router'
+import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { listNotifications } from '@/services/notifications'
 
@@ -18,6 +19,7 @@ function authenticatedUser() {
     last_name: '',
     is_email_verified: true,
     is_staff: false,
+    language: 'sr',
     memberships: [
       {
         role: 'owner' as const,
@@ -64,7 +66,7 @@ describe('AppShell nav active state', () => {
   })
 
   it('gives only the active link a background pill — not both colors on one element', async () => {
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const active = wrapper.findAll('a').find((a) => a.text() === 'Fakture')
@@ -103,7 +105,7 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('renders the sidebar hidden below sm and visible from sm up', async () => {
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const aside = wrapper.get('aside')
@@ -112,7 +114,7 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('renders all 8 nav links inside the sidebar, each with an icon', async () => {
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const aside = wrapper.get('aside')
@@ -125,7 +127,7 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('lists notifications, settings and logout in the sidebar footer', async () => {
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const aside = wrapper.get('aside')
@@ -142,7 +144,7 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
     // router/test-setup quirk unrelated to this component, not something
     // to chase down as part of a UI restructuring change. The redirect
     // itself is unchanged code (still AppShell's existing onLogout).
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
     const auth = useAuthStore()
     const logoutSpy = vi.spyOn(auth, 'logout').mockResolvedValue()
@@ -171,7 +173,7 @@ describe('AppShell accessibility (master prompt §55)', () => {
 
   it('offers a skip-to-content link targeting the main landmark', async () => {
     vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const skipLink = wrapper.find('a[href="#main-content"]')
@@ -182,7 +184,7 @@ describe('AppShell accessibility (master prompt §55)', () => {
 
   it('labels the sidebar nav landmark', async () => {
     vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     expect(wrapper.get('aside nav').attributes('aria-label')).toBe('Glavna navigacija')
@@ -190,7 +192,7 @@ describe('AppShell accessibility (master prompt §55)', () => {
 
   it('includes the unread count in the notification link\'s accessible name', async () => {
     vi.mocked(listNotifications).mockResolvedValue({ count: 3, next: null, previous: null, results: [] })
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const bell = wrapper.get('[href="/obavestenja"]')
@@ -199,7 +201,7 @@ describe('AppShell accessibility (master prompt §55)', () => {
 
   it('falls back to a plain label when there are no unread notifications', async () => {
     vi.mocked(listNotifications).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
-    const wrapper = mount(AppShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const bell = wrapper.get('[href="/obavestenja"]')

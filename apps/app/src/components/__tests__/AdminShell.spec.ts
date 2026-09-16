@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import AdminShell from '../AdminShell.vue'
 import router from '@/router'
+import { i18n } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 
 function staffUser() {
@@ -13,6 +14,7 @@ function staffUser() {
     last_name: '',
     is_email_verified: true,
     is_staff: true,
+    language: 'sr',
     memberships: [],
   }
 }
@@ -31,7 +33,7 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('renders the sidebar hidden below sm and visible from sm up', async () => {
-    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const aside = wrapper.get('aside')
@@ -40,7 +42,7 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('renders all 11 admin nav links inside the sidebar', async () => {
-    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const aside = wrapper.get('aside')
@@ -63,7 +65,7 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('gives only the active link a background pill', async () => {
-    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const aside = wrapper.get('aside')
@@ -77,14 +79,14 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('labels the sidebar nav landmark "Admin navigacija"', async () => {
-    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     expect(wrapper.get('aside nav').attributes('aria-label')).toBe('Admin navigacija')
   })
 
   it('shows the current user email and an exit action in the sidebar footer', async () => {
-    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const aside = wrapper.get('aside')
@@ -93,7 +95,7 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('exits to the main app when "Nazad u aplikaciju" is clicked', async () => {
-    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const exitButton = wrapper.get('aside').findAll('button').find((b) => b.text() === 'Nazad u aplikaciju')!
@@ -105,7 +107,7 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
   })
 
   it('keeps a mobile-only header with its own nav row for viewports below sm', async () => {
-    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router] } })
+    const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
     const header = wrapper.get('header')

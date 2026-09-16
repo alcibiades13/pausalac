@@ -6,6 +6,7 @@ import { useCompanyStore } from '@/stores/company'
 import { listNotifications } from '@/services/notifications'
 import MobileBottomNav from './MobileBottomNav.vue'
 import AppSidebar from './AppSidebar.vue'
+import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const auth = useAuthStore()
 const company = useCompanyStore()
@@ -229,6 +230,9 @@ async function onLogout() {
           </svg>
           Podešavanja
         </RouterLink>
+        <div class="px-3 py-2">
+          <LanguageSwitcher />
+        </div>
         <button
           type="button"
           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary"

@@ -22,6 +22,7 @@ function user(overrides: Partial<AdminUser> = {}): AdminUser {
     last_name: 'Markovic',
     is_active: true,
     is_staff: false,
+    language: 'sr',
     is_superuser: false,
     date_joined: '2026-01-01T00:00:00Z',
     email_verified_at: null,

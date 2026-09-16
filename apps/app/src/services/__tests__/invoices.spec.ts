@@ -40,6 +40,7 @@ describe('invoicePdfUrl', () => {
       last_name: '',
       is_email_verified: true,
       is_staff: false,
+      language: 'sr',
       memberships: [membership(1)],
     }
 
