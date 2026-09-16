@@ -67,6 +67,38 @@
       "accounting": "Accountant"
     }
   },
+  "topHeader": {
+    "searchPlaceholder": "Search (coming soon)",
+    "searchAriaLabel": "Search — coming soon",
+    "backButtonLabel": "Back",
+    "userMenuLabel": "Account"
+  },
+  "breadcrumb": {
+    "sections": {
+      "home": "Home",
+      "clients": "Clients",
+      "invoices": "Invoices",
+      "limits": "Limits",
+      "kpo": "KPO",
+      "obligations": "Obligations",
+      "documents": "Documents",
+      "accounting": "Accountant",
+      "settings": "Settings",
+      "notifications": "Notifications"
+    },
+    "leaves": {
+      "newClient": "New client",
+      "clientDetail": "Client",
+      "editClient": "Edit client",
+      "newInvoice": "New invoice",
+      "newProforma": "New proforma invoice",
+      "newAdvance": "New advance invoice",
+      "editInvoice": "Edit invoice",
+      "invoiceDetail": "Invoice",
+      "organization": "Organization",
+      "subscription": "Subscription"
+    }
+  },
   "mobileBottomNav": {
     "navLabel": "Main navigation",
     "quickActionLabel": "Quick action",

@@ -67,6 +67,38 @@
       "accounting": "Бухгалтер"
     }
   },
+  "topHeader": {
+    "searchPlaceholder": "Поиск (скоро)",
+    "searchAriaLabel": "Поиск — скоро будет доступен",
+    "backButtonLabel": "Назад",
+    "userMenuLabel": "Аккаунт"
+  },
+  "breadcrumb": {
+    "sections": {
+      "home": "Главная",
+      "clients": "Клиенты",
+      "invoices": "Счета",
+      "limits": "Лимиты",
+      "kpo": "КПО",
+      "obligations": "Обязательства",
+      "documents": "Документы",
+      "accounting": "Бухгалтер",
+      "settings": "Настройки",
+      "notifications": "Уведомления"
+    },
+    "leaves": {
+      "newClient": "Новый клиент",
+      "clientDetail": "Клиент",
+      "editClient": "Редактирование клиента",
+      "newInvoice": "Новый счёт",
+      "newProforma": "Новый проформа-счёт",
+      "newAdvance": "Новый авансовый счёт",
+      "editInvoice": "Редактирование счёта",
+      "invoiceDetail": "Счёт",
+      "organization": "Организация",
+      "subscription": "Подписка"
+    }
+  },
   "mobileBottomNav": {
     "navLabel": "Основная навигация",
     "quickActionLabel": "Быстрое действие",

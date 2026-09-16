@@ -8,6 +8,22 @@ declare module 'vue-router' {
     /** Client-side UX only (hide/redirect) — the real gate is always the
      * backend's IsAdminUser/IsSuperUser (master prompt §67, Phase 6b). */
     requiresStaff?: boolean
+    /**
+     * TopHeader.vue's breadcrumb (desktop/tablet header, added alongside
+     * the language-switcher relocation): `section` names the top-level
+     * NAV_LINKS entry (AppShell.vue) or admin NAV_LINKS entry
+     * (AdminShell.vue) this route belongs to, so a subroute can show
+     * "Section / this page" with a working back button. Top-level list
+     * pages themselves (clients, invoices, ...) don't set this — the
+     * breadcrumb only appears one level below them. `breadcrumbKey`
+     * is the i18n key suffix (under `authShell.breadcrumb.*`) for the
+     * leaf segment. Detail pages (client-detail/invoice-detail) show a
+     * generic leaf, not the entity's real name/number — a live page
+     * title would need a small reactive title bus this pass didn't
+     * build; flagged as a follow-up, not silently faked.
+     */
+    section?: string
+    breadcrumbKey?: string
   }
 }
 
@@ -72,18 +88,21 @@ const router = createRouter({
           path: 'klijenti/novi',
           name: 'client-new',
           component: () => import('@/views/ClientFormView.vue'),
+          meta: { section: 'clients', breadcrumbKey: 'newClient' },
         },
         {
           path: 'klijenti/:id',
           name: 'client-detail',
           component: () => import('@/views/ClientDetailView.vue'),
           props: true,
+          meta: { section: 'clients', breadcrumbKey: 'clientDetail' },
         },
         {
           path: 'klijenti/:id/izmeni',
           name: 'client-edit',
           component: () => import('@/views/ClientFormView.vue'),
           props: true,
+          meta: { section: 'clients', breadcrumbKey: 'editClient' },
         },
         {
           path: 'fakture',
@@ -94,30 +113,35 @@ const router = createRouter({
           path: 'fakture/nova',
           name: 'invoice-new',
           component: () => import('@/views/InvoiceFormView.vue'),
+          meta: { section: 'invoices', breadcrumbKey: 'newInvoice' },
         },
         {
           path: 'fakture/nova/profaktura',
           name: 'invoice-new-profaktura',
           component: () => import('@/views/InvoiceFormView.vue'),
           props: { documentType: 'profaktura' },
+          meta: { section: 'invoices', breadcrumbKey: 'newProforma' },
         },
         {
           path: 'fakture/nova/avans',
           name: 'invoice-new-avans',
           component: () => import('@/views/InvoiceFormView.vue'),
           props: { documentType: 'avans' },
+          meta: { section: 'invoices', breadcrumbKey: 'newAdvance' },
         },
         {
           path: 'fakture/:id/izmeni',
           name: 'invoice-edit',
           component: () => import('@/views/InvoiceFormView.vue'),
           props: true,
+          meta: { section: 'invoices', breadcrumbKey: 'editInvoice' },
         },
         {
           path: 'fakture/:id',
           name: 'invoice-detail',
           component: () => import('@/views/InvoiceDetailView.vue'),
           props: true,
+          meta: { section: 'invoices', breadcrumbKey: 'invoiceDetail' },
         },
         {
           path: 'podesavanja',
@@ -158,11 +182,13 @@ const router = createRouter({
           path: 'organizacija',
           name: 'accounting-organization',
           component: () => import('@/views/AccountingOrganizationView.vue'),
+          meta: { section: 'accounting', breadcrumbKey: 'organization' },
         },
         {
           path: 'pretplata',
           name: 'subscription',
           component: () => import('@/views/SubscriptionView.vue'),
+          meta: { section: 'settings', breadcrumbKey: 'subscription' },
         },
         {
           path: 'finansije',

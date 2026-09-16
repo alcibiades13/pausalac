@@ -67,6 +67,38 @@
       "accounting": "Računovođa"
     }
   },
+  "topHeader": {
+    "searchPlaceholder": "Pretraga (uskoro)",
+    "searchAriaLabel": "Pretraga — uskoro dostupno",
+    "backButtonLabel": "Nazad",
+    "userMenuLabel": "Nalog"
+  },
+  "breadcrumb": {
+    "sections": {
+      "home": "Početna",
+      "clients": "Klijenti",
+      "invoices": "Fakture",
+      "limits": "Limiti",
+      "kpo": "KPO",
+      "obligations": "Obaveze",
+      "documents": "Dokumenti",
+      "accounting": "Računovođa",
+      "settings": "Podešavanja",
+      "notifications": "Obaveštenja"
+    },
+    "leaves": {
+      "newClient": "Novi klijent",
+      "clientDetail": "Klijent",
+      "editClient": "Izmena klijenta",
+      "newInvoice": "Nova faktura",
+      "newProforma": "Nova profaktura",
+      "newAdvance": "Novi avans",
+      "editInvoice": "Izmena fakture",
+      "invoiceDetail": "Faktura",
+      "organization": "Organizacija",
+      "subscription": "Pretplata"
+    }
+  },
   "mobileBottomNav": {
     "navLabel": "Glavna navigacija",
     "quickActionLabel": "Brza akcija",

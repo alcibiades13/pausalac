@@ -12,15 +12,19 @@
  * performance on lower-end phones. Light mode only for now; dark mode is
  * a contained future addition to this same token set, not built yet.
  *
- * `--color-primary` moved from a teal accent to a cool slate-blue
- * (user judgment call, this session: the teal read as generic SaaS
- * green/teal, wanted something closer to the muted, near-monochrome
- * palettes of reference sites like privy.io — black/slate text with
- * color used sparingly rather than a saturated brand hue everywhere).
- * Values are Tailwind's own slate-600/700, not picked by eye — verified
- * by the same real-contrast-math discipline as the note below (both
- * exceed the darkened-palette values' contrast, so the earlier axe-core
- * WCAG AA pass this file documents still holds without re-scanning).
+ * `--color-primary` history: teal → cool slate-blue (muted-palette
+ * direction, one session) → violet (this change): the slate read as
+ * calm but not vivid enough for the elements that most need visual
+ * weight — CTA buttons, progress bars — a real, cited user complaint,
+ * not a stylistic whim. The slate didn't disappear: it's now
+ * `--color-secondary`, kept at the exact same values, available for
+ * anything that still wants the calmer tone. Neither color was picked
+ * by eye — a reference screenshot's own violet (`#8b5cf6`, Tailwind
+ * violet-500) only cleared 3.96:1/4.23:1 (text-on-background/white-on-
+ * fill) against this palette's `--color-background`, short of the
+ * 4.5:1 AA floor this file has held throughout — stepped one shade
+ * darker to violet-600/700, which clears it the same way every other
+ * token here does (real math, not eyeballed).
  *
  * The Google Fonts @import for Inter/Plus Jakarta Sans/IBM Plex Mono
  * (referenced below) lives in each consuming app's own main.css, as the
@@ -55,8 +59,10 @@
    * primary gradient keeps its original visual gap instead of
    * collapsing toward flat.
    */
-  --color-primary: #475569;
-  --color-primary-dark: #334155;
+  --color-primary: #7c3aed;
+  --color-primary-dark: #6d28d9;
+  --color-secondary: #475569;
+  --color-secondary-dark: #334155;
   --color-success: #0f7334;
   --color-warning: #965204;
   --color-danger: #bf1f1f;

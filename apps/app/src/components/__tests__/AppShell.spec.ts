@@ -126,14 +126,18 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
     }
   })
 
-  it('lists notifications, settings and logout in the sidebar footer', async () => {
+  it('lists notifications, language, settings and logout in the desktop top header', async () => {
     const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
-    const aside = wrapper.get('aside')
-    expect(aside.text()).toContain('Obaveštenja')
-    expect(aside.text()).toContain('Podešavanja')
-    expect(aside.text()).toContain('Odjavi se')
+    const desktopHeader = wrapper.findAll('header').find((h) => h.classes().includes('sm:flex'))!
+    expect(desktopHeader.find('[aria-label="Obaveštenja"]').exists()).toBe(true)
+    expect(desktopHeader.find('select[aria-label="Izbor jezika"]').exists()).toBe(true)
+
+    // Settings/logout live inside the user-menu dropdown, closed by default.
+    await desktopHeader.get('[aria-haspopup="menu"]').trigger('click')
+    expect(desktopHeader.text()).toContain('Podešavanja')
+    expect(desktopHeader.text()).toContain('Odjavi se')
   })
 
   it('calls auth.logout() when "Odjavi se" is clicked', async () => {
@@ -149,7 +153,9 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
     const auth = useAuthStore()
     const logoutSpy = vi.spyOn(auth, 'logout').mockResolvedValue()
 
-    const logoutButton = wrapper.get('aside').findAll('button').find((b) => b.text() === 'Odjavi se')!
+    const desktopHeader = wrapper.findAll('header').find((h) => h.classes().includes('sm:flex'))!
+    await desktopHeader.get('[aria-haspopup="menu"]').trigger('click')
+    const logoutButton = desktopHeader.findAll('button').find((b) => b.text() === 'Odjavi se')!
     await logoutButton.trigger('click')
     await flushPromises()
 

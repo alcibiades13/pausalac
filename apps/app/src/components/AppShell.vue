@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
@@ -8,6 +8,9 @@ import { listNotifications } from '@/services/notifications'
 import MobileBottomNav from './MobileBottomNav.vue'
 import AppSidebar from './AppSidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import NotificationBell from './NotificationBell.vue'
+import UserMenu from './UserMenu.vue'
+import AppBreadcrumb from './AppBreadcrumb.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -19,7 +22,8 @@ const route = useRoute()
 // same 24x24/stroke-2/round-cap convention MobileBottomNav.vue already
 // established) — Početna/Fakture reuse that file's exact paths. `name`
 // doubles as the i18n key under authShell.appShell.navLinks.* (see
-// template) since it's already a unique per-entry identifier.
+// template) since it's already a unique per-entry identifier, and as a
+// valid `route.meta.section` value for Breadcrumb (see below).
 const NAV_LINKS = [
   {
     name: 'home',
@@ -93,6 +97,41 @@ watch(
   },
 )
 
+const notificationsAriaLabel = computed(() =>
+  unreadCount.value > 0
+    ? t('authShell.appShell.notificationsAriaCount', { count: unreadCount.value })
+    : t('authShell.appShell.notificationsAriaLabel'),
+)
+
+// Breadcrumb (TopHeader, desktop/tablet only): a subroute's own
+// route.meta.section names which top-level NAV_LINKS entry it belongs
+// to (router/index.ts) — top-level pages themselves (route.name already
+// a NAV_LINKS name) don't set it, so `section` falls back to the route's
+// own name. `home` intentionally shows nothing: it's the landing page,
+// there's no "back" and no orientation need.
+const breadcrumbSection = computed(() => {
+  const name = route.name as string
+  if (name === 'home') return undefined
+  const section = (route.meta.section as string | undefined) ?? name
+  return t('authShell.breadcrumb.sections.' + section)
+})
+const breadcrumbLeaf = computed(() => {
+  const key = route.meta.breadcrumbKey as string | undefined
+  return key ? t('authShell.breadcrumb.leaves.' + key) : undefined
+})
+
+// First name/last name initials, falling back to the email's first
+// letter — no avatar photo upload exists anywhere in this product, an
+// initials circle is the honest option rather than a placeholder image.
+const userInitials = computed(() => {
+  const user = auth.user
+  if (!user) return '?'
+  const first = user.first_name?.trim()?.[0]
+  const last = user.last_name?.trim()?.[0]
+  if (first || last) return `${first ?? ''}${last ?? ''}`.toUpperCase()
+  return (user.email?.[0] ?? '?').toUpperCase()
+})
+
 async function onLogout() {
   await auth.logout()
   await router.push({ name: 'login' })
@@ -132,32 +171,14 @@ async function onLogout() {
           </span>
         </span>
 
-        <RouterLink
-          :to="{ name: 'notifications' }"
-          class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-navy hover:bg-background"
-          :aria-label="unreadCount > 0 ? t('authShell.appShell.notificationsAriaCount', { count: unreadCount }) : t('authShell.appShell.notificationsAriaLabel')"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"
-            />
-          </svg>
-          <span
-            v-if="unreadCount > 0"
-            class="absolute right-1 top-1 flex h-4 min-w-4 animate-pulse items-center justify-center rounded-full bg-danger px-1 text-[10px] font-medium text-white"
-            aria-hidden="true"
-          >
-            {{ unreadCount > 9 ? '9+' : unreadCount }}
-          </span>
-        </RouterLink>
+        <NotificationBell :unread-count="unreadCount" :label="notificationsAriaLabel" />
       </div>
     </header>
 
     <!-- Tablet/desktop: persistent left sidebar (hidden below sm:, see
-         AppSidebar.vue). Logo/switcher up top, nav in the middle,
-         notifications/settings/logout pinned to the bottom. -->
+         AppSidebar.vue). Logo/switcher up top, nav in the middle — no
+         footer slot content anymore, everything account-related (language,
+         notifications, settings, logout) moved into TopHeader below. -->
     <AppSidebar :nav-label="t('authShell.appShell.navLabel')">
       <template #header>
         <span
@@ -195,59 +216,70 @@ async function onLogout() {
         </svg>
         {{ t('authShell.appShell.navLinks.' + link.name) }}
       </RouterLink>
-
-      <template #footer>
-        <RouterLink
-          :to="{ name: 'notifications' }"
-          :class="navLinkClass('notifications')"
-          :aria-label="unreadCount > 0 ? t('authShell.appShell.notificationsAriaCount', { count: unreadCount }) : t('authShell.appShell.notificationsAriaLabel')"
-        >
-          <span class="relative flex shrink-0 items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"
-              />
-            </svg>
-            <span
-              v-if="unreadCount > 0"
-              class="absolute -right-1 -top-1 flex h-4 min-w-4 animate-pulse items-center justify-center rounded-full bg-danger px-1 text-[10px] font-medium text-white"
-              aria-hidden="true"
-            >
-              {{ unreadCount > 9 ? '9+' : unreadCount }}
-            </span>
-          </span>
-          {{ t('authShell.appShell.notificationsLinkText') }}
-        </RouterLink>
-        <RouterLink :to="{ name: 'settings' }" :class="navLinkClass('settings')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h12M20 18h0" />
-            <circle cx="15" cy="6" r="2" />
-            <circle cx="7" cy="12" r="2" />
-            <circle cx="16" cy="18" r="2" />
-          </svg>
-          {{ t('authShell.appShell.settingsLink') }}
-        </RouterLink>
-        <div class="px-3 py-2">
-          <LanguageSwitcher />
-        </div>
-        <button
-          type="button"
-          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary"
-          @click="onLogout"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 16l5-4-5-4" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H3" />
-          </svg>
-          {{ t('authShell.appShell.logoutButton') }}
-        </button>
-      </template>
     </AppSidebar>
 
     <div class="sm:pl-64">
+      <!-- Desktop/tablet-only top header: breadcrumb + back button on the
+           left, search (placeholder — no global search exists yet, a
+           real one is a separate later phase)/notifications/language/
+           user menu on the right. Language moving here (out of the
+           sidebar footer, where it read as an awkward extra row wedged
+           between Settings and Odjavi se) was the whole reason this
+           exists — settings/logout came along since a lone Settings
+           link left behind in an otherwise-empty sidebar footer would
+           have looked orphaned. -->
+      <header class="sticky top-0 z-10 hidden h-16 items-center justify-between gap-4 border-b border-border bg-surface px-6 sm:flex">
+        <AppBreadcrumb
+          :section-label="breadcrumbSection"
+          :leaf-label="breadcrumbLeaf"
+          :show-back="!!breadcrumbLeaf"
+          :back-label="t('authShell.topHeader.backButtonLabel')"
+          @back="router.back()"
+        />
+
+        <div class="flex shrink-0 items-center gap-2">
+          <div class="relative hidden lg:block">
+            <svg
+              class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round" />
+            </svg>
+            <input
+              type="search"
+              disabled
+              :placeholder="t('authShell.topHeader.searchPlaceholder')"
+              :aria-label="t('authShell.topHeader.searchAriaLabel')"
+              class="w-56 rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-navy placeholder:text-text-secondary disabled:cursor-not-allowed"
+            />
+          </div>
+
+          <NotificationBell :unread-count="unreadCount" :label="notificationsAriaLabel" />
+          <LanguageSwitcher />
+
+          <UserMenu :initials="userInitials" :label="t('authShell.topHeader.userMenuLabel')">
+            <RouterLink
+              :to="{ name: 'settings' }"
+              class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary"
+            >
+              {{ t('authShell.appShell.settingsLink') }}
+            </RouterLink>
+            <button
+              type="button"
+              class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary"
+              @click="onLogout"
+            >
+              {{ t('authShell.appShell.logoutButton') }}
+            </button>
+          </UserMenu>
+        </div>
+      </header>
+
       <main id="main-content" class="mx-auto max-w-5xl px-4 py-8 pb-24 sm:pb-8">
         <RouterView v-slot="{ Component }">
           <Transition name="page" mode="out-in">
