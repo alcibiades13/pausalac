@@ -73,7 +73,7 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
     const inactive = aside.findAll('a').find((a) => a.text() === 'Korisnici')!
 
     expect(active.classes()).toContain('bg-primary/10')
-    expect(active.classes()).toContain('text-primary')
+    expect(active.classes()).toContain('text-primary-dark')
     expect(inactive.classes()).not.toContain('bg-primary/10')
     expect(inactive.classes()).toContain('text-text-secondary')
   })
@@ -85,23 +85,20 @@ describe('AdminShell sidebar (tablet/desktop nav)', () => {
     expect(wrapper.get('aside nav').attributes('aria-label')).toBe('Admin navigacija')
   })
 
-  it('shows the current user email and an exit action in the top-header user menu', async () => {
+  it('shows the current user email and an exit action in the sidebar footer', async () => {
     const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
-    const desktopHeader = wrapper.findAll('header').find((h) => h.classes().includes('sm:flex'))!
-    await desktopHeader.get('[aria-haspopup="menu"]').trigger('click')
-    expect(desktopHeader.text()).toContain('admin@pausalac.rs')
-    expect(desktopHeader.text()).toContain('Nazad u aplikaciju')
+    const aside = wrapper.get('aside')
+    expect(aside.text()).toContain('admin@pausalac.rs')
+    expect(aside.text()).toContain('Nazad u aplikaciju')
   })
 
   it('exits to the main app when "Nazad u aplikaciju" is clicked', async () => {
     const wrapper = mount(AdminShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
-    const desktopHeader = wrapper.findAll('header').find((h) => h.classes().includes('sm:flex'))!
-    await desktopHeader.get('[aria-haspopup="menu"]').trigger('click')
-    const exitButton = desktopHeader.findAll('button').find((b) => b.text() === 'Nazad u aplikaciju')!
+    const exitButton = wrapper.get('aside').findAll('button').find((b) => b.text() === 'Nazad u aplikaciju')!
     await exitButton.trigger('click')
 
     await vi.waitFor(() => {

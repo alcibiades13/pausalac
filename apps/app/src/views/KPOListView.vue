@@ -37,10 +37,10 @@ watch([dateFrom, dateTo], load)
     <div class="flex items-center justify-between">
       <h1 class="text-xl font-semibold text-navy">{{ t('limitsAccountingEtc.kpoListView.title') }}</h1>
       <div class="flex gap-3">
-        <a :href="kpoExportPdfUrl()" target="_blank" rel="noopener" class="text-sm text-primary hover:underline">
+        <a :href="kpoExportPdfUrl()" target="_blank" rel="noopener" class="text-sm text-primary-dark hover:underline">
           {{ t('limitsAccountingEtc.kpoListView.exportPdf') }}
         </a>
-        <a :href="kpoExportXlsxUrl()" class="text-sm text-primary hover:underline">{{ t('limitsAccountingEtc.kpoListView.exportExcel') }}</a>
+        <a :href="kpoExportXlsxUrl()" class="text-sm text-primary-dark hover:underline">{{ t('limitsAccountingEtc.kpoListView.exportExcel') }}</a>
       </div>
     </div>
 

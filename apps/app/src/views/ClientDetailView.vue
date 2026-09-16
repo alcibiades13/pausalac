@@ -164,7 +164,7 @@ onMounted(load)
               <p class="truncate text-navy">{{ doc.title }}</p>
               <p class="text-text-secondary">{{ doc.original_filename }}</p>
             </div>
-            <a v-if="doc.file_url" :href="doc.file_url" target="_blank" rel="noopener" class="shrink-0 text-primary hover:underline">
+            <a v-if="doc.file_url" :href="doc.file_url" target="_blank" rel="noopener" class="shrink-0 text-primary-dark hover:underline">
               Otvori
             </a>
           </li>

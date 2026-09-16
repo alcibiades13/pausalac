@@ -24,7 +24,7 @@ const localePath = useLocalePath()
         <nav class="hidden items-center gap-1 sm:flex" :aria-label="$t('nav.cenovnik')">
           <NuxtLink
             :to="localePath('/cenovnik')"
-            class="rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary"
+            class="rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary-dark"
           >
             {{ $t('nav.cenovnik') }}
           </NuxtLink>
@@ -71,10 +71,10 @@ const localePath = useLocalePath()
           <nav :aria-label="$t('footer.product')" class="flex gap-8">
             <div class="flex flex-col gap-2 text-sm">
               <span class="font-medium text-navy">{{ $t('footer.product') }}</span>
-              <NuxtLink :to="localePath('/#kako-radi')" class="text-text-secondary hover:text-primary">{{
+              <NuxtLink :to="localePath('/#kako-radi')" class="text-text-secondary hover:text-primary-dark">{{
                 $t('footer.kakoRadi')
               }}</NuxtLink>
-              <NuxtLink :to="localePath('/cenovnik')" class="text-text-secondary hover:text-primary">{{
+              <NuxtLink :to="localePath('/cenovnik')" class="text-text-secondary hover:text-primary-dark">{{
                 $t('footer.cenovnik')
               }}</NuxtLink>
             </div>
@@ -84,14 +84,14 @@ const localePath = useLocalePath()
                 :href="`${config.public.appUrl}/prijava`"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-text-secondary hover:text-primary"
+                class="text-text-secondary hover:text-primary-dark"
                 >{{ $t('footer.prijava') }}</a
               >
               <a
                 :href="`${config.public.appUrl}/registracija`"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-text-secondary hover:text-primary"
+                class="text-text-secondary hover:text-primary-dark"
                 >{{ $t('footer.registracija') }}</a
               >
             </div>

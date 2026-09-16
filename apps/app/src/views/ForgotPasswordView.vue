@@ -45,7 +45,7 @@ async function onSubmit() {
         <Button type="submit" :loading="loading">{{ t('authShell.forgotPasswordView.submitButton') }}</Button>
       </form>
       <p class="mt-4 text-center text-sm text-text-secondary">
-        <RouterLink :to="{ name: 'login' }" class="text-primary underline">{{ t('authShell.forgotPasswordView.backToLoginLink') }}</RouterLink>
+        <RouterLink :to="{ name: 'login' }" class="text-primary-dark underline">{{ t('authShell.forgotPasswordView.backToLoginLink') }}</RouterLink>
       </p>
     </Card>
   </AuthLayout>

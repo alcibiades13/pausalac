@@ -485,7 +485,7 @@ async function onOpenClient(companyId: number) {
           <div class="mt-3 flex items-center justify-end gap-3">
             <button
               type="button"
-              class="text-sm text-primary hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
+              class="text-sm text-primary-dark hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
               :disabled="!portfolioHasPrevious"
               @click="onPrevPortfolioPage"
             >
@@ -493,7 +493,7 @@ async function onOpenClient(companyId: number) {
             </button>
             <button
               type="button"
-              class="text-sm text-primary hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
+              class="text-sm text-primary-dark hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
               :disabled="!portfolioHasNext"
               @click="onNextPortfolioPage"
             >

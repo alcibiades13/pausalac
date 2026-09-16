@@ -285,7 +285,7 @@ async function onUpload() {
             :href="doc.file_url"
             target="_blank"
             rel="noopener"
-            class="text-sm text-primary hover:underline"
+            class="text-sm text-primary-dark hover:underline"
           >
             {{ t('limitsAccountingEtc.documentsView.openLink') }}
           </a>

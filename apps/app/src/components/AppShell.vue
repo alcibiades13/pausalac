@@ -54,8 +54,8 @@ const unreadCount = ref(0)
 
 // Deliberately not `class="..." active-class="..."`: RouterLink appends
 // active-class alongside the base class rather than replacing it, and
-// `text-text-secondary`/`text-primary` are equal-specificity utilities —
-// Tailwind happens to emit `.text-text-secondary` after `.text-primary`
+// `text-text-secondary`/`text-primary-dark` are equal-specificity utilities —
+// Tailwind happens to emit `.text-text-secondary` after `.text-primary-dark`
 // in the compiled stylesheet, so the "active" color silently lost the
 // cascade and only font-weight ever visibly changed. A background pill
 // (mutually exclusive classes, never both colors on the element at once)
@@ -63,9 +63,9 @@ const unreadCount = ref(0)
 function navLinkClass(routeName: string): string {
   const isActive = route.name === routeName
   if (isActive) {
-    return 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-primary/10 text-primary'
+    return 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-primary/10 text-primary-dark'
   }
-  return 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary'
+  return 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary-dark'
 }
 
 // A user who belongs to more than one company (typically an accounting
@@ -176,9 +176,10 @@ async function onLogout() {
     </header>
 
     <!-- Tablet/desktop: persistent left sidebar (hidden below sm:, see
-         AppSidebar.vue). Logo/switcher up top, nav in the middle — no
-         footer slot content anymore, everything account-related (language,
-         notifications, settings, logout) moved into TopHeader below. -->
+         AppSidebar.vue). Logo/switcher up top, nav in the middle,
+         Settings pinned to the footer as before — an empty footer read
+         as sparse (user feedback), so only language/notifications/
+         logout moved into TopHeader below, not Settings. -->
     <AppSidebar :nav-label="t('authShell.appShell.navLabel')">
       <template #header>
         <span
@@ -216,6 +217,18 @@ async function onLogout() {
         </svg>
         {{ t('authShell.appShell.navLinks.' + link.name) }}
       </RouterLink>
+
+      <template #footer>
+        <RouterLink :to="{ name: 'settings' }" :class="navLinkClass('settings')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h12M20 18h0" />
+            <circle cx="15" cy="6" r="2" />
+            <circle cx="7" cy="12" r="2" />
+            <circle cx="16" cy="18" r="2" />
+          </svg>
+          {{ t('authShell.appShell.settingsLink') }}
+        </RouterLink>
+      </template>
     </AppSidebar>
 
     <div class="sm:pl-64">
@@ -225,9 +238,10 @@ async function onLogout() {
            user menu on the right. Language moving here (out of the
            sidebar footer, where it read as an awkward extra row wedged
            between Settings and Odjavi se) was the whole reason this
-           exists — settings/logout came along since a lone Settings
-           link left behind in an otherwise-empty sidebar footer would
-           have looked orphaned. -->
+           exists — Settings stayed in the sidebar footer (user
+           feedback: moving it out left the footer looking sparse), and
+           the user menu here is just the logout action, per the
+           original ask. -->
       <header class="sticky top-0 z-10 hidden h-16 items-center justify-between gap-4 border-b border-border bg-surface px-6 sm:flex">
         <AppBreadcrumb
           :section-label="breadcrumbSection"
@@ -263,15 +277,9 @@ async function onLogout() {
           <LanguageSwitcher />
 
           <UserMenu :initials="userInitials" :label="t('authShell.topHeader.userMenuLabel')">
-            <RouterLink
-              :to="{ name: 'settings' }"
-              class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary"
-            >
-              {{ t('authShell.appShell.settingsLink') }}
-            </RouterLink>
             <button
               type="button"
-              class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary"
+              class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary-dark"
               @click="onLogout"
             >
               {{ t('authShell.appShell.logoutButton') }}

@@ -57,12 +57,12 @@ async function onSubmit() {
         <Button type="submit" :loading="loading">{{ t('authShell.loginView.submitButton') }}</Button>
       </form>
       <div class="mt-4 flex flex-col gap-1 text-center text-sm text-text-secondary">
-        <RouterLink :to="{ name: 'forgot-password' }" class="text-primary underline">
+        <RouterLink :to="{ name: 'forgot-password' }" class="text-primary-dark underline">
           {{ t('authShell.loginView.forgotPasswordLink') }}
         </RouterLink>
         <span>
           {{ t('authShell.loginView.noAccountText') }}
-          <RouterLink :to="{ name: 'register' }" class="text-primary underline">
+          <RouterLink :to="{ name: 'register' }" class="text-primary-dark underline">
             {{ t('authShell.loginView.registerLink') }}
           </RouterLink>
         </span>

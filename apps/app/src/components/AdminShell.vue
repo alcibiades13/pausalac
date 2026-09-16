@@ -11,7 +11,6 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import AppSidebar from './AppSidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
-import UserMenu from './UserMenu.vue'
 import AppBreadcrumb from './AppBreadcrumb.vue'
 
 const { t } = useI18n()
@@ -41,8 +40,8 @@ function navLinkClass(routeName: string, mobile = false): string {
     ? 'rounded-lg px-3 py-1.5 text-sm whitespace-nowrap'
     : 'rounded-lg px-3 py-2 text-sm'
   return isActive
-    ? `${base} font-medium bg-primary/10 text-primary`
-    : `${base} text-text-secondary hover:bg-background hover:text-primary`
+    ? `${base} font-medium bg-primary/10 text-primary-dark`
+    : `${base} text-text-secondary hover:bg-background hover:text-primary-dark`
 }
 
 // Admin's nav is flat (no nested detail pages under a section the way
@@ -50,15 +49,6 @@ function navLinkClass(routeName: string, mobile = false): string {
 // breadcrumb never needs a back button — every page IS the leaf, always
 // one level under the fixed "System Admin" root.
 const breadcrumbLeaf = computed(() => t('authShell.adminShell.navLinks.' + (route.name as string)))
-
-const userInitials = computed(() => {
-  const user = auth.user
-  if (!user) return '?'
-  const first = user.first_name?.trim()?.[0]
-  const last = user.last_name?.trim()?.[0]
-  if (first || last) return `${first ?? ''}${last ?? ''}`.toUpperCase()
-  return (user.email?.[0] ?? '?').toUpperCase()
-})
 
 async function onExit() {
   await router.push({ name: 'home' })
@@ -79,7 +69,7 @@ async function onExit() {
         </span>
         <button
           type="button"
-          class="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:bg-background hover:text-primary"
+          class="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:bg-background hover:text-primary-dark"
           @click="onExit"
         >
           {{ t('authShell.adminShell.backToAppButton') }}
@@ -99,9 +89,10 @@ async function onExit() {
 
     <!-- Tablet/desktop: same AppSidebar chrome AppShell.vue uses, text-only
          (no icons — 11 hand-drawn, visually-unverified icons for a
-         rarely-used internal tool isn't a good trade). No footer slot
-         content anymore — language/account moved into the top header,
-         same reasoning as AppShell.vue. -->
+         rarely-used internal tool isn't a good trade). Email + exit stay
+         in the footer as before — an empty footer read as sparse (same
+         feedback as AppShell.vue's Settings link), so only the language
+         switcher moved into the top header, not the exit action. -->
     <AppSidebar :nav-label="t('authShell.adminShell.navLabel')">
       <template #header>
         <span class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-navy to-secondary" aria-hidden="true" />
@@ -116,6 +107,17 @@ async function onExit() {
       >
         {{ t('authShell.adminShell.navLinks.' + link.name) }}
       </RouterLink>
+
+      <template #footer>
+        <p class="truncate px-3 py-1 text-xs text-text-secondary">{{ auth.user?.email }}</p>
+        <button
+          type="button"
+          class="rounded-lg px-3 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary-dark"
+          @click="onExit"
+        >
+          {{ t('authShell.adminShell.backToAppButton') }}
+        </button>
+      </template>
     </AppSidebar>
 
     <div class="sm:pl-64">
@@ -129,16 +131,6 @@ async function onExit() {
 
         <div class="flex shrink-0 items-center gap-2">
           <LanguageSwitcher />
-          <UserMenu :initials="userInitials" :label="t('authShell.topHeader.userMenuLabel')">
-            <p class="truncate border-b border-border px-4 py-2 text-xs text-text-secondary">{{ auth.user?.email }}</p>
-            <button
-              type="button"
-              class="flex w-full items-center px-4 py-2 text-left text-sm text-text-secondary hover:bg-background hover:text-primary"
-              @click="onExit"
-            >
-              {{ t('authShell.adminShell.backToAppButton') }}
-            </button>
-          </UserMenu>
         </div>
       </header>
 

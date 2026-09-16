@@ -50,7 +50,7 @@ onMounted(async () => {
       <p class="mt-4 text-center text-sm">
         <RouterLink
           :to="auth.isAuthenticated ? { name: 'home' } : { name: 'login' }"
-          class="text-primary hover:underline"
+          class="text-primary-dark hover:underline"
         >
           {{ auth.isAuthenticated ? t('authShell.verifyEmailView.continueLink') : t('authShell.verifyEmailView.loginLink') }}
         </RouterLink>

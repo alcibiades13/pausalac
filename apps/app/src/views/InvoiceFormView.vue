@@ -185,7 +185,7 @@ async function onSubmit() {
             <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
           <p v-if="clients.length === 0" class="text-sm text-text-secondary">
-            <RouterLink :to="{ name: 'client-new' }" class="text-primary hover:underline">
+            <RouterLink :to="{ name: 'client-new' }" class="text-primary-dark hover:underline">
               {{ t('dashboardInvoicesClients.invoiceFormView.addClientLink') }}
             </RouterLink>
             {{ t('dashboardInvoicesClients.invoiceFormView.addClientSuffix') }}
@@ -201,7 +201,7 @@ async function onSubmit() {
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
             <span class="text-sm font-medium text-navy">{{ t('dashboardInvoicesClients.invoiceFormView.itemsLabel') }}</span>
-            <button type="button" class="text-sm text-primary hover:underline" @click="addLineItem">
+            <button type="button" class="text-sm text-primary-dark hover:underline" @click="addLineItem">
               {{ t('dashboardInvoicesClients.invoiceFormView.addItemButton') }}
             </button>
           </div>

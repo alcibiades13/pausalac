@@ -79,7 +79,7 @@ async function onSubmit() {
       </form>
       <p class="mt-4 text-center text-sm text-text-secondary">
         {{ t('authShell.registerView.hasAccountText') }}
-        <RouterLink :to="{ name: 'login' }" class="text-primary underline">{{ t('authShell.registerView.loginLink') }}</RouterLink>
+        <RouterLink :to="{ name: 'login' }" class="text-primary-dark underline">{{ t('authShell.registerView.loginLink') }}</RouterLink>
       </p>
     </Card>
   </AuthLayout>

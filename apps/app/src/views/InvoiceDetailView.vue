@@ -230,7 +230,7 @@ onMounted(load)
           </h1>
           <RouterLink
             :to="{ name: 'client-detail', params: { id: invoice.client } }"
-            class="text-sm text-primary hover:underline"
+            class="text-sm text-primary-dark hover:underline"
           >
             {{ invoice.client_name }}
           </RouterLink>
@@ -310,7 +310,7 @@ onMounted(load)
         <ul class="flex flex-col divide-y divide-border">
           <li v-for="doc in documents" :key="doc.id" class="flex items-center justify-between py-2 text-sm">
             <p class="min-w-0 truncate text-navy">{{ doc.title }}</p>
-            <a v-if="doc.file_url" :href="doc.file_url" target="_blank" rel="noopener" class="shrink-0 text-primary hover:underline">
+            <a v-if="doc.file_url" :href="doc.file_url" target="_blank" rel="noopener" class="shrink-0 text-primary-dark hover:underline">
               {{ t('dashboardInvoicesClients.invoiceDetailView.openLink') }}
             </a>
           </li>

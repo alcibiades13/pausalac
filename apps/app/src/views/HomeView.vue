@@ -143,7 +143,7 @@ onMounted(loadDashboard)
         <Card>
           <div class="flex items-center justify-between">
             <span class="text-sm font-medium text-navy">{{ t('dashboardInvoicesClients.homeView.limitsCardTitle') }}</span>
-            <RouterLink :to="{ name: 'limits' }" class="text-sm text-primary hover:underline">
+            <RouterLink :to="{ name: 'limits' }" class="text-sm text-primary-dark hover:underline">
               {{ t('dashboardInvoicesClients.homeView.detailsLink') }}
             </RouterLink>
           </div>
@@ -179,7 +179,7 @@ onMounted(loadDashboard)
         <Card>
           <div class="flex items-center justify-between">
             <span class="text-sm font-medium text-navy">{{ t('dashboardInvoicesClients.homeView.nextObligationTitle') }}</span>
-            <RouterLink :to="{ name: 'obligations' }" class="text-sm text-primary hover:underline">
+            <RouterLink :to="{ name: 'obligations' }" class="text-sm text-primary-dark hover:underline">
               {{ t('dashboardInvoicesClients.homeView.detailsLink') }}
             </RouterLink>
           </div>
@@ -201,7 +201,7 @@ onMounted(loadDashboard)
         <Card v-if="dashboard.onboarding.percentage < 100">
           <div class="flex items-center justify-between">
             <span class="text-sm text-navy">{{ t('dashboardInvoicesClients.homeView.onboardingProgress', { percentage: dashboard.onboarding.percentage }) }}</span>
-            <RouterLink :to="{ name: 'settings' }" class="text-sm text-primary hover:underline">
+            <RouterLink :to="{ name: 'settings' }" class="text-sm text-primary-dark hover:underline">
               {{ t('dashboardInvoicesClients.homeView.completeSetupLink') }}
             </RouterLink>
           </div>

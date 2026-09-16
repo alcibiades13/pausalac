@@ -221,7 +221,7 @@ async function onCreateResolution() {
                 <button
                   v-if="obligation.status !== 'paid'"
                   type="button"
-                  class="text-sm text-primary hover:underline disabled:opacity-40"
+                  class="text-sm text-primary-dark hover:underline disabled:opacity-40"
                   :disabled="markingPaidId === obligation.id"
                   @click="onMarkPaid(obligation.id)"
                 >

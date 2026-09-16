@@ -35,10 +35,13 @@ describe('Progress', () => {
     expect(inner.classes()).toContain('bg-danger')
   })
 
-  it('defaults to the primary variant color', () => {
+  it('defaults to the primary variant color, using the darker shade for visibility', () => {
+    // Not `bg-primary` — --color-primary is a pale, user-specified
+    // violet (tokens.css) that would barely show up as a thin fill;
+    // `primary-dark` is the same hue family but actually visible.
     const wrapper = mount(Progress, { props: { value: 10 } })
     const inner = wrapper.find('[role="progressbar"] > div')
-    expect(inner.classes()).toContain('bg-primary')
+    expect(inner.classes()).toContain('bg-primary-dark')
   })
 
   it('sets an aria-label when provided', () => {

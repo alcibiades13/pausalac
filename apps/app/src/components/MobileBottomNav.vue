@@ -47,7 +47,7 @@ const TAB_ROUTES: Record<string, string[]> = {
 function tabClass(key: string): string {
   const name = route.name as string | undefined
   const isActive = !!name && TAB_ROUTES[key]!.includes(name)
-  return isActive ? 'text-primary' : 'text-text-secondary'
+  return isActive ? 'text-primary-dark' : 'text-text-secondary'
 }
 
 // §7's FAB order minus the two already-excluded items (Fiskalni račun,

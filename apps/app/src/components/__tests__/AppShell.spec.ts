@@ -80,11 +80,11 @@ describe('AppShell nav active state', () => {
     // specificity collision that made the "active" color never actually
     // win the cascade. A single element must never carry both.
     expect(active!.classes()).toContain('bg-primary/10')
-    expect(active!.classes()).toContain('text-primary')
+    expect(active!.classes()).toContain('text-primary-dark')
     expect(active!.classes()).not.toContain('text-text-secondary')
 
     expect(inactive!.classes()).not.toContain('bg-primary/10')
-    expect(inactive!.classes()).not.toContain('text-primary')
+    expect(inactive!.classes()).not.toContain('text-primary-dark')
     expect(inactive!.classes()).toContain('text-text-secondary')
   })
 })
@@ -126,7 +126,7 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
     }
   })
 
-  it('lists notifications, language, settings and logout in the desktop top header', async () => {
+  it('lists notifications and language in the desktop top header, with logout in the user menu', async () => {
     const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
     await flushPromises()
 
@@ -134,10 +134,19 @@ describe('AppShell sidebar (tablet/desktop nav)', () => {
     expect(desktopHeader.find('[aria-label="Obaveštenja"]').exists()).toBe(true)
     expect(desktopHeader.find('select[aria-label="Izbor jezika"]').exists()).toBe(true)
 
-    // Settings/logout live inside the user-menu dropdown, closed by default.
+    // Logout lives inside the user-menu dropdown, closed by default —
+    // Settings stays in the sidebar footer (see the sidebar-footer test
+    // below), not duplicated here.
     await desktopHeader.get('[aria-haspopup="menu"]').trigger('click')
-    expect(desktopHeader.text()).toContain('Podešavanja')
     expect(desktopHeader.text()).toContain('Odjavi se')
+    expect(desktopHeader.text()).not.toContain('Podešavanja')
+  })
+
+  it('keeps Settings in the sidebar footer', async () => {
+    const wrapper = mount(AppShell, { global: { plugins: [pinia, router, i18n] } })
+    await flushPromises()
+
+    expect(wrapper.get('aside').text()).toContain('Podešavanja')
   })
 
   it('calls auth.logout() when "Odjavi se" is clicked', async () => {

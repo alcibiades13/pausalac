@@ -65,8 +65,8 @@ describe('MobileBottomNav', () => {
     const links = wrapper.get('nav').findAll('a')
     const active = links.find((l) => l.text() === 'Fakture')!
     const inactive = links.find((l) => l.text() === 'Početna')!
-    expect(active.classes()).toContain('text-primary')
-    expect(inactive.classes()).not.toContain('text-primary')
+    expect(active.classes()).toContain('text-primary-dark')
+    expect(inactive.classes()).not.toContain('text-primary-dark')
     expect(inactive.classes()).toContain('text-text-secondary')
   })
 
@@ -76,7 +76,7 @@ describe('MobileBottomNav', () => {
     await flushPromises()
 
     const active = wrapper.get('nav').findAll('a').find((l) => l.text() === 'Finansije')!
-    expect(active.classes()).toContain('text-primary')
+    expect(active.classes()).toContain('text-primary-dark')
   })
 
   it('highlights Više when on a grouped sub-route like settings', async () => {
@@ -85,7 +85,7 @@ describe('MobileBottomNav', () => {
     await flushPromises()
 
     const active = wrapper.get('nav').findAll('a').find((l) => l.text() === 'Više')!
-    expect(active.classes()).toContain('text-primary')
+    expect(active.classes()).toContain('text-primary-dark')
   })
 
   it('opens the quick-create sheet with exactly the four non-excluded items in order', async () => {

@@ -92,7 +92,7 @@ async function onMarkRead(notification: AppNotification) {
             <RouterLink
               v-if="notification.action_route"
               :to="{ name: notification.action_route, query: notification.action_query }"
-              class="text-sm text-primary hover:underline"
+              class="text-sm text-primary-dark hover:underline"
             >
               {{ t('limitsAccountingEtc.notificationsView.viewLink') }}
             </RouterLink>
