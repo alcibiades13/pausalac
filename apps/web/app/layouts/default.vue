@@ -28,6 +28,12 @@ const localePath = useLocalePath()
           >
             {{ $t('nav.cenovnik') }}
           </NuxtLink>
+          <NuxtLink
+            :to="localePath('/baza-znanja')"
+            class="rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-background hover:text-primary-dark"
+          >
+            {{ $t('nav.bazaZnanja') }}
+          </NuxtLink>
         </nav>
 
         <div class="flex items-center gap-3">
@@ -76,6 +82,9 @@ const localePath = useLocalePath()
               }}</NuxtLink>
               <NuxtLink :to="localePath('/cenovnik')" class="text-text-secondary hover:text-primary-dark">{{
                 $t('footer.cenovnik')
+              }}</NuxtLink>
+              <NuxtLink :to="localePath('/baza-znanja')" class="text-text-secondary hover:text-primary-dark">{{
+                $t('footer.bazaZnanja')
               }}</NuxtLink>
             </div>
             <div class="flex flex-col gap-2 text-sm">

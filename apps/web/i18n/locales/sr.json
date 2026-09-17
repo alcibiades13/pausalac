@@ -11,6 +11,7 @@
   },
   "nav": {
     "cenovnik": "Cenovnik",
+    "bazaZnanja": "Baza znanja",
     "aplikacija": "Aplikacija",
     "otvoriAplikaciju": "Otvori aplikaciju"
   },
@@ -19,6 +20,7 @@
     "product": "Proizvod",
     "kakoRadi": "Kako radi",
     "cenovnik": "Cenovnik",
+    "bazaZnanja": "Baza znanja",
     "nalog": "Nalog",
     "prijava": "Prijava",
     "registracija": "Registracija",
@@ -40,7 +42,8 @@
       "jedanStatus": "Jedan status",
       "fakturisanje": "Fakturisanje",
       "poredjenje": "Poređenje",
-      "cenovnik": "Cenovnik"
+      "cenovnik": "Cenovnik",
+      "faq": "Pitanja"
     },
     "problem": {
       "cards": [
@@ -62,30 +65,55 @@
     "modules": {
       "heading": "Sve na jednom mestu",
       "subtitle": "Isti moduli koje koristiš u aplikaciji svaki dan — bez tabova koje moraš sam da povezuješ.",
-      "items": [
-        { "title": "Fakture", "body": "Kreiraj, pošalji i prati status naplate — sve na jednom mestu." },
+      "spotlight": [
+        {
+          "title": "Fakture",
+          "body": "Kreiraj, pošalji i prati status naplate — sve na jednom mestu, sa jasnim statusom za svaku fakturu.",
+          "screenshotAlt": "Lista faktura u Pausalac aplikaciji, sa statusima Izdata, Nacrt, Plaćena i Kasni"
+        },
+        {
+          "title": "KPO",
+          "body": "Knjiga prihoda generiše se iz stvarnih transakcija — svaka izdata faktura automatski postaje red u KPO knjizi, bez ručnog unosa.",
+          "screenshotAlt": "KPO tabela sa automatski generisanim stavkama iz izdatih faktura"
+        },
+        {
+          "title": "Limiti",
+          "body": "Paušalni i PDV limit prate se automatski, sa procenom do kraja perioda — uvek znaš koliko ti je prostora ostalo.",
+          "screenshotAlt": "Kartice paušalnog i PDV limita sa procentom iskorišćenosti i preostalim iznosom"
+        }
+      ],
+      "supporting": [
         { "title": "Klijenti", "body": "Baza klijenata sa istorijom faktura i kontakt podacima." },
-        { "title": "Limiti", "body": "Paušalni i PDV limit prate se automatski, sa projekcijom do kraja godine." },
-        { "title": "KPO", "body": "Knjiga prihoda generiše se iz stvarnih transakcija, ne ručno." },
         { "title": "Obaveze", "body": "Poreske i doprinosne obaveze sa rokovima na jednom mestu." },
         { "title": "Dokumenti", "body": "Svi generisani PDF-ovi i priložena dokumentacija, organizovano." }
       ]
     },
     "attention": {
       "heading": "Ne gomila kartica",
-      "body": "Umesto da sam sastavljaš sliku iz faktura, limita i poreskih obaveza, Pausalac ih objedinjuje u jednu listu prioriteta — šta kasni, šta dospeva, šta zahteva pažnju. Uvek znaš odakle dolazi svaki broj koji vidiš."
+      "body": "Umesto da sam sastavljaš sliku iz faktura, limita i poreskih obaveza, Pausalac ih objedinjuje u jednu listu prioriteta — šta kasni, šta dospeva, šta zahteva pažnju. Uvek znaš odakle dolazi svaki broj koji vidiš.",
+      "screenshotAlt": "Lista 'Zahteva pažnju' u Pausalac aplikaciji — kasni faktura, nedostajući dokument i poreska obaveza koja kasni, svaka sa dugmetom Pogledaj",
+      "annotations": [
+        "Svaka stavka vodi direktno na akciju — ne samo obaveštenje, već i rešenje.",
+        "Agregira fakture, limite i poreske obaveze u jednu listu — ne moraš sam da ih sastavljaš."
+      ]
     },
     "steps": {
       "heading": "Tri koraka, bez trećeg alata",
       "items": [
-        { "title": "Izaberi klijenta", "body": "Iz liste klijenata ili dodaj novog u par sekundi." },
+        {
+          "title": "Izaberi klijenta",
+          "body": "Iz liste klijenata ili dodaj novog u par sekundi.",
+          "screenshotAlt": "Forma za novu fakturu sa izabranim klijentom i popunjenim datumima"
+        },
         {
           "title": "Dodaj stavke",
-          "body": "Usluge ili proizvodi, sa automatskim izračunom ukupnog iznosa."
+          "body": "Usluge ili proizvodi, sa automatskim izračunom ukupnog iznosa.",
+          "screenshotAlt": "Forma za novu fakturu sa popunjenom stavkom i izračunatim ukupnim iznosom"
         },
         {
           "title": "Pošalji",
-          "body": "PDF i email idu direktno klijentu, status prati da li je faktura viđena i plaćena."
+          "body": "PDF i email idu direktno klijentu, status prati da li je faktura viđena i plaćena.",
+          "screenshotAlt": "Izdata faktura spremna za slanje, sa stavkama i ukupnim iznosom"
         }
       ]
     },
@@ -110,10 +138,146 @@
       "heading": "Jednostavni paketi",
       "seeAll": "Pogledaj sve pakete i detalje →"
     },
+    "faq": {
+      "heading": "Česta pitanja",
+      "items": [
+        {
+          "q": "Da li je potrebna kartica za probni period?",
+          "a": "Ne. Svaka nova kompanija dobija 14 dana besplatnog probnog perioda, bez unosa kartice."
+        },
+        {
+          "q": "Šta se dešava kad probni period istekne?",
+          "a": "Dobićeš obaveštenje na vreme, pre isteka. Do izbora paketa je kreiranje novih faktura privremeno ograničeno — svi tvoji podaci ostaju netaknuti."
+        },
+        {
+          "q": "Da li Pausalac automatski prati paušalni i PDV limit?",
+          "a": "Da — oba limita se prate iz stvarnog prometa, sa procenom do kraja perioda, umesto ručnog računanja."
+        },
+        {
+          "q": "Da li se KPO knjiga vodi automatski?",
+          "a": "Da. Svaka izdata faktura i uplata automatski postaje red u KPO knjizi — ne unosiš ništa ručno dva puta."
+        },
+        {
+          "q": "Mogu li da otkažem pretplatu u bilo kom trenutku?",
+          "a": "Da, otkazivanje je moguće u svakom trenutku iz podešavanja naloga."
+        },
+        {
+          "q": "Da li fakture idu direktno klijentu?",
+          "a": "Da — PDF i email se šalju direktno klijentu iz aplikacije, sa statusom da li je faktura viđena i plaćena."
+        }
+      ]
+    },
+    "knowledgeBase": {
+      "kicker": "Baza znanja",
+      "heading": "Naučite više o paušalnom poslovanju",
+      "subtitle": "Kratki, praktični tekstovi o tome kako paušalno poslovanje funkcioniše i kako ga Pausalac pojednostavljuje.",
+      "seeAll": "Pogledaj sve tekstove →",
+      "readMore": "Pročitaj →"
+    },
     "finalCta": {
       "heading": "Spreman da prestaneš da razmišljaš o administraciji?",
       "cta": "Probaj besplatno",
       "facts": ["14 dana besplatno", "Bez potrebe za karticom", "Sve na jednom mestu"]
+    }
+  },
+  "articles": {
+    "meta": {
+      "title": "Baza znanja",
+      "description": "Kratki, praktični tekstovi o paušalnom poslovanju i o tome kako Pausalac pomaže da ga vodiš bez haosa."
+    },
+    "backToList": "← Sve iz baze znanja",
+    "list": [
+      {
+        "slug": "sta-je-pausalno-oporezivanje",
+        "title": "Šta je paušalno oporezivanje i kome je namenjeno",
+        "excerpt": "Osnovni koncept, bez pravnog žargona — i zašto administracija i dalje ume da bude izazov.",
+        "readTime": "4 min čitanja"
+      },
+      {
+        "slug": "pausalni-i-pdv-limit",
+        "title": "Paušalni i PDV limit: šta pratiti i zašto",
+        "excerpt": "Dva različita praga, dve različite posledice — i kako ih Pausalac prati umesto tebe.",
+        "readTime": "3 min čitanja"
+      },
+      {
+        "slug": "od-fakture-do-kpo-knjige",
+        "title": "Od fakture do KPO knjige: kako izgleda tok podataka u Pausalac-u",
+        "excerpt": "Jedna akcija — izdavanje fakture — a KPO knjiga i limiti se ažuriraju sami.",
+        "readTime": "3 min čitanja"
+      }
+    ],
+    "content": {
+      "sta-je-pausalno-oporezivanje": {
+        "dek": "Osnovni koncept, bez pravnog žargona.",
+        "sections": [
+          {
+            "heading": "Šta paušalno oporezivanje znači u praksi",
+            "paragraphs": [
+              "Paušalno oporezivanje je poreski režim namenjen manjim preduzetnicima u Srbiji, kod kojeg se porez i doprinosi obračunavaju na unapred utvrđenoj (paušalnoj) osnovici, umesto na osnovu stvarno utvrđene dobiti iz knjigovodstva. U praksi to znači manje knjigovodstvene administracije od standardnog režima — ali ne i nulu.",
+              "Tačni uslovi za ulazak u paušalno oporezivanje, dozvoljene delatnosti i visina osnovice zavise od konkretne situacije preduzetnika, pa za te detalje uvek treba proveriti kod Poreske uprave ili knjigovođe — ovaj tekst objašnjava koncept, ne zamenjuje zvaničan izvor."
+            ]
+          },
+          {
+            "heading": "Zašto administracija i dalje ume da bude izazov",
+            "paragraphs": [
+              "I uz pojednostavljeno oporezivanje, paušalni preduzetnik i dalje mora da vodi evidenciju prometa (KPO knjigu), prati da ne pređe godišnji limit prometa, i na vreme izmiruje mesečne poreske i doprinosne obaveze. Kad se to radi ručno — kroz Excel tabele, podsetnike u telefonu i fascikle sa rešenjima — lako se izgubi pregled nad tim šta je već urađeno, a šta kasni."
+            ]
+          },
+          {
+            "heading": "Kako Pausalac pomaže",
+            "paragraphs": [
+              "Pausalac ne menja poreske obaveze paušalnog preduzetnika, ali objedinjuje njihovo praćenje: fakture, KPO knjiga, limiti i poreske obaveze vide se na jednom mestu, sa jasnim statusom umesto razbacanih podsetnika."
+            ]
+          }
+        ]
+      },
+      "pausalni-i-pdv-limit": {
+        "dek": "Dva različita praga, dve različite posledice.",
+        "sections": [
+          {
+            "heading": "Paušalni limit prometa",
+            "paragraphs": [
+              "Paušalni preduzetnik ima godišnji limit ukupnog prometa — trenutno 6.000.000 RSD u kalendarskoj godini. Prelazak ovog limita menja poreski status preduzetnika, pa je praćenje koliko je od limita iskorišćeno, i kojom brzinom, bitno tokom cele godine, ne tek na kraju decembra."
+            ]
+          },
+          {
+            "heading": "Prag za PDV",
+            "paragraphs": [
+              "Nezavisno od paušalnog limita, postoji poseban prag ukupnog prometa u prethodnih 12 meseci nakon kojeg je ulazak u sistem PDV-a obavezan. Ovaj prag se prati odvojeno od paušalnog limita i ima svoje posledice na fakturisanje. Tačan iznos praga i njegova primena zavise od važećih propisa — Pausalac prikazuje trenutno važeću vrednost direktno u aplikaciji, pa je nema potrebe pamtiti napamet."
+            ]
+          },
+          {
+            "heading": "Kako Pausalac prati oba limita",
+            "paragraphs": [
+              "Oba praga se u Pausalac-u računaju automatski iz stvarnog prometa — izdatih faktura i naplata — i prikazuju se kao procenat iskorišćenosti sa procenom kretanja do kraja perioda. Nema ručnog sabiranja faktura u Excel-u da bi se znalo koliko prostora je ostalo."
+            ]
+          }
+        ]
+      },
+      "od-fakture-do-kpo-knjige": {
+        "dek": "Jedna akcija, a više toga se ažurira samo.",
+        "sections": [
+          {
+            "heading": "Tok koji inače zahteva nekoliko alata",
+            "paragraphs": [
+              "Bez objedinjenog sistema, izdavanje fakture je samo prvi korak — nakon toga sledi ručno upisivanje u KPO knjigu, ručno preračunavanje koliko je od paušalnog i PDV limita iskorišćeno, i praćenje da li je faktura naplaćena, obično u posebnoj tabeli ili na papiru."
+            ]
+          },
+          {
+            "heading": "Kako to izgleda u Pausalac-u",
+            "paragraphs": [
+              "Kad izdaš fakturu u Pausalac-u, ona se odmah pojavljuje u listi faktura sa svojim statusom (izdata, viđena, plaćena, kasni). U pozadini se, bez dodatne akcije, generiše odgovarajući red u KPO knjizi, a paušalni i PDV limit se preračunavaju na osnovu novog prometa.",
+              "Kad klijent plati, evidentiranje uplate ažurira status fakture i preostali iznos potraživanja — a isti taj podatak se odmah odražava i na dashboard-u, u pregledu 'Zahteva pažnju', ako je faktura pre toga kasnila."
+            ]
+          },
+          {
+            "heading": "Zašto je to bitno",
+            "paragraphs": [
+              "Jedan izvor istine za fakture, KPO knjigu i limite znači da se isti broj nikad ne računa na dva različita mesta na dva različita načina — a to je tačno vrsta greške koja u ručnom vođenju najčešće prođe neopaženo do kraja godine."
+            ]
+          }
+        ]
+      }
     }
   },
   "mockup": {

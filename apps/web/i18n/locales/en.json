@@ -11,6 +11,7 @@
   },
   "nav": {
     "cenovnik": "Pricing",
+    "bazaZnanja": "Knowledge base",
     "aplikacija": "App",
     "otvoriAplikaciju": "Open app"
   },
@@ -19,6 +20,7 @@
     "product": "Product",
     "kakoRadi": "How it works",
     "cenovnik": "Pricing",
+    "bazaZnanja": "Knowledge base",
     "nalog": "Account",
     "prijava": "Log in",
     "registracija": "Sign up",
@@ -40,7 +42,8 @@
       "jedanStatus": "One status",
       "fakturisanje": "Invoicing",
       "poredjenje": "Comparison",
-      "cenovnik": "Pricing"
+      "cenovnik": "Pricing",
+      "faq": "Questions"
     },
     "problem": {
       "cards": [
@@ -62,30 +65,55 @@
     "modules": {
       "heading": "Everything in one place",
       "subtitle": "The same modules you use in the app every day — no tabs you have to keep in sync yourself.",
-      "items": [
-        { "title": "Invoices", "body": "Create, send, and track payment status — all in one place." },
+      "spotlight": [
+        {
+          "title": "Invoices",
+          "body": "Create, send, and track payment status — all in one place, with a clear status for every invoice.",
+          "screenshotAlt": "Invoice list in the Pausalac app, showing Issued, Draft, Paid and Late statuses"
+        },
+        {
+          "title": "Revenue ledger",
+          "body": "Generated from your real transactions — every issued invoice automatically becomes a row in the revenue ledger, no manual entry.",
+          "screenshotAlt": "Revenue ledger table with rows generated automatically from issued invoices"
+        },
+        {
+          "title": "Limits",
+          "body": "Your flat-rate and VAT limits are tracked automatically, with a projection to the end of the period — you always know how much room you have left.",
+          "screenshotAlt": "Flat-rate and VAT limit cards showing usage percentage and remaining amount"
+        }
+      ],
+      "supporting": [
         { "title": "Clients", "body": "A client base with invoice history and contact details." },
-        { "title": "Limits", "body": "Your flat-rate and VAT limits are tracked automatically, with a year-end projection." },
-        { "title": "Revenue ledger", "body": "Generated from your real transactions, not filled in by hand." },
         { "title": "Obligations", "body": "Tax and contribution obligations with their due dates, in one place." },
         { "title": "Documents", "body": "Every generated PDF and attached document, organized." }
       ]
     },
     "attention": {
       "heading": "Not a pile of cards",
-      "body": "Instead of piecing the picture together yourself from invoices, limits and tax obligations, Pausalac brings them into a single prioritized list — what's late, what's due, what needs attention. You always know where every number you see comes from."
+      "body": "Instead of piecing the picture together yourself from invoices, limits and tax obligations, Pausalac brings them into a single prioritized list — what's late, what's due, what needs attention. You always know where every number you see comes from.",
+      "screenshotAlt": "The 'Needs attention' list in the Pausalac app — a late invoice, a missing document and a late tax obligation, each with a View button",
+      "annotations": [
+        "Every item leads straight to an action — not just a notification, but a fix.",
+        "Aggregates invoices, limits and tax obligations into one list — you don't have to piece it together yourself."
+      ]
     },
     "steps": {
       "heading": "Three steps, no third tool",
       "items": [
-        { "title": "Pick a client", "body": "From your client list, or add a new one in a few seconds." },
+        {
+          "title": "Pick a client",
+          "body": "From your client list, or add a new one in a few seconds.",
+          "screenshotAlt": "New invoice form with a client selected and dates filled in"
+        },
         {
           "title": "Add line items",
-          "body": "Services or products, with the total calculated automatically."
+          "body": "Services or products, with the total calculated automatically.",
+          "screenshotAlt": "New invoice form with a line item filled in and the total calculated"
         },
         {
           "title": "Send it",
-          "body": "The PDF and email go straight to the client — status tracks whether it's been seen and paid."
+          "body": "The PDF and email go straight to the client — status tracks whether it's been seen and paid.",
+          "screenshotAlt": "Issued invoice ready to send, with line items and total"
         }
       ]
     },
@@ -110,10 +138,146 @@
       "heading": "Simple plans",
       "seeAll": "See all plans and details →"
     },
+    "faq": {
+      "heading": "Frequently asked questions",
+      "items": [
+        {
+          "q": "Do I need a card for the trial?",
+          "a": "No. Every new company gets a 14-day free trial, no card required."
+        },
+        {
+          "q": "What happens when the trial ends?",
+          "a": "You'll get a heads-up before it expires. Until you pick a plan, creating new invoices is temporarily restricted — all your data stays untouched."
+        },
+        {
+          "q": "Does Pausalac automatically track my flat-rate and VAT limits?",
+          "a": "Yes — both limits are tracked from your real turnover, with a projection to the end of the period, instead of you calculating it by hand."
+        },
+        {
+          "q": "Is the revenue ledger kept automatically?",
+          "a": "Yes. Every issued invoice and payment automatically becomes a row in the revenue ledger — you never enter anything twice."
+        },
+        {
+          "q": "Can I cancel my subscription at any time?",
+          "a": "Yes, you can cancel at any time from your account settings."
+        },
+        {
+          "q": "Do invoices go straight to the client?",
+          "a": "Yes — the PDF and email are sent straight to the client from the app, with a status showing whether the invoice has been seen and paid."
+        }
+      ]
+    },
+    "knowledgeBase": {
+      "kicker": "Knowledge base",
+      "heading": "Learn more about running a flat-rate business",
+      "subtitle": "Short, practical articles on how flat-rate business works, and how Pausalac makes it simpler.",
+      "seeAll": "See all articles →",
+      "readMore": "Read →"
+    },
     "finalCta": {
       "heading": "Ready to stop thinking about admin?",
       "cta": "Try for free",
       "facts": ["14 days free", "No card required", "Everything in one place"]
+    }
+  },
+  "articles": {
+    "meta": {
+      "title": "Knowledge base",
+      "description": "Short, practical articles on flat-rate business in Serbia, and how Pausalac helps you run it without the chaos."
+    },
+    "backToList": "← All articles",
+    "list": [
+      {
+        "slug": "sta-je-pausalno-oporezivanje",
+        "title": "What flat-rate taxation is, and who it's for",
+        "excerpt": "The basic concept, without the legal jargon — and why admin can still be a challenge.",
+        "readTime": "4 min read"
+      },
+      {
+        "slug": "pausalni-i-pdv-limit",
+        "title": "Flat-rate and VAT limits: what to track and why",
+        "excerpt": "Two different thresholds, two different consequences — and how Pausalac tracks them for you.",
+        "readTime": "3 min read"
+      },
+      {
+        "slug": "od-fakture-do-kpo-knjige",
+        "title": "From invoice to revenue ledger: how data flows through Pausalac",
+        "excerpt": "One action — issuing an invoice — and the revenue ledger and limits update themselves.",
+        "readTime": "3 min read"
+      }
+    ],
+    "content": {
+      "sta-je-pausalno-oporezivanje": {
+        "dek": "The basic concept, without the legal jargon.",
+        "sections": [
+          {
+            "heading": "What flat-rate taxation means in practice",
+            "paragraphs": [
+              "Flat-rate taxation is a tax regime for smaller entrepreneurs in Serbia, where tax and contributions are calculated on a predetermined (flat) base instead of on profit actually established through bookkeeping. In practice, this means less bookkeeping admin than the standard regime — but not zero.",
+              "The exact conditions for entering flat-rate taxation, the allowed activities, and the size of the base depend on an entrepreneur's specific situation, so always check those details with the Tax Administration or an accountant — this article explains the concept, it doesn't replace an official source."
+            ]
+          },
+          {
+            "heading": "Why admin can still be a challenge",
+            "paragraphs": [
+              "Even with simplified taxation, a flat-rate entrepreneur still has to keep a revenue ledger, track that they don't exceed the annual turnover limit, and pay monthly tax and contribution obligations on time. When this is done by hand — through spreadsheets, phone reminders and folders of paperwork — it's easy to lose track of what's already done and what's overdue."
+            ]
+          },
+          {
+            "heading": "How Pausalac helps",
+            "paragraphs": [
+              "Pausalac doesn't change a flat-rate entrepreneur's tax obligations, but it unifies tracking them: invoices, the revenue ledger, limits and tax obligations are visible in one place, with a clear status instead of scattered reminders."
+            ]
+          }
+        ]
+      },
+      "pausalni-i-pdv-limit": {
+        "dek": "Two different thresholds, two different consequences.",
+        "sections": [
+          {
+            "heading": "The flat-rate turnover limit",
+            "paragraphs": [
+              "A flat-rate entrepreneur has an annual total turnover limit — currently 6,000,000 RSD in a calendar year. Exceeding this limit changes the entrepreneur's tax status, so tracking how much of the limit is used, and how fast, matters throughout the year, not just at the end of December."
+            ]
+          },
+          {
+            "heading": "The VAT threshold",
+            "paragraphs": [
+              "Independently of the flat-rate limit, there's a separate threshold for total turnover in the trailing 12 months, past which registering for VAT becomes mandatory. This threshold is tracked separately from the flat-rate limit and has its own consequences for invoicing. Its exact amount and application depend on current regulations — Pausalac shows the currently applicable value directly in the app, so there's no need to memorize it."
+            ]
+          },
+          {
+            "heading": "How Pausalac tracks both limits",
+            "paragraphs": [
+              "In Pausalac, both thresholds are calculated automatically from your real turnover — issued invoices and payments received — and shown as a usage percentage with a projection to the end of the period. No manually adding up invoices in a spreadsheet to know how much room is left."
+            ]
+          }
+        ]
+      },
+      "od-fakture-do-kpo-knjige": {
+        "dek": "One action, and several other things update themselves.",
+        "sections": [
+          {
+            "heading": "A flow that normally needs several tools",
+            "paragraphs": [
+              "Without a unified system, issuing an invoice is just the first step — after that comes manually entering it into the revenue ledger, manually recalculating how much of the flat-rate and VAT limit is used, and tracking whether the invoice has been paid, usually in a separate spreadsheet or on paper."
+            ]
+          },
+          {
+            "heading": "How this looks in Pausalac",
+            "paragraphs": [
+              "When you issue an invoice in Pausalac, it immediately appears in the invoice list with its own status (issued, seen, paid, late). In the background, without any extra action, a matching row is generated in the revenue ledger, and the flat-rate and VAT limits are recalculated based on the new turnover.",
+              "When a client pays, recording the payment updates the invoice's status and remaining amount due — and that same information is immediately reflected on the dashboard, in the 'Needs attention' overview, if the invoice was previously late."
+            ]
+          },
+          {
+            "heading": "Why this matters",
+            "paragraphs": [
+              "One source of truth for invoices, the revenue ledger and limits means the same number is never calculated in two different places in two different ways — which is exactly the kind of mistake that most often goes unnoticed until year-end when everything is tracked by hand."
+            ]
+          }
+        ]
+      }
     }
   },
   "mockup": {

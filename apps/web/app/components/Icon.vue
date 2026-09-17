@@ -93,5 +93,9 @@ const MODULE_PATHS: Record<string, string> = {
       <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round" />
       <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round" />
     </template>
+
+    <template v-else-if="name === 'chevron-down'">
+      <polyline points="6 9 12 15 18 9" stroke-linecap="round" stroke-linejoin="round" />
+    </template>
   </svg>
 </template>
