@@ -76,8 +76,12 @@ const faqItems = computed(() =>
           <div class="w-[82%]">
             <ScreenshotFrame src="/screenshots/hero-laptop.png" :alt="t('home.hero.laptopScreenshotAlt')" />
           </div>
-          <div class="w-[24%] -ml-10 translate-y-10">
-            <ScreenshotFrame src="/screenshots/hero-mobile.png" :alt="t('home.hero.mobileScreenshotAlt')" />
+          <div class="w-[24%] -ml-10 translate-y-16">
+            <ScreenshotFrame
+              src="/screenshots/hero-mobile.png"
+              :alt="t('home.hero.mobileScreenshotAlt')"
+              shadow-class="shadow-[0_28px_70px_-16px_rgba(10,10,10,0.35)]"
+            />
           </div>
         </div>
       </div>
