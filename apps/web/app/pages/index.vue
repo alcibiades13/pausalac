@@ -41,9 +41,9 @@ const faqItems = computed(() =>
     <section class="relative overflow-hidden">
       <div class="pointer-events-none absolute inset-0 -z-10 bg-dot-grid opacity-50" aria-hidden="true" />
 
-      <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.3fr] lg:gap-10">
+      <div class="grid w-full grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.4fr] lg:gap-10 xl:px-12">
         <div class="flex flex-col gap-6 text-center lg:text-left">
-          <h1 class="font-display text-5xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 class="font-display text-6xl font-black leading-[1.05] tracking-tight sm:text-7xl 2xl:text-8xl">
             <span class="text-navy">{{ t('home.hero.titleMain') }}</span><br />
             <span class="text-text-secondary">{{ t('home.hero.titleAccent') }}</span>
           </h1>
@@ -68,10 +68,10 @@ const faqItems = computed(() =>
         </div>
 
         <div v-reveal class="relative flex items-center justify-center py-6 lg:justify-end">
-          <div class="w-[80%]">
+          <div class="w-[82%]">
             <ScreenshotFrame src="/screenshots/hero-laptop.png" :alt="t('home.hero.laptopScreenshotAlt')" />
           </div>
-          <div class="w-[23%] -ml-10 translate-y-10">
+          <div class="w-[24%] -ml-10 translate-y-10">
             <ScreenshotFrame src="/screenshots/hero-mobile.png" :alt="t('home.hero.mobileScreenshotAlt')" />
           </div>
         </div>
