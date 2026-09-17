@@ -47,7 +47,7 @@ const faqItems = computed(() =>
       <div class="pointer-events-none absolute inset-0 -z-10 bg-dot-grid opacity-50" aria-hidden="true" />
 
       <div class="grid w-full grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-10 xl:px-12">
-        <div class="flex flex-col items-center gap-6 text-center">
+        <div class="flex flex-col items-center gap-6 text-center lg:mx-auto lg:w-fit lg:items-start lg:text-left">
           <h1 class="font-display text-6xl font-black leading-[1.05] tracking-tight sm:text-7xl 2xl:text-8xl">
             <span class="text-navy">{{ t('home.hero.titleMain') }}</span><br />
             <span class="text-text-secondary">{{ t('home.hero.titleAccent') }}</span>
@@ -57,7 +57,7 @@ const faqItems = computed(() =>
             {{ t('home.hero.subtitle') }}
           </p>
 
-          <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <div class="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <a :href="`${config.public.appUrl}/registracija`" target="_blank" rel="noopener noreferrer">
               <Button class="w-full gap-2 sm:w-auto">
                 {{ t('home.hero.ctaPrimary') }}
