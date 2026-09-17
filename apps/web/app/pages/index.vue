@@ -68,10 +68,10 @@ const faqItems = computed(() =>
         </div>
 
         <div v-reveal class="relative flex items-center justify-center py-6 lg:justify-end">
-          <div class="w-[70%]">
+          <div class="w-[80%]">
             <ScreenshotFrame src="/screenshots/hero-laptop.png" :alt="t('home.hero.laptopScreenshotAlt')" />
           </div>
-          <div class="w-[32%] -ml-16 translate-y-14">
+          <div class="w-[23%] -ml-10 translate-y-10">
             <ScreenshotFrame src="/screenshots/hero-mobile.png" :alt="t('home.hero.mobileScreenshotAlt')" />
           </div>
         </div>
