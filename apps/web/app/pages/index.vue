@@ -38,10 +38,12 @@ const faqItems = computed(() =>
 <template>
   <div class="flex flex-col gap-24 pb-24 sm:gap-32">
     <!-- Hero -->
-    <section class="relative overflow-hidden">
+    <section class="relative z-0 overflow-hidden">
+      <div class="pointer-events-none absolute inset-y-0 left-0 -z-20 hidden w-1/2 bg-gradient-to-br from-surface to-background lg:block" aria-hidden="true" />
+      <div class="pointer-events-none absolute inset-y-0 right-0 -z-20 hidden w-1/2 bg-gradient-to-br from-secondary to-secondary-dark lg:block" aria-hidden="true" />
       <div class="pointer-events-none absolute inset-0 -z-10 bg-dot-grid opacity-50" aria-hidden="true" />
 
-      <div class="grid w-full grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.4fr] lg:gap-10 xl:px-12">
+      <div class="grid w-full grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-10 xl:px-12">
         <div class="flex flex-col gap-6 text-center lg:text-left">
           <h1 class="font-display text-6xl font-black leading-[1.05] tracking-tight sm:text-7xl 2xl:text-8xl">
             <span class="text-navy">{{ t('home.hero.titleMain') }}</span><br />
