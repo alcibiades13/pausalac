@@ -90,7 +90,7 @@ describe('InvoiceFormView', () => {
     const select = wrapper.find('select[id]:not([id="client"])')
     expect((select.element as HTMLSelectElement).value).toBe('service')
 
-    await wrapper.find('input[type="text"]').setValue('Konsalting')
+    await wrapper.find('input[type="text"]:not([readonly])').setValue('Konsalting')
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()
 
@@ -108,7 +108,7 @@ describe('InvoiceFormView', () => {
 
     const select = wrapper.find('select[id]:not([id="client"])')
     await select.setValue('product')
-    await wrapper.find('input[type="text"]').setValue('Widget')
+    await wrapper.find('input[type="text"]:not([readonly])').setValue('Widget')
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()
 
@@ -125,7 +125,7 @@ describe('InvoiceFormView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('Nova faktura')
 
-    await wrapper.find('input[type="text"]').setValue('X')
+    await wrapper.find('input[type="text"]:not([readonly])').setValue('X')
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()
     expect(createInvoice).toHaveBeenCalledWith(expect.objectContaining({ document_type: 'invoice' }))
@@ -140,7 +140,7 @@ describe('InvoiceFormView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('Nova profaktura')
 
-    await wrapper.find('input[type="text"]').setValue('X')
+    await wrapper.find('input[type="text"]:not([readonly])').setValue('X')
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()
     expect(createInvoice).toHaveBeenCalledWith(
@@ -157,7 +157,7 @@ describe('InvoiceFormView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('Novi avans')
 
-    await wrapper.find('input[type="text"]').setValue('X')
+    await wrapper.find('input[type="text"]:not([readonly])').setValue('X')
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()
     expect(createInvoice).toHaveBeenCalledWith(expect.objectContaining({ document_type: 'avans' }))
@@ -233,7 +233,7 @@ describe('InvoiceFormView', () => {
       const wrapper = mount(RootComponent, { global: { plugins: [guardRouter, i18n] } })
       await flushPromises()
 
-      await wrapper.find('input[type="text"]').setValue('Konsalting')
+      await wrapper.find('input[type="text"]:not([readonly])').setValue('Konsalting')
 
       const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
       await guardRouter.push('/fakture')
@@ -254,7 +254,7 @@ describe('InvoiceFormView', () => {
       await flushPromises()
 
       const confirmSpy = vi.spyOn(window, 'confirm')
-      await wrapper.find('input[type="text"]').setValue('Konsalting')
+      await wrapper.find('input[type="text"]:not([readonly])').setValue('Konsalting')
       await wrapper.find('form').trigger('submit.prevent')
       await flushPromises()
 

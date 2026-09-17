@@ -102,7 +102,10 @@ describe('AdminRulesView', () => {
 
     const inputs = wrapper.findAll('input')
     await inputs[0]!.setValue('turnover_limit')
-    await inputs[3]!.setValue('Zakon X')
+    // DatePicker (effective_from) renders two <input>s — a readonly
+    // decorative display plus the real hidden type="date" input — so
+    // "source" shifted from index 3 to 4.
+    await inputs[4]!.setValue('Zakon X')
 
     await wrapper.find('form').trigger('submit.prevent')
     await flushPromises()

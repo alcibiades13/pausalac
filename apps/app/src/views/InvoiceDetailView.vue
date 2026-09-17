@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Button, Card, Alert, Input, MoneyDisplay, Skeleton, MoneyInput } from '@pausalac/ui'
+import { Button, Card, Alert, Input, MoneyDisplay, Skeleton, MoneyInput, DatePicker } from '@pausalac/ui'
 import {
   getInvoice,
   issueInvoice,
@@ -352,7 +352,7 @@ onMounted(load)
               :label="t('dashboardInvoicesClients.invoiceDetailView.amountLabel')"
               required
             />
-            <Input v-model="paymentDate" type="date" :label="t('dashboardInvoicesClients.invoiceDetailView.paymentDateLabel')" required />
+            <DatePicker v-model="paymentDate" :label="t('dashboardInvoicesClients.invoiceDetailView.paymentDateLabel')" required />
           </div>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="flex flex-col gap-1">

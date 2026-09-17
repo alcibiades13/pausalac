@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Alert, Badge, Button, Card, Input , DataTable, type DataTableColumn } from '@pausalac/ui'
+import { Alert, Badge, Button, Card, Input, DataTable, DatePicker, type DataTableColumn } from '@pausalac/ui'
 import {
   approveAdminRegulatoryRule,
   createAdminRegulatoryRule,
@@ -116,7 +116,7 @@ onMounted(load)
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input v-model="form.identifier" :label="t('admin.adminRulesView.identifierLabel')" :disabled="saving" required />
           <Input v-model="form.version" :label="t('admin.adminRulesView.versionLabel')" type="number" :disabled="saving" required />
-          <Input v-model="form.effective_from" :label="t('admin.adminRulesView.effectiveFromLabel')" type="date" :disabled="saving" required />
+          <DatePicker v-model="form.effective_from" :label="t('admin.adminRulesView.effectiveFromLabel')" :disabled="saving" required />
           <Input v-model="form.source" :label="t('admin.adminRulesView.sourceLabel')" :disabled="saving" required />
         </div>
         <Input v-model="form.configJson" :label="t('admin.adminRulesView.configJsonLabel')" :disabled="saving" required />

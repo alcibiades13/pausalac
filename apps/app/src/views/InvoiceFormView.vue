@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Button, Card, Input, Select, Alert, Skeleton, MoneyInput } from '@pausalac/ui'
+import { Button, Card, Input, Select, Alert, Skeleton, MoneyInput, DatePicker } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
 import {
   createInvoice,
@@ -193,9 +193,9 @@ async function onSubmit() {
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Input v-model="form.issue_date" type="date" :label="t('dashboardInvoicesClients.invoiceFormView.issueDateLabel')" required />
-          <Input v-model="form.due_date" type="date" :label="t('dashboardInvoicesClients.invoiceFormView.dueDateLabel')" required />
-          <Input v-model="form.service_date" type="date" :label="t('dashboardInvoicesClients.invoiceFormView.serviceDateLabel')" required />
+          <DatePicker v-model="form.issue_date" :label="t('dashboardInvoicesClients.invoiceFormView.issueDateLabel')" required />
+          <DatePicker v-model="form.due_date" :label="t('dashboardInvoicesClients.invoiceFormView.dueDateLabel')" required />
+          <DatePicker v-model="form.service_date" :label="t('dashboardInvoicesClients.invoiceFormView.serviceDateLabel')" required />
         </div>
 
         <div class="flex flex-col gap-2">
