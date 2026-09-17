@@ -39,22 +39,25 @@ const faqItems = computed(() =>
   <div class="flex flex-col gap-24 pb-24 sm:gap-32">
     <!-- Hero -->
     <section class="relative z-0 overflow-hidden">
-      <div class="pointer-events-none absolute inset-y-0 left-0 -z-20 hidden w-1/2 bg-gradient-to-br from-surface to-background lg:block" aria-hidden="true" />
-      <div class="pointer-events-none absolute inset-y-0 right-0 -z-20 hidden w-1/2 bg-gradient-to-br from-secondary to-secondary-dark lg:block" aria-hidden="true" />
+      <div class="pointer-events-none absolute inset-0 -z-20 bg-gradient-to-br from-surface to-background" aria-hidden="true" />
+      <div
+        class="pointer-events-none absolute inset-y-0 right-0 -z-20 hidden w-1/2 bg-[radial-gradient(circle_at_100%_100%,_var(--color-primary),_transparent_60%)] opacity-20 lg:block"
+        aria-hidden="true"
+      />
       <div class="pointer-events-none absolute inset-0 -z-10 bg-dot-grid opacity-50" aria-hidden="true" />
 
       <div class="grid w-full grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-10 xl:px-12">
-        <div class="flex flex-col gap-6 text-center lg:text-left">
+        <div class="flex flex-col items-center gap-6 text-center">
           <h1 class="font-display text-6xl font-black leading-[1.05] tracking-tight sm:text-7xl 2xl:text-8xl">
             <span class="text-navy">{{ t('home.hero.titleMain') }}</span><br />
             <span class="text-text-secondary">{{ t('home.hero.titleAccent') }}</span>
           </h1>
 
-          <p class="max-w-xl text-lg text-text-secondary lg:mx-0">
+          <p class="max-w-xl text-lg text-text-secondary">
             {{ t('home.hero.subtitle') }}
           </p>
 
-          <div class="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+          <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <a :href="`${config.public.appUrl}/registracija`" target="_blank" rel="noopener noreferrer">
               <Button class="w-full gap-2 sm:w-auto">
                 {{ t('home.hero.ctaPrimary') }}
