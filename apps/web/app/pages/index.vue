@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Card, Button } from '@pausalac/ui'
-import AttentionMockup from '~/components/AttentionMockup.vue'
-import PhoneMockup from '~/components/PhoneMockup.vue'
 import PricingCard from '~/components/PricingCard.vue'
 import Icon from '~/components/Icon.vue'
 import Kicker from '~/components/Kicker.vue'
@@ -43,7 +41,7 @@ const faqItems = computed(() =>
     <section class="relative overflow-hidden">
       <div class="pointer-events-none absolute inset-0 -z-10 bg-dot-grid opacity-50" aria-hidden="true" />
 
-      <div class="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-10">
+      <div class="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.3fr] lg:gap-10">
         <div class="flex flex-col gap-6 text-center lg:text-left">
           <h1 class="font-display text-5xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
             <span class="text-navy">{{ t('home.hero.titleMain') }}</span><br />
@@ -69,12 +67,12 @@ const faqItems = computed(() =>
           <p class="text-sm text-text-secondary">{{ t('home.hero.trust') }}</p>
         </div>
 
-        <div v-reveal class="relative flex items-center justify-center gap-5 py-6 lg:justify-end lg:pr-4">
-          <div class="w-[58%]">
-            <AttentionMockup />
+        <div v-reveal class="relative flex items-center justify-center py-6 lg:justify-end">
+          <div class="w-[70%]">
+            <ScreenshotFrame src="/screenshots/hero-laptop.png" :alt="t('home.hero.laptopScreenshotAlt')" />
           </div>
-          <div class="w-[38%] translate-y-12">
-            <PhoneMockup />
+          <div class="w-[32%] -ml-16 translate-y-14">
+            <ScreenshotFrame src="/screenshots/hero-mobile.png" :alt="t('home.hero.mobileScreenshotAlt')" />
           </div>
         </div>
       </div>

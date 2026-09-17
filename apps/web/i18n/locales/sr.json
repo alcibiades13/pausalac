@@ -34,7 +34,9 @@
       "subtitle": "Fakture, naplate, KPO, limiti i poreske obaveze - objedinjeni u preglednom sistemu za jednostavno poslovanje.",
       "ctaPrimary": "Probaj besplatno",
       "ctaSecondary": "Vidi kako radi",
-      "trust": "14 dana besplatno · Bez potrebe za karticom"
+      "trust": "14 dana besplatno · Bez potrebe za karticom",
+      "laptopScreenshotAlt": "Dashboard Pausalac aplikacije na laptopu — lista 'Zahteva pažnju' i kartice paušalnog i PDV limita",
+      "mobileScreenshotAlt": "Dashboard Pausalac aplikacije na mobilnom telefonu — lista 'Zahteva pažnju' i donja navigacija"
     },
     "kickers": {
       "kakoRadi": "Kako radi",
@@ -278,21 +280,6 @@
           }
         ]
       }
-    }
-  },
-  "mockup": {
-    "windowLabel": "Početna",
-    "attentionTitle": "3 stvari zahtevaju tvoju pažnju",
-    "badge": "Pogledaj",
-    "item1": "Faktura #2026-014 kasni 6 dana",
-    "item2": "Ostalo ti je 18% do godišnjeg limita",
-    "item3": "Poreska obaveza dospeva za 4 dana",
-    "phoneLabel": "Naplaćeno ovog meseca",
-    "phoneToast": "Faktura #2026-015 plaćena",
-    "phoneNav": {
-      "fakture": "Fakture",
-      "limiti": "Limiti",
-      "dokumenti": "Dokumenti"
     }
   },
   "cenovnik": {

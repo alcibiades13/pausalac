@@ -34,7 +34,9 @@
       "subtitle": "Invoices, collections, revenue ledger, limits and tax obligations — unified in one clear system for simple bookkeeping.",
       "ctaPrimary": "Try for free",
       "ctaSecondary": "See how it works",
-      "trust": "14 days free · No card required"
+      "trust": "14 days free · No card required",
+      "laptopScreenshotAlt": "Pausalac dashboard on a laptop — the 'Needs attention' list and flat-rate/VAT limit cards",
+      "mobileScreenshotAlt": "Pausalac dashboard on a phone — the 'Needs attention' list and bottom navigation"
     },
     "kickers": {
       "kakoRadi": "How it works",
@@ -278,21 +280,6 @@
           }
         ]
       }
-    }
-  },
-  "mockup": {
-    "windowLabel": "Home",
-    "attentionTitle": "3 things need your attention",
-    "badge": "View",
-    "item1": "Invoice #2026-014 is 6 days late",
-    "item2": "You have 18% left under your annual limit",
-    "item3": "A tax obligation is due in 4 days",
-    "phoneLabel": "Collected this month",
-    "phoneToast": "Invoice #2026-015 paid",
-    "phoneNav": {
-      "fakture": "Invoices",
-      "limiti": "Limits",
-      "dokumenti": "Documents"
     }
   },
   "cenovnik": {
