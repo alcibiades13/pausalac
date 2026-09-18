@@ -116,7 +116,7 @@ const moduleSpotlight = computed(() =>
     <section v-reveal class="mx-auto w-full max-w-6xl px-4 sm:px-6">
       <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div class="text-center lg:text-left">
-          <Kicker :text="t('home.kickers.jedanStatus')" class="mb-4 justify-center lg:justify-start" />
+          <Kicker :text="t('home.kickers.jedanStatus')" align="center-until-lg" class="mb-4" />
           <h2 class="font-display text-2xl font-semibold text-navy sm:text-3xl">{{ t('home.attention.heading') }}</h2>
           <p class="mt-4 text-text-secondary">
             {{ t('home.attention.body') }}
@@ -224,7 +224,7 @@ const moduleSpotlight = computed(() =>
          (sm+) make the "three steps in sequence" claim visually obvious
          instead of just three cards that happen to sit in a row. -->
     <section class="mx-auto w-full max-w-6xl px-4 sm:px-6">
-      <Kicker v-reveal :text="t('home.kickers.fakturisanje')" class="mb-6 justify-center" />
+      <Kicker v-reveal :text="t('home.kickers.fakturisanje')" align="center" class="mb-6" />
       <h2 v-reveal class="mb-16 text-center font-display text-2xl font-semibold text-navy">
         {{ t('home.steps.heading') }}
       </h2>
@@ -259,7 +259,7 @@ const moduleSpotlight = computed(() =>
     <!-- Poređenje -->
     <section class="border-y border-border bg-surface py-20">
       <div class="mx-auto w-full max-w-4xl px-4 sm:px-6">
-        <Kicker v-reveal :text="t('home.kickers.poredjenje')" class="mb-6 justify-center" />
+        <Kicker v-reveal :text="t('home.kickers.poredjenje')" align="center" class="mb-6" />
         <h2 v-reveal class="mb-8 text-center font-display text-2xl font-semibold text-navy">
           {{ t('home.comparison.heading') }}
         </h2>
@@ -300,7 +300,7 @@ const moduleSpotlight = computed(() =>
 
     <!-- Cenovnik preview -->
     <section class="mx-auto w-full max-w-6xl px-4 sm:px-6">
-      <Kicker v-reveal :text="t('home.kickers.cenovnik')" class="mb-6 justify-center" />
+      <Kicker v-reveal :text="t('home.kickers.cenovnik')" align="center" class="mb-6" />
       <h2 v-reveal class="mb-8 text-center font-display text-2xl font-semibold text-navy">
         {{ t('home.pricing.heading') }}
       </h2>
@@ -320,7 +320,7 @@ const moduleSpotlight = computed(() =>
          static card grid), and reduces friction right before the pricing
          preview above and the final CTA below. -->
     <section class="mx-auto w-full max-w-3xl px-4 sm:px-6">
-      <Kicker v-reveal :text="t('home.kickers.faq')" class="mb-6 justify-center" />
+      <Kicker v-reveal :text="t('home.kickers.faq')" align="center" class="mb-6" />
       <h2 v-reveal class="mb-8 text-center font-display text-2xl font-semibold text-navy">
         {{ t('home.faq.heading') }}
       </h2>
@@ -329,7 +329,7 @@ const moduleSpotlight = computed(() =>
 
     <!-- Baza znanja teaser -->
     <section class="mx-auto w-full max-w-6xl px-4 sm:px-6">
-      <Kicker v-reveal :text="t('home.knowledgeBase.kicker')" class="mb-6 justify-center" />
+      <Kicker v-reveal :text="t('home.knowledgeBase.kicker')" align="center" class="mb-6" />
       <h2 v-reveal class="mb-3 text-center font-display text-2xl font-semibold text-navy">
         {{ t('home.knowledgeBase.heading') }}
       </h2>

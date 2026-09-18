@@ -21,7 +21,7 @@ useHead({
 
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-20 px-4 py-16 sm:px-6 sm:py-24">
       <div v-reveal class="text-center">
-        <Kicker :text="t('home.kickers.cenovnik')" class="justify-center" />
+        <Kicker :text="t('home.kickers.cenovnik')" align="center" />
         <h1 class="mt-4 font-display text-3xl font-semibold text-navy sm:text-4xl">
           {{ t('cenovnik.heading') }}
         </h1>
