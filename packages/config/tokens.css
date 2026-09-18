@@ -34,7 +34,7 @@
  * (the lighter aa76ff end of that gradient is still a real, disclosed
  * soft spot, not a false claim that gradient buttons are fully AA).
  *
- * The Google Fonts @import for Inter/Plus Jakarta Sans/IBM Plex Mono
+ * The Google Fonts @import for Inter/Poppins/IBM Plex Mono
  * (referenced below) lives in each consuming app's own main.css, as the
  * very first line — NOT here. A CSS `@import` must precede every other
  * rule in the final compiled stylesheet; nesting it inside this file
@@ -80,7 +80,7 @@
   --font-sans:
     "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display:
-    "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+    "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }

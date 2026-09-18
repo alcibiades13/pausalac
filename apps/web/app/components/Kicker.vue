@@ -5,11 +5,11 @@ defineProps<{ text: string; tone?: 'default' | 'inverted' }>()
 <template>
   <span
     :class="[
-      'inline-flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-wider',
-      tone === 'inverted' ? 'text-white/60' : 'text-text-secondary',
+      'flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-wider',
+      tone === 'inverted' ? 'text-white/60' : 'text-primary-dark',
     ]"
   >
-    <span :class="['h-px w-4', tone === 'inverted' ? 'bg-white/30' : 'bg-border']" aria-hidden="true" />
+    <span :class="['h-px w-4', tone === 'inverted' ? 'bg-white/30' : 'bg-primary-dark/40']" aria-hidden="true" />
     {{ text }}
   </span>
 </template>

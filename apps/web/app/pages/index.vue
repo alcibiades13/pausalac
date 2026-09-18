@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Card, Button } from '@pausalac/ui'
 import PricingCard from '~/components/PricingCard.vue'
 import Icon from '~/components/Icon.vue'
@@ -33,6 +33,19 @@ const STEP_NUMBERS = ['01', '02', '03']
 const faqItems = computed(() =>
   (tm('home.faq.items') as { q: any; a: any }[]).map((item) => ({ q: rt(item.q), a: rt(item.a) })),
 )
+
+// "Sve na jednom mestu" tabs — one active module at a time (real
+// screenshot + its own description large enough to actually read,
+// rather than three small alternating blocks) instead of a static
+// alternating-image list.
+const activeModuleTab = ref(0)
+const moduleSpotlight = computed(() =>
+  (tm('home.modules.spotlight') as { title: any; body: any; screenshotAlt: any }[]).map((item) => ({
+    title: rt(item.title),
+    body: rt(item.body),
+    screenshotAlt: rt(item.screenshotAlt),
+  })),
+)
 </script>
 
 <template>
@@ -46,16 +59,25 @@ const faqItems = computed(() =>
       />
       <div class="pointer-events-none absolute inset-0 -z-10 bg-dot-grid opacity-50" aria-hidden="true" />
 
-      <div class="grid w-full grid-cols-1 items-center gap-14 px-4 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-10 xl:px-12">
+      <div class="grid w-full grid-cols-1 items-center gap-14 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-10 xl:px-12">
         <div class="flex flex-col items-center gap-6 text-center lg:mx-auto lg:w-fit lg:items-start lg:text-left">
           <h1 class="font-display text-6xl font-black leading-[1.05] tracking-tight sm:text-7xl 2xl:text-8xl">
             <span class="text-navy">{{ t('home.hero.titleMain') }}</span><br />
             <span class="text-text-secondary">{{ t('home.hero.titleAccent') }}</span>
           </h1>
 
-          <p class="max-w-xl text-lg text-text-secondary">
-            {{ t('home.hero.subtitle') }}
-          </p>
+          <ul class="flex flex-col gap-3 text-left">
+            <li
+              v-for="(fact, i) in tm('home.hero.facts')"
+              :key="i"
+              class="flex items-start gap-3 text-lg text-text-secondary"
+            >
+              <span class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary-dark">
+                <Icon name="check" :size="12" />
+              </span>
+              {{ rt(fact) }}
+            </li>
+          </ul>
 
           <div class="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <a :href="`${config.public.appUrl}/registracija`" target="_blank" rel="noopener noreferrer">
@@ -136,10 +158,11 @@ const faqItems = computed(() =>
       </div>
     </section>
 
-    <!-- Sve na jednom mestu — 3 spotlight modules with real screenshots,
-         alternating left/right so the section isn't another uniform
-         centered grid, plus the remaining 3 modules as a smaller
-         supporting icon+text row underneath. -->
+    <!-- Sve na jednom mestu — a tabbed switcher over the 3 modules with
+         real screenshots (one big screenshot + a properly-sized
+         description at a time, not three small alternating blocks),
+         plus the remaining 3 modules as a smaller supporting icon+text
+         row underneath. -->
     <section class="bg-navy py-20 text-white">
       <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <Kicker v-reveal :text="t('home.kickers.moduli')" tone="inverted" class="mb-6" />
@@ -150,21 +173,29 @@ const faqItems = computed(() =>
           </p>
         </div>
 
-        <div class="mt-14 flex flex-col gap-16">
-          <div
-            v-for="(item, i) in tm('home.modules.spotlight')"
-            :key="i"
-            v-reveal
-            class="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-14"
-          >
-            <div :class="i % 2 === 1 ? 'lg:order-2' : ''">
-              <h3 class="font-display text-xl font-semibold">{{ rt(item.title) }}</h3>
-              <p class="mt-2 text-white/60">{{ rt(item.body) }}</p>
-            </div>
-            <div :class="i % 2 === 1 ? 'lg:order-1' : ''">
-              <ScreenshotFrame :src="SPOTLIGHT_SCREENSHOTS[i]" :alt="rt(item.screenshotAlt)" />
-            </div>
+        <div v-reveal class="mt-14 lg:grid lg:grid-cols-[240px_1fr] lg:items-start lg:gap-14">
+          <div class="mb-8 flex gap-2 overflow-x-auto pb-1 lg:mb-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
+            <button
+              v-for="(item, i) in moduleSpotlight"
+              :key="i"
+              type="button"
+              class="shrink-0 rounded-lg px-4 py-3 text-left font-display text-sm font-semibold transition-colors lg:shrink"
+              :class="activeModuleTab === i ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white/80'"
+              @click="activeModuleTab = i"
+            >
+              {{ item.title }}
+            </button>
           </div>
+
+          <Transition name="fade-slide" mode="out-in">
+            <div :key="activeModuleTab">
+              <p class="mb-6 max-w-xl text-lg text-white/70">{{ moduleSpotlight[activeModuleTab]?.body }}</p>
+              <ScreenshotFrame
+                :src="SPOTLIGHT_SCREENSHOTS[activeModuleTab]"
+                :alt="moduleSpotlight[activeModuleTab]?.screenshotAlt ?? ''"
+              />
+            </div>
+          </Transition>
         </div>
 
         <div class="mt-16 grid grid-cols-1 gap-x-10 border-t border-white/10 pt-10 sm:grid-cols-3">
@@ -189,22 +220,36 @@ const faqItems = computed(() =>
 
     <!-- Fakturisanje flow — mini real screenshots of each step instead of
          abstract icon cards, proving the "tri koraka" claim rather than
-         just stating it. -->
+         just stating it. Numbered badges + a connecting timeline line
+         (sm+) make the "three steps in sequence" claim visually obvious
+         instead of just three cards that happen to sit in a row. -->
     <section class="mx-auto w-full max-w-6xl px-4 sm:px-6">
       <Kicker v-reveal :text="t('home.kickers.fakturisanje')" class="mb-6 justify-center" />
-      <h2 v-reveal class="mb-12 text-center font-display text-2xl font-semibold text-navy">
+      <h2 v-reveal class="mb-16 text-center font-display text-2xl font-semibold text-navy">
         {{ t('home.steps.heading') }}
       </h2>
-      <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
+      <div class="relative grid grid-cols-1 gap-12 sm:grid-cols-3 sm:gap-8">
+        <div
+          class="pointer-events-none absolute inset-x-0 top-6 hidden h-px bg-gradient-to-r from-transparent via-border to-transparent sm:block"
+          aria-hidden="true"
+        />
         <div
           v-for="(item, i) in tm('home.steps.items')"
           :key="i"
           v-reveal
-          :style="{ transitionDelay: `${i * 100}ms` }"
-          class="flex flex-col gap-3"
+          :style="{ transitionDelay: `${i * 120}ms` }"
+          class="relative flex flex-col items-center gap-4 text-center"
         >
-          <span class="font-mono text-xs text-text-secondary">{{ STEP_NUMBERS[i] }}</span>
-          <ScreenshotFrame :src="STEP_SCREENSHOTS[i]" :alt="rt(item.screenshotAlt)" />
+          <span
+            class="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark font-display text-lg font-bold text-white shadow-[0_10px_30px_-8px_rgba(170,118,255,0.55)]"
+          >
+            {{ STEP_NUMBERS[i] }}
+          </span>
+          <ScreenshotFrame
+            class="w-full transition-transform duration-300 hover:-translate-y-1"
+            :src="STEP_SCREENSHOTS[i]"
+            :alt="rt(item.screenshotAlt)"
+          />
           <h3 class="font-medium text-navy">{{ rt(item.title) }}</h3>
           <p class="text-sm text-text-secondary">{{ rt(item.body) }}</p>
         </div>
@@ -342,3 +387,20 @@ const faqItems = computed(() =>
     </section>
   </div>
 </template>
+
+<style scoped>
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+</style>

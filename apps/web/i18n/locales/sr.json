@@ -31,7 +31,12 @@
     "hero": {
       "titleMain": "Tvoj paušal,",
       "titleAccent": "na autopilotu.",
-      "subtitle": "Fakture, naplate, KPO, limiti i poreske obaveze - objedinjeni u preglednom sistemu za jednostavno poslovanje.",
+      "facts": [
+        "Vidiš tačno koliko si zaradio i koliko ti je ostalo do limita",
+        "Faktura se šalje i naplata se prati bez ijedne Excel tabele",
+        "KPO se vodi sam, iz stvarnih transakcija — ne ručno",
+        "Javljamo ti samo kad nešto stvarno traži tvoju pažnju"
+      ],
       "ctaPrimary": "Probaj besplatno",
       "ctaSecondary": "Vidi kako radi",
       "trust": "14 dana besplatno · Bez potrebe za karticom",

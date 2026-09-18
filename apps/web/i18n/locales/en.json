@@ -31,7 +31,12 @@
     "hero": {
       "titleMain": "Your flat-rate business,",
       "titleAccent": "on autopilot.",
-      "subtitle": "Invoices, collections, revenue ledger, limits and tax obligations — unified in one clear system for simple bookkeeping.",
+      "facts": [
+        "See exactly how much you've earned and how much room is left under your limit",
+        "Invoices go out and get tracked to payment without a single spreadsheet",
+        "The revenue ledger keeps itself, from real transactions — not by hand",
+        "We only ping you when something genuinely needs your attention"
+      ],
       "ctaPrimary": "Try for free",
       "ctaSecondary": "See how it works",
       "trust": "14 days free · No card required",
