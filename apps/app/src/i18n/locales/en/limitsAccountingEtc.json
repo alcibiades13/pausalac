@@ -20,10 +20,36 @@
     "projectionLabel": "Projected by period end:",
     "projectionSuffix": "(estimate)"
   },
+  "charts": {
+    "limitProgress": {
+      "title": "Progress toward the limit",
+      "thresholdLabel": "Limit",
+      "projectedSuffix": "estimate",
+      "emptyTitle": "No data for this year yet.",
+      "emptyDescription": "The chart will fill in as soon as you issue your first invoice."
+    },
+    "kpoMonthly": {
+      "title": "KPO by month",
+      "products": "Products",
+      "services": "Services",
+      "emptyTitle": "No KPO turnover this year yet.",
+      "emptyDescription": "The chart will fill in as soon as you issue your first invoice."
+    },
+    "clientStatusDistribution": {
+      "title": "Client status",
+      "ok": "OK",
+      "attention": "Attention",
+      "critical": "Critical",
+      "emptyTitle": "No connected clients yet.",
+      "emptyDescription": "The chart will fill in once your first client connects."
+    }
+  },
   "kpoListView": {
     "title": "KPO",
     "exportPdf": "Export PDF",
     "exportExcel": "Export Excel",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Description...",
     "dateFromLabel": "From",
     "dateToLabel": "To",
     "retryButton": "Try again",
@@ -91,6 +117,11 @@
     "loadError": "We can't load your documents right now.",
     "emptyTitle": "No documents yet.",
     "emptyDescription": "Upload your first document above.",
+    "columnTitle": "Title",
+    "columnCategory": "Category",
+    "columnFile": "File",
+    "columnSize": "Size",
+    "columnCreatedAt": "Uploaded",
     "openLink": "Open",
     "deleteButton": "Delete",
     "uploadError": "We can't upload the file right now.",
@@ -171,11 +202,6 @@
     "portfolioStatusOk": "OK",
     "portfolioStatusAttention": "Attention",
     "portfolioStatusCritical": "Critical",
-    "sortByLabel": "Sort by",
-    "sortNameAsc": "Name (A-Z)",
-    "sortNameDesc": "Name (Z-A)",
-    "sortRevenueDesc": "Revenue (descending)",
-    "sortRevenueAsc": "Revenue (ascending)",
     "portfolioLoadError": "We can't load the client overview right now.",
     "emptyPortfolioTitle": "No active clients.",
     "emptyPortfolioDescription": "Once a client accepts a connection request, they'll appear here.",

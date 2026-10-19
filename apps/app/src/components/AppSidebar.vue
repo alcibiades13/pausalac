@@ -16,7 +16,14 @@ withDefaults(defineProps<{ navLabel?: string }>(), { navLabel: 'Glavna navigacij
   <aside
     class="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r border-border bg-surface sm:flex"
   >
-    <div class="flex items-center gap-2 border-b border-border px-4 py-4">
+    <!--
+      h-16 to match the top header's own `h-16` (AppShell.vue/
+      AdminShell.vue) exactly — `py-4` alone came out a few px shorter
+      since it sized to the slot content instead of a fixed height, so
+      the sidebar's own border-bottom sat visibly above the top header's,
+      even though both borders are meant to read as one continuous line.
+    -->
+    <div class="flex h-16 items-center gap-2 border-b border-border px-4">
       <slot name="header" />
     </div>
     <nav class="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4" :aria-label="navLabel">

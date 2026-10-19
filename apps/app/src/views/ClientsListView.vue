@@ -1,47 +1,53 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Button, Card, Input, Alert, EmptyState, Skeleton, Pagination } from '@pausalac/ui'
+import { Button, Card, Input, Alert, EmptyState, DataTable, Pagination, Skeleton, type DataTableColumn } from '@pausalac/ui'
 import { listClients, type Client } from '@/services/clients'
-import { ApiError } from '@/lib/api'
+import { useTableQuery } from '@/composables/useTableQuery'
+import { formatDate } from '@/lib/formatDate'
 
 const { t } = useI18n()
-const clients = ref<Client[]>([])
-const status = ref<'loading' | 'ready' | 'error'>('loading')
-const errorMessage = ref('')
-const searchTerm = ref('')
-const page = ref(1)
-const hasNext = ref(false)
-const hasPrevious = ref(false)
+const router = useRouter()
 
-async function load() {
-  status.value = 'loading'
-  try {
-    const result = await listClients({ page: page.value, search: searchTerm.value || undefined })
-    clients.value = result.results
-    hasNext.value = result.next !== null
-    hasPrevious.value = result.previous !== null
-    status.value = 'ready'
-  } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError ? error.message : t('dashboardInvoicesClients.clientsListView.loadError')
-    status.value = 'error'
-  }
-}
+const columns: DataTableColumn<Client>[] = [
+  { key: 'name', label: t('dashboardInvoicesClients.clientsListView.columnName'), sortable: true },
+  { key: 'tax_id', label: t('dashboardInvoicesClients.clientsListView.columnTaxId') },
+  { key: 'email', label: t('dashboardInvoicesClients.clientsListView.columnEmail') },
+  { key: 'client_type', label: t('dashboardInvoicesClients.clientsListView.columnType') },
+  { key: 'created_at', label: t('dashboardInvoicesClients.clientsListView.columnCreatedAt'), sortable: true },
+]
+
+const {
+  rows: clients,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  search,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+  reload,
+} = useTableQuery<Client>(
+  (q) =>
+    listClients({
+      page: q.page,
+      pageSize: q.pageSize,
+      search: q.search,
+      ordering: q.ordering,
+    }),
+  { genericErrorMessage: t('dashboardInvoicesClients.clientsListView.loadError') },
+)
 
 onMounted(load)
-watch(searchTerm, () => {
-  page.value = 1
-  load()
-})
 
-function goNext() {
-  page.value += 1
-  load()
-}
-function goPrevious() {
-  page.value = Math.max(1, page.value - 1)
-  load()
+function onRowClick(client: Client) {
+  router.push({ name: 'client-detail', params: { id: client.id } })
 }
 </script>
 
@@ -56,13 +62,13 @@ function goPrevious() {
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">{{ t('dashboardInvoicesClients.clientsListView.retryButton') }}</button>
+      <button class="ml-2 underline" @click="reload">{{ t('dashboardInvoicesClients.clientsListView.retryButton') }}</button>
     </Alert>
 
     <Card v-else>
       <div class="border-b border-border pb-4">
         <Input
-          v-model="searchTerm"
+          v-model="search"
           label-sr-only
           :label="t('dashboardInvoicesClients.clientsListView.searchLabel')"
           :placeholder="t('dashboardInvoicesClients.clientsListView.searchPlaceholder')"
@@ -70,7 +76,7 @@ function goPrevious() {
         />
       </div>
 
-      <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
+      <Skeleton v-if="status === 'loading' && clients.length === 0" class="mt-4" :count="3" />
 
       <EmptyState
         v-else-if="clients.length === 0"
@@ -86,24 +92,39 @@ function goPrevious() {
       </EmptyState>
 
       <template v-else>
-        <ul class="flex flex-col divide-y divide-border">
-          <li v-for="c in clients" :key="c.id" class="py-3">
-            <RouterLink
-              :to="{ name: 'client-detail', params: { id: c.id } }"
-              class="-mx-2 flex flex-col gap-1 rounded-lg px-2 py-1 hover:bg-background sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <p class="font-medium text-navy">{{ c.name }}</p>
-                <p class="text-sm text-text-secondary">{{ c.email || c.phone || '—' }}</p>
-              </div>
-              <span class="text-sm text-text-secondary">
-                {{ t(`dashboardInvoicesClients.clientsListView.clientTypeLabels.${c.client_type}`) }}
-              </span>
-            </RouterLink>
-          </li>
-        </ul>
+        <DataTable
+          class="mt-4"
+          :columns="columns"
+          :rows="clients"
+          :loading="status === 'loading'"
+          :sort="sort"
+          row-clickable
+          @sort="onSort"
+          @row-click="onRowClick"
+        >
+          <template #cell-name="{ row }">
+            <span class="font-medium text-navy">{{ row.name }}</span>
+          </template>
+          <template #cell-email="{ row }">
+            {{ row.email || row.phone || '—' }}
+          </template>
+          <template #cell-client_type="{ row }">
+            {{ t(`dashboardInvoicesClients.clientsListView.clientTypeLabels.${row.client_type}`) }}
+          </template>
+          <template #cell-created_at="{ row }">
+            {{ formatDate(row.created_at) }}
+          </template>
+        </DataTable>
 
-        <Pagination class="mt-4" :has-next="hasNext" :has-previous="hasPrevious" @next="goNext" @previous="goPrevious" />
+        <Pagination
+          class="mt-4"
+          :has-next="hasNext"
+          :has-previous="hasPrevious"
+          :page="page"
+          :total-pages="totalPages"
+          @next="nextPage"
+          @previous="prevPage"
+        />
       </template>
     </Card>
   </div>

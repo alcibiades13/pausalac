@@ -26,6 +26,19 @@ export interface LimitsSimulation {
   after: Limits
 }
 
+export interface LimitHistoryPoint {
+  month: string
+  cumulative: string
+}
+
+export interface LimitHistory {
+  year: number
+  threshold: string
+  currency: string
+  history: LimitHistoryPoint[]
+  projection: LimitHistoryPoint[]
+}
+
 function currentCompanyId(): number {
   const id = useCompanyStore().currentCompanyId
   if (id === null) {
@@ -43,5 +56,12 @@ export function simulateLimits(amount: string): Promise<LimitsSimulation> {
     method: 'POST',
     companyId: currentCompanyId(),
     body: { amount },
+  })
+}
+
+export function getLimitHistory(year?: number): Promise<LimitHistory> {
+  return apiFetch<LimitHistory>('limits/pausal/history/', {
+    companyId: currentCompanyId(),
+    params: { year },
   })
 }

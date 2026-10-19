@@ -1,25 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Alert, Button , DataTable, type DataTableColumn } from '@pausalac/ui'
+import { Alert, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import { listAdminAuditLog, type AdminAuditLogEntry } from '@/services/admin'
-import { ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/formatDate'
+import { useTableQuery } from '@/composables/useTableQuery'
 
 const { t } = useI18n()
-
-const entries = ref<AdminAuditLogEntry[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const page = ref(1)
-const hasNext = ref(false)
-const hasPrevious = ref(false)
 
 const columns = computed<DataTableColumn<AdminAuditLogEntry>[]>(() => [
   {
     key: 'created_at',
     label: t('admin.adminAuditLogView.createdAtColumn'),
     format: (r) => formatDateTime(r.created_at),
+    sortable: true,
   },
   {
     key: 'actor_email',
@@ -31,30 +25,23 @@ const columns = computed<DataTableColumn<AdminAuditLogEntry>[]>(() => [
   { key: 'action', label: t('admin.adminAuditLogView.actionColumn') },
 ])
 
-async function load() {
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    const result = await listAdminAuditLog({ page: page.value })
-    entries.value = result.results
-    hasNext.value = result.next !== null
-    hasPrevious.value = result.previous !== null
-  } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError ? error.message : t('admin.adminAuditLogView.loadError')
-  } finally {
-    loading.value = false
-  }
-}
-
-function goNext() {
-  page.value += 1
-  load()
-}
-function goPrevious() {
-  page.value = Math.max(1, page.value - 1)
-  load()
-}
+const {
+  rows: entries,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+} = useTableQuery<AdminAuditLogEntry>(
+  (q) => listAdminAuditLog({ page: q.page, page_size: q.pageSize, search: q.search, ordering: q.ordering }),
+  { genericErrorMessage: t('admin.adminAuditLogView.loadError') },
+)
 
 onMounted(load)
 </script>
@@ -68,13 +55,19 @@ onMounted(load)
     <DataTable
       :columns="columns"
       :rows="entries"
-      :loading="loading"
+      :loading="status === 'loading'"
+      :sort="sort"
       :empty-title="t('admin.adminAuditLogView.emptyTitle')"
+      @sort="onSort"
     />
 
-    <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">{{ t('admin.adminAuditLogView.previousButton') }}</Button>
-      <Button variant="secondary" :disabled="!hasNext" @click="goNext">{{ t('admin.adminAuditLogView.nextButton') }}</Button>
-    </div>
+    <Pagination
+      :has-next="hasNext"
+      :has-previous="hasPrevious"
+      :page="page"
+      :total-pages="totalPages"
+      @next="nextPage"
+      @previous="prevPage"
+    />
   </div>
 </template>

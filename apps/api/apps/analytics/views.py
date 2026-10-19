@@ -5,10 +5,7 @@ doing" in one call.
 """
 
 from datetime import date
-from decimal import Decimal
 
-from django.db.models import Sum, Value
-from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -16,17 +13,10 @@ from rest_framework.views import APIView
 
 from apps.companies.onboarding import compute_onboarding_status
 from apps.companies.permissions import HasCompanyPermission
-from apps.invoices.ledger import sum_issued_revenue
-from apps.invoices.models import Invoice
+from apps.invoices.ledger import monthly_issued_revenue, outstanding_summary, sum_issued_revenue
 from apps.limits.services import LimitsService
 from apps.taxes.models import TaxObligation, TaxResolution
-
-OUTSTANDING_STATUSES = [
-    Invoice.Status.ISSUED,
-    Invoice.Status.SENT,
-    Invoice.Status.PARTIALLY_PAID,
-    Invoice.Status.OVERDUE,
-]
+from config.pluralize import pluralize_sr
 
 
 class DashboardView(APIView):
@@ -40,6 +30,11 @@ class DashboardView(APIView):
         onboarding = compute_onboarding_status(company)
         limits = LimitsService.compute_all(company)
         next_obligation = self._next_obligation(company)
+        overdue_obligation = self._overdue_obligation(company)
+
+        overdue_invoices_phrase = pluralize_sr(
+            outstanding["overdue_count"], "faktura kasni", "fakture kasne", "faktura kasni"
+        )
 
         attention = []
         if outstanding["overdue_count"]:
@@ -47,7 +42,7 @@ class DashboardView(APIView):
                 {
                     "type": "overdue_invoices",
                     "message": (
-                        f"{outstanding['overdue_count']} faktura(e) kasni sa ukupno "
+                        f"{outstanding['overdue_count']} {overdue_invoices_phrase} sa ukupno "
                         f"{outstanding['overdue_total']} {company.default_currency} potraživanja."
                     ),
                     "action": {"route": "invoices", "query": {"status": "overdue"}},
@@ -76,11 +71,17 @@ class DashboardView(APIView):
             TaxResolution.objects.for_company(company).filter(documents__isnull=True).count()
         )
         if missing_document_count:
+            missing_document_phrase = pluralize_sr(
+                missing_document_count,
+                "poresko rešenje nema",
+                "poreska rešenja nemaju",
+                "poreskih rešenja nema",
+            )
             attention.append(
                 {
                     "type": "tax_resolution_missing_document",
                     "message": (
-                        f"{missing_document_count} poresko(a) rešenje(a) nema priložen dokument."
+                        f"{missing_document_count} {missing_document_phrase} priložen dokument."
                     ),
                     "action": {"route": "documents"},
                 }
@@ -107,14 +108,14 @@ class DashboardView(APIView):
                 }
             )
 
-        obligation_overdue = next_obligation is not None and next_obligation["status"] == "overdue"
+        obligation_overdue = overdue_obligation is not None
         if obligation_overdue:
             attention.append(
                 {
                     "type": "tax_obligation_overdue",
                     "message": (
-                        f"Poreska obaveza za {next_obligation['period_start']} kasni "
-                        f"({next_obligation['total_amount']} {company.default_currency})."
+                        f"Poreska obaveza za {overdue_obligation['period_start']} kasni "
+                        f"({overdue_obligation['total_amount']} {company.default_currency})."
                     ),
                     "action": {"route": "obligations"},
                 }
@@ -143,10 +144,11 @@ class DashboardView(APIView):
         elif subscription is not None and subscription.status == Subscription.Status.TRIALING:
             days_left = (subscription.trial_ends_at.date() - timezone.now().date()).days
             if days_left <= 3:
+                days_word = pluralize_sr(days_left, "dan", "dana", "dana")
                 attention.append(
                     {
                         "type": "trial_ending_soon",
-                        "message": f"Probni period ističe za {days_left} dan(a).",
+                        "message": f"Probni period ističe za {days_left} {days_word}.",
                         "action": {"route": "subscription"},
                     }
                 )
@@ -160,7 +162,9 @@ class DashboardView(APIView):
         if is_critical:
             reasons = []
             if outstanding["overdue_count"]:
-                reasons.append(f"{outstanding['overdue_count']} faktura(e) kasni sa naplatom.")
+                reasons.append(
+                    f"{outstanding['overdue_count']} {overdue_invoices_phrase} sa naplatom."
+                )
             reasons.extend(
                 f"{label} je na {tracker['percentage']}%." for label, tracker in limits_critical
             )
@@ -202,14 +206,30 @@ class DashboardView(APIView):
             # figure, even though both now share the same promet/accrual
             # basis and the same sum_issued_revenue helper.
             "basis": "invoiced",
+            # For RevenueTrendChart — same monthly_issued_revenue function
+            # LimitProgressChart's history reads, so the dashboard chart
+            # and the limits chart never compute "revenue per month" two
+            # different ways.
+            "monthly_series": monthly_issued_revenue(company, year_start, year_end),
         }
 
     @staticmethod
     def _next_obligation(company) -> dict | None:
+        """The genuinely upcoming obligation — PENDING only. An OVERDUE
+        one is never "next" (it's already late), and surfaces instead via
+        `_overdue_obligation`/the `tax_obligation_overdue` attention item —
+        showing the same overdue row in both places read as a bug (two
+        "sources of truth" disagreeing about what "next" means), found via
+        an actual rendered dashboard, not assumed."""
         obligation = (
             TaxObligation.objects.for_company(company)
-            .filter(status__in=[TaxObligation.Status.PENDING, TaxObligation.Status.OVERDUE])
-            .order_by("due_date")
+            .filter(status=TaxObligation.Status.PENDING)
+            # `id` as a tie-breaker: two obligations can share a due_date
+            # (nothing prevents it), and `order_by("due_date")` alone
+            # would leave the choice between them up to the database's
+            # own unspecified tie order — deterministic every time this
+            # runs, but not guaranteed identical run to run.
+            .order_by("due_date", "id")
             .first()
         )
         if obligation is None:
@@ -223,27 +243,20 @@ class DashboardView(APIView):
         }
 
     @staticmethod
-    def _outstanding(company) -> dict:
-        invoices = (
-            Invoice.objects.for_company(company)
-            .filter(status__in=OUTSTANDING_STATUSES)
-            .annotate(paid_amount=Coalesce(Sum("payments__amount"), Value(Decimal("0.00"))))
+    def _overdue_obligation(company) -> dict | None:
+        obligation = (
+            TaxObligation.objects.for_company(company)
+            .filter(status=TaxObligation.Status.OVERDUE)
+            .order_by("due_date", "id")
+            .first()
         )
-
-        total = Decimal("0.00")
-        overdue_total = Decimal("0.00")
-        overdue_count = 0
-        for invoice in invoices:
-            remaining = invoice.total - invoice.paid_amount
-            total += remaining
-            if invoice.status == Invoice.Status.OVERDUE:
-                overdue_total += remaining
-                overdue_count += 1
-
+        if obligation is None:
+            return None
         return {
-            "count": invoices.count(),
-            "total": total,
-            "currency": company.default_currency,
-            "overdue_count": overdue_count,
-            "overdue_total": overdue_total,
+            "period_start": obligation.period_start.isoformat(),
+            "total_amount": obligation.total_amount,
         }
+
+    @staticmethod
+    def _outstanding(company) -> dict:
+        return outstanding_summary(company)

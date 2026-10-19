@@ -69,6 +69,36 @@ describe('KPOListView', () => {
     expect(listKpoEntries).toHaveBeenCalledWith(expect.objectContaining({ dateFrom: '2026-01-01' }))
   })
 
+  it('re-fetches with the search term typed into the search box', async () => {
+    vi.mocked(listKpoEntries).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const wrapper = mountView()
+    await flushPromises()
+
+    // The search box is the one plain-text input (the date filters are
+    // type="date") — the shared `Input` component generates its own `id`,
+    // so there's no stable id selector to target instead.
+    await wrapper.find('input:not([type="date"])').setValue('Klijent A')
+    await flushPromises()
+
+    expect(listKpoEntries).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'Klijent A' }))
+  })
+
+  it('re-fetches with an ordering param when a sortable column header is clicked', async () => {
+    vi.mocked(listKpoEntries).mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [entry()],
+    })
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.find('th button').trigger('click')
+    await flushPromises()
+
+    expect(listKpoEntries).toHaveBeenLastCalledWith(expect.objectContaining({ ordering: 'sequence_number' }))
+  })
+
   it('renders export links', async () => {
     vi.mocked(listKpoEntries).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
     const wrapper = mountView()

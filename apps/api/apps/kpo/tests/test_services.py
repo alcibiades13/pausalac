@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
@@ -8,6 +9,7 @@ from apps.companies.models import Company
 from apps.invoices.models import InvoiceLineItem
 from apps.invoices.services import InvoiceService
 from apps.kpo.models import KPOEntry
+from apps.kpo.services import monthly_summary
 
 
 def _draft(company, client_obj, items, *, service_date=None):
@@ -252,3 +254,65 @@ class KPOServiceCancelTests(TestCase):
         )
         InvoiceService.cancel(invoice, actor=None)
         self.assertEqual(KPOEntry.objects.filter(invoice=invoice).count(), 0)
+
+
+class MonthlySummaryTests(TestCase):
+    """`monthly_summary` — KpoMonthlyBarChart's data source."""
+
+    def setUp(self):
+        self.company = Company.objects.create(name="Firma A", pib="123456789")
+        self.client_obj = Client.objects.create(company=self.company, name="Klijent A")
+
+    def test_groups_by_entry_date_month_with_zero_filled_gaps(self):
+        jan_invoice = _draft(
+            self.company,
+            self.client_obj,
+            [{"description": "Widget", "item_type": "product", "quantity": "1", "unit_price": "1000.00"}],
+            service_date=date(2026, 1, 15),
+        )
+        InvoiceService.issue(jan_invoice, actor=None)
+        mar_invoice = _draft(
+            self.company,
+            self.client_obj,
+            [{"description": "Konsalting", "item_type": "service", "quantity": "1", "unit_price": "2000.00"}],
+            service_date=date(2026, 3, 10),
+        )
+        InvoiceService.issue(mar_invoice, actor=None)
+
+        rows = monthly_summary(self.company, 2026)
+        self.assertEqual(len(rows), 12)
+        by_month = {row["month"]: row for row in rows}
+        self.assertEqual(by_month["2026-01-01"]["products"], Decimal("1000.00"))
+        self.assertEqual(by_month["2026-01-01"]["services"], Decimal("0.00"))
+        self.assertEqual(by_month["2026-01-01"]["total"], Decimal("1000.00"))
+        self.assertEqual(by_month["2026-02-01"]["total"], Decimal("0.00"))
+        self.assertEqual(by_month["2026-03-01"]["services"], Decimal("2000.00"))
+        self.assertEqual(by_month["2026-03-01"]["total"], Decimal("2000.00"))
+
+    def test_storno_nets_out_within_the_month(self):
+        invoice = _draft(
+            self.company,
+            self.client_obj,
+            [{"description": "Konsalting", "item_type": "service", "quantity": "1", "unit_price": "5000.00"}],
+            service_date=date(2026, 6, 5),
+        )
+        invoice = InvoiceService.issue(invoice, actor=None)
+        InvoiceService.cancel(invoice, actor=None)
+
+        rows = monthly_summary(self.company, 2026)
+        by_month = {row["month"]: row for row in rows}
+        self.assertEqual(by_month["2026-06-01"]["total"], Decimal("0.00"))
+
+    def test_tenant_isolation(self):
+        other_company = Company.objects.create(name="Firma B", pib="987654321")
+        other_client = Client.objects.create(company=other_company, name="Klijent B")
+        invoice = _draft(
+            other_company,
+            other_client,
+            [{"description": "Widget", "item_type": "product", "quantity": "1", "unit_price": "9999.00"}],
+            service_date=date(2026, 1, 1),
+        )
+        InvoiceService.issue(invoice, actor=None)
+
+        rows = monthly_summary(self.company, 2026)
+        self.assertEqual(rows[0]["total"], Decimal("0.00"))

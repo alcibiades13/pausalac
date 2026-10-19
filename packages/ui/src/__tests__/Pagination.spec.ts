@@ -30,4 +30,16 @@ describe('Pagination', () => {
     expect(wrapper.emitted('next')).toHaveLength(1)
     expect(wrapper.emitted('previous')).toHaveLength(1)
   })
+
+  it('shows "Strana X od Y" when page/totalPages are given', () => {
+    const wrapper = mount(Pagination, {
+      props: { hasNext: true, hasPrevious: true, page: 2, totalPages: 5 },
+    })
+    expect(wrapper.text()).toContain('Strana 2 od 5')
+  })
+
+  it('omits the page indicator when page/totalPages are not given', () => {
+    const wrapper = mount(Pagination, { props: { hasNext: true, hasPrevious: true } })
+    expect(wrapper.text()).not.toContain('Strana')
+  })
 })

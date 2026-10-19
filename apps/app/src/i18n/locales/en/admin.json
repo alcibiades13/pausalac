@@ -8,9 +8,7 @@
     "entityColumn": "Entity",
     "actionColumn": "Action",
     "loadError": "We can't load the audit log right now.",
-    "emptyTitle": "No entries.",
-    "previousButton": "Previous",
-    "nextButton": "Next"
+    "emptyTitle": "No entries."
   },
   "adminCompaniesView": {
     "title": "Companies",
@@ -21,8 +19,6 @@
     "loadError": "We can't load companies right now.",
     "emptyTitle": "No companies.",
     "membersButton": "Members",
-    "previousButton": "Previous",
-    "nextButton": "Next",
     "membersHeading": "Members — {name}",
     "closeButton": "Close",
     "loadingMembers": "Loading...",
@@ -37,9 +33,7 @@
     "uploadedByColumn": "Uploaded by",
     "dateColumn": "Date",
     "loadError": "We can't load documents right now.",
-    "emptyTitle": "No documents.",
-    "previousButton": "Previous",
-    "nextButton": "Next"
+    "emptyTitle": "No documents."
   },
   "adminIntegrationsView": {
     "title": "Integrations",
@@ -62,10 +56,9 @@
     "numberColumn": "Number",
     "draftFallback": "draft",
     "issueDateColumn": "Issue date",
+    "dueDateColumn": "Due date",
     "loadError": "We can't load invoices right now.",
-    "emptyTitle": "No invoices.",
-    "previousButton": "Previous",
-    "nextButton": "Next"
+    "emptyTitle": "No invoices."
   },
   "adminNotificationsView": {
     "title": "Notifications",
@@ -75,9 +68,7 @@
     "channelColumn": "Channel",
     "dateColumn": "Date",
     "loadError": "We can't load notifications right now.",
-    "emptyTitle": "No notifications.",
-    "previousButton": "Previous",
-    "nextButton": "Next"
+    "emptyTitle": "No notifications."
   },
   "adminPlansView": {
     "title": "Plans",
@@ -134,9 +125,7 @@
     "statusActive": "Active",
     "statusGracePeriod": "Grace period",
     "statusCancelled": "Cancelled",
-    "statusExpired": "Expired",
-    "previousButton": "Previous",
-    "nextButton": "Next"
+    "statusExpired": "Expired"
   },
   "adminTaxObligationsView": {
     "title": "Tax obligations",
@@ -147,9 +136,7 @@
     "dueDateColumn": "Due date",
     "statusPending": "Pending",
     "statusPaid": "Paid",
-    "statusOverdue": "Overdue",
-    "previousButton": "Previous",
-    "nextButton": "Next"
+    "statusOverdue": "Overdue"
   },
   "adminUsersView": {
     "title": "Users",

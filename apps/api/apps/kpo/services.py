@@ -6,14 +6,53 @@ docs/decisions-log.md for why this is a real write at issue time, not a
 read-time computed view.
 """
 
+from datetime import date
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce, TruncMonth
 
 from apps.invoices.models import Invoice, InvoiceLineItem
 
 from .models import KPOEntry
 from .numbering import assign_sequence_number
+
+
+def monthly_summary(company, year: int) -> list[dict]:
+    """Products/services/total per month for `KpoMonthlyBarChart` — reads
+    the same `KPOEntry` rows the KPO table itself lists (storno rows
+    already store negative product/service amounts, so a plain `Sum`
+    nets them out correctly, same as the table's own totals). One row
+    per calendar month, even ones with no activity, for a stable X-axis.
+    """
+    period_start = date(year, 1, 1)
+    period_end = date(year, 12, 31)
+    rows = (
+        KPOEntry.objects.for_company(company)
+        .filter(entry_date__gte=period_start, entry_date__lte=period_end)
+        .annotate(month=TruncMonth("entry_date"))
+        .values("month")
+        .annotate(
+            products=Coalesce(Sum("product_revenue"), Value(Decimal("0.00"))),
+            services=Coalesce(Sum("service_revenue"), Value(Decimal("0.00"))),
+        )
+    )
+    by_month = {row["month"].isoformat(): row for row in rows}
+
+    months: list[dict] = []
+    cursor = period_start
+    end_marker = date(year, 12, 1)
+    while cursor <= end_marker:
+        key = cursor.isoformat()
+        row = by_month.get(key)
+        products = row["products"] if row else Decimal("0.00")
+        services = row["services"] if row else Decimal("0.00")
+        months.append(
+            {"month": key, "products": products, "services": services, "total": products + services}
+        )
+        cursor = date(cursor.year + 1, 1, 1) if cursor.month == 12 else date(cursor.year, cursor.month + 1, 1)
+    return months
 
 
 def _sum_by_item_type(invoice: Invoice, item_type: str) -> Decimal:

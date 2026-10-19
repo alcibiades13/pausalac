@@ -46,7 +46,7 @@ const emit = defineEmits<{ back: [] }>()
     <nav v-if="sectionLabel" aria-label="Breadcrumb" class="flex min-w-0 items-center gap-1.5 truncate text-sm">
       <span :class="leafLabel ? 'text-text-secondary' : 'font-medium text-navy'">{{ sectionLabel }}</span>
       <template v-if="leafLabel">
-        <span class="text-border" aria-hidden="true">/</span>
+        <span class="text-text-secondary" aria-hidden="true">/</span>
         <span class="truncate font-medium text-navy">{{ leafLabel }}</span>
       </template>
     </nav>

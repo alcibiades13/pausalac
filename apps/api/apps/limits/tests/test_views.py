@@ -36,6 +36,7 @@ class LimitsViewTests(TestCase):
         self.headers = {"HTTP_X_COMPANY_ID": str(self.company.id)}
         self.url = reverse("limits", kwargs={"version": "v1"})
         self.simulate_url = reverse("limits-simulate", kwargs={"version": "v1"})
+        self.history_url = reverse("limits-pausal-history", kwargs={"version": "v1"})
 
     def test_get_limits_returns_both_trackers(self):
         _issued_invoice(self.company, self.client_obj, unit_price="1000000.00")
@@ -84,6 +85,33 @@ class LimitsViewTests(TestCase):
         response = self.client.get(self.url, **self.headers)
         body = response.json()
         self.assertEqual(Decimal(body["pausal_limit"]["current"]), Decimal("0.00"))
+
+    def test_history_returns_monthly_breakdown_for_requested_year(self):
+        _issued_invoice(self.company, self.client_obj, unit_price="500000.00")
+        # A past year always has all 12 months of history (nothing left
+        # to project) — the current year's history only runs through
+        # "today"'s month, tested separately below.
+        response = self.client.get(f"{self.history_url}?year=2020", **self.headers)
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["year"], 2020)
+        self.assertEqual(len(body["history"]), 12)
+        self.assertEqual(body["projection"], [])
+        self.assertEqual(Decimal(body["threshold"]), Decimal("6000000.00"))
+
+    def test_history_for_current_year_runs_through_this_month_only(self):
+        response = self.client.get(f"{self.history_url}?year={timezone.now().date().year}", **self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["history"]), timezone.now().date().month)
+
+    def test_history_defaults_to_current_year_without_query_param(self):
+        response = self.client.get(self.history_url, **self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["year"], timezone.now().date().year)
+
+    def test_history_rejects_invalid_year(self):
+        response = self.client.get(f"{self.history_url}?year=not-a-year", **self.headers)
+        self.assertEqual(response.status_code, 400)
 
     def test_accountant_can_view_limits(self):
         accountant = User.objects.create_user(email="acc@pausalac.rs", password="s3cr3t-pass")

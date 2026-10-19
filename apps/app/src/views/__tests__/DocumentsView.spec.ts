@@ -148,6 +148,39 @@ describe('DocumentsView', () => {
     expect(listDocuments).toHaveBeenCalledWith(expect.objectContaining({ category: 'contract' }))
   })
 
+  it('re-fetches with the search term typed into the search box', async () => {
+    vi.mocked(listDocuments).mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    const wrapper = mountView()
+    await flushPromises()
+
+    // Text inputs in DOM order: upload form's title, upload form's
+    // description, then the list toolbar's search box.
+    await wrapper.findAll('input[type="text"]')[2]!.setValue('ugovor')
+    await flushPromises()
+
+    expect(listDocuments).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'ugovor' }))
+  })
+
+  it('re-fetches with an ordering param when a sortable column header is clicked', async () => {
+    vi.mocked(listDocuments).mockResolvedValue({ count: 1, next: null, previous: null, results: [doc()] })
+    const wrapper = mountView()
+    await flushPromises()
+
+    await wrapper.find('th button').trigger('click')
+    await flushPromises()
+
+    expect(listDocuments).toHaveBeenLastCalledWith(expect.objectContaining({ ordering: 'title' }))
+  })
+
+  it('opens the file in a new tab via the actions column', async () => {
+    vi.mocked(listDocuments).mockResolvedValue({ count: 1, next: null, previous: null, results: [doc()] })
+    const wrapper = mountView()
+    await flushPromises()
+
+    const openLink = wrapper.findAll('a').find((a) => a.text() === 'Otvori')!
+    expect(openLink.attributes('href')).toBe('http://minio.local/documents/1/file.pdf')
+  })
+
   it('deletes a document and reloads the list', async () => {
     vi.mocked(listDocuments).mockResolvedValue({ count: 1, next: null, previous: null, results: [doc()] })
     vi.mocked(deleteDocument).mockResolvedValue(undefined)

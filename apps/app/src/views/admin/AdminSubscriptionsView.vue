@@ -1,19 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Alert, Badge, Button , DataTable, type DataTableColumn } from '@pausalac/ui'
+import { Alert, Badge, Button, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import { listAdminSubscriptions, type AdminSubscription } from '@/services/admin'
-import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
+import { useTableQuery } from '@/composables/useTableQuery'
 
 const { t } = useI18n()
-
-const subscriptions = ref<AdminSubscription[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const page = ref(1)
-const hasNext = ref(false)
-const hasPrevious = ref(false)
 
 const STATUS_LABELS = computed<Record<AdminSubscription['status'], string>>(() => ({
   trialing: t('admin.adminSubscriptionsView.statusTrialing'),
@@ -33,33 +26,31 @@ const STATUS_VARIANTS: Record<AdminSubscription['status'], 'success' | 'warning'
 const columns = computed<DataTableColumn<AdminSubscription>[]>(() => [
   { key: 'company_name', label: t('admin.adminSubscriptionsView.companyColumn') },
   { key: 'plan', label: t('admin.adminSubscriptionsView.planColumn'), format: (r) => r.plan?.name ?? '—' },
-  { key: 'trial_ends_at', label: t('admin.adminSubscriptionsView.trialEndsColumn'), format: (r) => formatDate(r.trial_ends_at) },
+  {
+    key: 'trial_ends_at',
+    label: t('admin.adminSubscriptionsView.trialEndsColumn'),
+    format: (r) => formatDate(r.trial_ends_at),
+    sortable: true,
+  },
 ])
 
-async function load() {
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    const result = await listAdminSubscriptions({ page: page.value })
-    subscriptions.value = result.results
-    hasNext.value = result.next !== null
-    hasPrevious.value = result.previous !== null
-  } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError ? error.message : t('admin.adminSubscriptionsView.loadError')
-  } finally {
-    loading.value = false
-  }
-}
-
-function goNext() {
-  page.value += 1
-  load()
-}
-function goPrevious() {
-  page.value = Math.max(1, page.value - 1)
-  load()
-}
+const {
+  rows: subscriptions,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+} = useTableQuery<AdminSubscription>(
+  (q) => listAdminSubscriptions({ page: q.page, page_size: q.pageSize, search: q.search, ordering: q.ordering }),
+  { genericErrorMessage: t('admin.adminSubscriptionsView.loadError') },
+)
 
 onMounted(load)
 </script>
@@ -73,17 +64,23 @@ onMounted(load)
     <DataTable
       :columns="columns"
       :rows="subscriptions"
-      :loading="loading"
+      :loading="status === 'loading'"
+      :sort="sort"
       :empty-title="t('admin.adminSubscriptionsView.emptyTitle')"
+      @sort="onSort"
     >
       <template #actions="{ row }">
         <Badge :variant="STATUS_VARIANTS[row.status]">{{ STATUS_LABELS[row.status] }}</Badge>
       </template>
     </DataTable>
 
-    <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">{{ t('admin.adminSubscriptionsView.previousButton') }}</Button>
-      <Button variant="secondary" :disabled="!hasNext" @click="goNext">{{ t('admin.adminSubscriptionsView.nextButton') }}</Button>
-    </div>
+    <Pagination
+      :has-next="hasNext"
+      :has-previous="hasPrevious"
+      :page="page"
+      :total-pages="totalPages"
+      @next="nextPage"
+      @previous="prevPage"
+    />
   </div>
 </template>

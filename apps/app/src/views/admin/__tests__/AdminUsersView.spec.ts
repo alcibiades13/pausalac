@@ -62,7 +62,10 @@ describe('AdminUsersView', () => {
     const wrapper = mount(AdminUsersView, { global: { plugins: [i18n] } })
     await flushPromises()
 
-    await wrapper.find('button').trigger('click')
+    // `th button` (the new sortable column header) is now the first
+    // `<button>` on the page — target the row action button by its
+    // text instead of position.
+    await wrapper.findAll('button').find((b) => b.text() === 'Deaktiviraj')!.trigger('click')
     await flushPromises()
 
     expect(deactivateAdminUser).toHaveBeenCalledWith(1)
@@ -82,9 +85,44 @@ describe('AdminUsersView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Deaktiviran')
-    await wrapper.find('button').trigger('click')
+    await wrapper.findAll('button').find((b) => b.text() === 'Reaktiviraj')!.trigger('click')
     await flushPromises()
 
     expect(reactivateAdminUser).toHaveBeenCalledWith(1)
+  })
+
+  it('re-fetches with an ordering param when a sortable column header is clicked', async () => {
+    vi.mocked(listAdminUsers).mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [user()],
+    })
+    const wrapper = mount(AdminUsersView, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    await wrapper.find('th button').trigger('click')
+    await flushPromises()
+
+    expect(listAdminUsers).toHaveBeenLastCalledWith(expect.objectContaining({ ordering: 'email' }))
+  })
+
+  it('shows the current page and total page count', async () => {
+    vi.mocked(listAdminUsers).mockResolvedValue({
+      count: 60,
+      next: 'http://api/admin/users/?page=2',
+      previous: null,
+      results: [user()],
+    })
+    const wrapper = mount(AdminUsersView, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Strana 1 od 3')
+
+    const nextButton = wrapper.findAll('button').find((b) => b.text() === 'Sledeća')!
+    await nextButton.trigger('click')
+    await flushPromises()
+
+    expect(listAdminUsers).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }))
   })
 })

@@ -28,6 +28,14 @@ describe('LimitTracker', () => {
     expect(wrapper.text()).toContain('kalendarska godina')
   })
 
+  it('keeps a real space before the "/" in the current/threshold fraction', () => {
+    // Regression: adjacent inline elements with only template
+    // whitespace between them can collapse to zero space, producing
+    // "... RSD/ 6.000.000,00 RSD" with no gap before the slash.
+    const wrapper = mount(LimitTracker, { global: { plugins: [i18n] }, props: { label: 'Paušalni limit', tracker: tracker() } })
+    expect(wrapper.text()).toContain('RSD /')
+  })
+
   it('shows the projection line when present, suffixed as an estimate', () => {
     const wrapper = mount(LimitTracker, {
       global: { plugins: [i18n] },

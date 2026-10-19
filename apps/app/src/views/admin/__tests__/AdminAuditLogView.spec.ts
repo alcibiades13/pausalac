@@ -65,4 +65,67 @@ describe('AdminAuditLogView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('sistem')
   })
+
+  it('re-fetches with an ordering param when a sortable column header is clicked', async () => {
+    vi.mocked(listAdminAuditLog).mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [
+        {
+          id: 1,
+          company_id: 1,
+          company_name: 'Firma A',
+          actor_email: 'super@pausalac.rs',
+          entity_type: 'plan',
+          entity_id: '1',
+          action: 'admin_updated',
+          old_value: null,
+          new_value: null,
+          source: 'api',
+          created_at: '2026-01-01T00:00:00Z',
+        },
+      ],
+    })
+    const wrapper = mount(AdminAuditLogView, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    await wrapper.find('th button').trigger('click')
+    await flushPromises()
+
+    expect(listAdminAuditLog).toHaveBeenLastCalledWith(expect.objectContaining({ ordering: 'created_at' }))
+  })
+
+  it('shows the current page and total page count', async () => {
+    vi.mocked(listAdminAuditLog).mockResolvedValue({
+      count: 60,
+      next: 'http://api/admin/audit-log/?page=2',
+      previous: null,
+      results: [
+        {
+          id: 1,
+          company_id: 1,
+          company_name: 'Firma A',
+          actor_email: 'super@pausalac.rs',
+          entity_type: 'plan',
+          entity_id: '1',
+          action: 'admin_updated',
+          old_value: null,
+          new_value: null,
+          source: 'api',
+          created_at: '2026-01-01T00:00:00Z',
+        },
+      ],
+    })
+    const wrapper = mount(AdminAuditLogView, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Strana 1 od 3')
+
+    const nextButton = wrapper.findAll('button').find((b) => b.text() === 'Sledeća')!
+    await nextButton.trigger('click')
+    await flushPromises()
+
+    expect(listAdminAuditLog).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }))
+  })
 })

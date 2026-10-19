@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Alert, Badge, Button, Card, Input, DataTable, DatePicker, type DataTableColumn } from '@pausalac/ui'
+import { Alert, Badge, Button, Card, Input, DataTable, DatePicker, Pagination, type DataTableColumn } from '@pausalac/ui'
 import {
   approveAdminRegulatoryRule,
   createAdminRegulatoryRule,
@@ -9,12 +9,10 @@ import {
   type AdminRegulatoryRule,
 } from '@/services/admin'
 import { ApiError } from '@/lib/api'
+import { useTableQuery } from '@/composables/useTableQuery'
 
 const { t } = useI18n()
 
-const rules = ref<AdminRegulatoryRule[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
 const saving = ref(false)
 const actingOnId = ref<number | null>(null)
 
@@ -29,24 +27,29 @@ const form = ref({
 })
 
 const columns = computed<DataTableColumn<AdminRegulatoryRule>[]>(() => [
-  { key: 'identifier', label: t('admin.adminRulesView.identifierLabel') },
-  { key: 'version', label: t('admin.adminRulesView.versionLabel') },
-  { key: 'effective_from', label: t('admin.adminRulesView.effectiveFromLabel') },
+  { key: 'identifier', label: t('admin.adminRulesView.identifierLabel'), sortable: true },
+  { key: 'version', label: t('admin.adminRulesView.versionLabel'), sortable: true },
+  { key: 'effective_from', label: t('admin.adminRulesView.effectiveFromLabel'), sortable: true },
   { key: 'source', label: t('admin.adminRulesView.sourceLabel') },
 ])
 
-async function load() {
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    rules.value = (await listAdminRegulatoryRules()).results
-  } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError ? error.message : t('admin.adminRulesView.loadError')
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  rows: rules,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+} = useTableQuery<AdminRegulatoryRule>(
+  (q) => listAdminRegulatoryRules({ page: q.page, page_size: q.pageSize, search: q.search, ordering: q.ordering }),
+  { genericErrorMessage: t('admin.adminRulesView.loadError') },
+)
 
 function onNew() {
   formOpen.value = true
@@ -130,7 +133,14 @@ onMounted(load)
       </form>
     </Card>
 
-    <DataTable :columns="columns" :rows="rules" :loading="loading" :empty-title="t('admin.adminRulesView.emptyTitle')">
+    <DataTable
+      :columns="columns"
+      :rows="rules"
+      :loading="status === 'loading'"
+      :sort="sort"
+      :empty-title="t('admin.adminRulesView.emptyTitle')"
+      @sort="onSort"
+    >
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.approval_status === 'confirmed' ? 'success' : 'warning'">
@@ -147,5 +157,14 @@ onMounted(load)
         </div>
       </template>
     </DataTable>
+
+    <Pagination
+      :has-next="hasNext"
+      :has-previous="hasPrevious"
+      :page="page"
+      :total-pages="totalPages"
+      @next="nextPage"
+      @previous="prevPage"
+    />
   </div>
 </template>

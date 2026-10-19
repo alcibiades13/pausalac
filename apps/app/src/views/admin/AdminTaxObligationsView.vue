@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Alert, Badge, Button, MoneyDisplay , DataTable, type DataTableColumn } from '@pausalac/ui'
+import { Alert, Badge, MoneyDisplay, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import { listAdminTaxObligations, type AdminTaxObligation } from '@/services/admin'
-import { ApiError } from '@/lib/api'
+import { useTableQuery } from '@/composables/useTableQuery'
 
 const { t } = useI18n()
-
-const obligations = ref<AdminTaxObligation[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const page = ref(1)
-const hasNext = ref(false)
-const hasPrevious = ref(false)
 
 const STATUS_LABELS = computed<Record<string, string>>(() => ({
   pending: t('admin.adminTaxObligationsView.statusPending'),
@@ -27,34 +20,27 @@ const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'danger' | 'neutra
 
 const columns = computed<DataTableColumn<AdminTaxObligation>[]>(() => [
   { key: 'company_name', label: t('admin.adminTaxObligationsView.companyColumn') },
-  { key: 'period_start', label: t('admin.adminTaxObligationsView.periodColumn') },
-  { key: 'due_date', label: t('admin.adminTaxObligationsView.dueDateColumn') },
+  { key: 'period_start', label: t('admin.adminTaxObligationsView.periodColumn'), sortable: true },
+  { key: 'due_date', label: t('admin.adminTaxObligationsView.dueDateColumn'), sortable: true },
 ])
 
-async function load() {
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    const result = await listAdminTaxObligations({ page: page.value })
-    obligations.value = result.results
-    hasNext.value = result.next !== null
-    hasPrevious.value = result.previous !== null
-  } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError ? error.message : t('admin.adminTaxObligationsView.loadError')
-  } finally {
-    loading.value = false
-  }
-}
-
-function goNext() {
-  page.value += 1
-  load()
-}
-function goPrevious() {
-  page.value = Math.max(1, page.value - 1)
-  load()
-}
+const {
+  rows: obligations,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+} = useTableQuery<AdminTaxObligation>(
+  (q) => listAdminTaxObligations({ page: q.page, page_size: q.pageSize, search: q.search, ordering: q.ordering }),
+  { genericErrorMessage: t('admin.adminTaxObligationsView.loadError') },
+)
 
 onMounted(load)
 </script>
@@ -68,8 +54,10 @@ onMounted(load)
     <DataTable
       :columns="columns"
       :rows="obligations"
-      :loading="loading"
+      :loading="status === 'loading'"
+      :sort="sort"
       :empty-title="t('admin.adminTaxObligationsView.emptyTitle')"
+      @sort="onSort"
     >
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
@@ -81,9 +69,13 @@ onMounted(load)
       </template>
     </DataTable>
 
-    <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">{{ t('admin.adminTaxObligationsView.previousButton') }}</Button>
-      <Button variant="secondary" :disabled="!hasNext" @click="goNext">{{ t('admin.adminTaxObligationsView.nextButton') }}</Button>
-    </div>
+    <Pagination
+      :has-next="hasNext"
+      :has-previous="hasPrevious"
+      :page="page"
+      :total-pages="totalPages"
+      @next="nextPage"
+      @previous="prevPage"
+    />
   </div>
 </template>

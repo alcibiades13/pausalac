@@ -20,10 +20,36 @@
     "projectionLabel": "Прогноз на конец периода:",
     "projectionSuffix": "(оценка)"
   },
+  "charts": {
+    "limitProgress": {
+      "title": "Движение к лимиту",
+      "thresholdLabel": "Лимит",
+      "projectedSuffix": "оценка",
+      "emptyTitle": "Пока нет данных за этот год.",
+      "emptyDescription": "График заполнится, как только вы выставите первый счёт."
+    },
+    "kpoMonthly": {
+      "title": "KPO по месяцам",
+      "products": "Товары",
+      "services": "Услуги",
+      "emptyTitle": "В этом году пока нет оборота по KPO.",
+      "emptyDescription": "График заполнится, как только вы выставите первый счёт."
+    },
+    "clientStatusDistribution": {
+      "title": "Статус клиентов",
+      "ok": "В порядке",
+      "attention": "Внимание",
+      "critical": "Критично",
+      "emptyTitle": "Пока нет подключённых клиентов.",
+      "emptyDescription": "График заполнится, как только подключится первый клиент."
+    }
+  },
   "kpoListView": {
     "title": "KPO",
     "exportPdf": "Экспорт в PDF",
     "exportExcel": "Экспорт в Excel",
+    "searchLabel": "Поиск",
+    "searchPlaceholder": "Описание...",
     "dateFromLabel": "От",
     "dateToLabel": "До",
     "retryButton": "Попробовать снова",
@@ -91,6 +117,11 @@
     "loadError": "Не удалось загрузить документы.",
     "emptyTitle": "Документов пока нет.",
     "emptyDescription": "Загрузите первый документ выше.",
+    "columnTitle": "Название",
+    "columnCategory": "Категория",
+    "columnFile": "Файл",
+    "columnSize": "Размер",
+    "columnCreatedAt": "Загружен",
     "openLink": "Открыть",
     "deleteButton": "Удалить",
     "uploadError": "Не удалось загрузить файл.",
@@ -171,11 +202,6 @@
     "portfolioStatusOk": "OK",
     "portfolioStatusAttention": "Внимание",
     "portfolioStatusCritical": "Критично",
-    "sortByLabel": "Сортировать по",
-    "sortNameAsc": "Название (А-Я)",
-    "sortNameDesc": "Название (Я-А)",
-    "sortRevenueDesc": "Доход (по убыванию)",
-    "sortRevenueAsc": "Доход (по возрастанию)",
     "portfolioLoadError": "Не удалось загрузить обзор клиентов.",
     "emptyPortfolioTitle": "Нет активных клиентов.",
     "emptyPortfolioDescription": "Когда клиент примет запрос на подключение, он появится здесь.",

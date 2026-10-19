@@ -8,6 +8,7 @@ fallback if Beat isn't running in a given environment.
 from django.core.management.base import BaseCommand
 
 from apps.invoices.services import InvoiceService
+from config.pluralize import pluralize_sr
 
 
 class Command(BaseCommand):
@@ -15,4 +16,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         count = InvoiceService.mark_overdue_all()
-        self.stdout.write(self.style.SUCCESS(f"Označeno kao 'kasni': {count} faktura(e)."))
+        noun = pluralize_sr(count, "faktura", "fakture", "faktura")
+        self.stdout.write(self.style.SUCCESS(f"Označeno kao 'kasni': {count} {noun}."))

@@ -20,10 +20,36 @@
     "projectionLabel": "Procena do kraja perioda:",
     "projectionSuffix": "(procena)"
   },
+  "charts": {
+    "limitProgress": {
+      "title": "Kretanje ka limitu",
+      "thresholdLabel": "Limit",
+      "projectedSuffix": "procena",
+      "emptyTitle": "Još nema podataka za ovu godinu.",
+      "emptyDescription": "Grafikon će se popuniti čim izdaš prvu fakturu."
+    },
+    "kpoMonthly": {
+      "title": "KPO po mesecima",
+      "products": "Proizvodi",
+      "services": "Usluge",
+      "emptyTitle": "Još nema KPO prometa ove godine.",
+      "emptyDescription": "Grafikon će se popuniti čim izdaš prvu fakturu."
+    },
+    "clientStatusDistribution": {
+      "title": "Status klijenata",
+      "ok": "U redu",
+      "attention": "Pažnja",
+      "critical": "Kritično",
+      "emptyTitle": "Još nema povezanih klijenata.",
+      "emptyDescription": "Grafikon će se popuniti čim se poveže prvi klijent."
+    }
+  },
   "kpoListView": {
     "title": "KPO",
     "exportPdf": "Izvezi PDF",
     "exportExcel": "Izvezi Excel",
+    "searchLabel": "Pretraga",
+    "searchPlaceholder": "Opis...",
     "dateFromLabel": "Od",
     "dateToLabel": "Do",
     "retryButton": "Pokušaj ponovo",
@@ -91,6 +117,11 @@
     "loadError": "Ne možemo trenutno da učitamo dokumente.",
     "emptyTitle": "Još nema dokumenata.",
     "emptyDescription": "Otpremi prvi dokument iznad.",
+    "columnTitle": "Naslov",
+    "columnCategory": "Kategorija",
+    "columnFile": "Fajl",
+    "columnSize": "Veličina",
+    "columnCreatedAt": "Otpremljen",
     "openLink": "Otvori",
     "deleteButton": "Obriši",
     "uploadError": "Ne možemo trenutno da otpremimo fajl.",
@@ -171,11 +202,6 @@
     "portfolioStatusOk": "OK",
     "portfolioStatusAttention": "Pažnja",
     "portfolioStatusCritical": "Kritično",
-    "sortByLabel": "Sortiraj po",
-    "sortNameAsc": "Naziv (A-Š)",
-    "sortNameDesc": "Naziv (Š-A)",
-    "sortRevenueDesc": "Prihod (opadajuće)",
-    "sortRevenueAsc": "Prihod (rastuće)",
     "portfolioLoadError": "Ne možemo trenutno da učitamo pregled klijenata.",
     "emptyPortfolioTitle": "Nema aktivnih klijenata.",
     "emptyPortfolioDescription": "Kada klijent prihvati zahtev za povezivanje, pojaviće se ovde.",

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Button, Card, Input, Select, Alert, Badge, EmptyState, MoneyDisplay, Skeleton } from '@pausalac/ui'
+import { Button, Card, Input, Select, Alert, Badge, EmptyState, MoneyDisplay, Skeleton, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import {
   listOrganizations,
   createOrganization,
@@ -23,6 +23,8 @@ import {
 } from '@/services/accounting'
 import { useCompanyStore } from '@/stores/company'
 import { ApiError } from '@/lib/api'
+import { useTableQuery } from '@/composables/useTableQuery'
+import ClientStatusDistribution from '@/components/charts/ClientStatusDistribution.vue'
 
 const router = useRouter()
 const company = useCompanyStore()
@@ -73,12 +75,17 @@ const PORTFOLIO_STATUS_FILTER_OPTIONS = computed<{ value: PortfolioStatus | ''; 
   { value: 'attention', label: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusAttention') },
   { value: 'critical', label: t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusCritical') },
 ])
-const PORTFOLIO_ORDERING_OPTIONS = computed<{ value: 'name' | '-name' | 'revenue' | '-revenue'; label: string }[]>(() => [
-  { value: 'name', label: t('limitsAccountingEtc.accountingOrganizationView.sortNameAsc') },
-  { value: '-name', label: t('limitsAccountingEtc.accountingOrganizationView.sortNameDesc') },
-  { value: '-revenue', label: t('limitsAccountingEtc.accountingOrganizationView.sortRevenueDesc') },
-  { value: 'revenue', label: t('limitsAccountingEtc.accountingOrganizationView.sortRevenueAsc') },
-])
+
+const portfolioColumns: DataTableColumn<ClientPortfolioRow>[] = [
+  { key: 'company_name', label: t('limitsAccountingEtc.accountingOrganizationView.columnClient'), sortable: true, sortKey: 'name' },
+  { key: 'status', label: t('limitsAccountingEtc.accountingOrganizationView.columnStatus') },
+  { key: 'revenue_ytd', label: t('limitsAccountingEtc.accountingOrganizationView.columnRevenueYtd'), sortable: true, sortKey: 'revenue' },
+  { key: 'pausal_limit', label: t('limitsAccountingEtc.accountingOrganizationView.columnLimits') },
+  { key: 'next_obligation_due', label: t('limitsAccountingEtc.accountingOrganizationView.columnNextObligation') },
+  { key: 'overdue_invoice_count', label: t('limitsAccountingEtc.accountingOrganizationView.columnOverdue') },
+  { key: 'missing_document_count', label: t('limitsAccountingEtc.accountingOrganizationView.columnMissingDocs') },
+  { key: 'integration_errors', label: t('limitsAccountingEtc.accountingOrganizationView.columnIntegrations') },
+]
 
 // --- organization: load-or-create ---------------------------------------
 
@@ -202,57 +209,52 @@ async function onInviteClient() {
 
 // --- client portfolio (master prompt §28/§29) ------------------------------
 
-const portfolioRows = ref<ClientPortfolioRow[]>([])
 const portfolioSummary = ref<PortfolioSummary>({ total: 0, ok: 0, attention: 0, critical: 0 })
-const portfolioStatus = ref<'loading' | 'ready' | 'error'>('loading')
-const portfolioErrorMessage = ref('')
-const portfolioHasNext = ref(false)
-const portfolioHasPrevious = ref(false)
-const portfolioPage = ref(1)
-const portfolioSearch = ref('')
 const portfolioStatusFilter = ref<PortfolioStatus | ''>('')
-const portfolioOrdering = ref<'name' | '-name' | 'revenue' | '-revenue'>('name')
 
-async function loadPortfolio() {
-  if (!organization.value) return
-  portfolioStatus.value = 'loading'
-  try {
+const {
+  rows: portfolioRows,
+  status: portfolioStatus,
+  errorMessage: portfolioErrorMessage,
+  page: portfolioPage,
+  totalPages: portfolioTotalPages,
+  hasNext: portfolioHasNext,
+  hasPrevious: portfolioHasPrevious,
+  search: portfolioSearch,
+  sort: portfolioSort,
+  onSort: onPortfolioSort,
+  nextPage: nextPortfolioPage,
+  prevPage: prevPortfolioPage,
+  load: loadPortfolio,
+  reload: reloadPortfolio,
+} = useTableQuery<ClientPortfolioRow>(
+  async (q) => {
+    if (!organization.value) return { results: [], count: 0, next: null, previous: null }
     const page = await getClientPortfolio(organization.value.id, {
       status: portfolioStatusFilter.value || undefined,
-      search: portfolioSearch.value || undefined,
-      ordering: portfolioOrdering.value,
-      page: portfolioPage.value,
+      search: q.search,
+      // `useTableQuery`'s ordering computed always lands on one of these
+      // four strings given the `sortKey: 'name' | 'revenue'` columns below
+      // — `getClientPortfolio`'s param is a narrower literal union than
+      // the composable's generic `string | undefined`, hence the cast.
+      ordering: q.ordering as 'name' | '-name' | 'revenue' | '-revenue' | undefined,
+      page: q.page,
     })
-    portfolioRows.value = page.results
+    // `getClientPortfolio` returns the standard `Paginated<T>` shape plus
+    // an extra `summary` field `useTableQuery.load()` doesn't know about
+    // (it only reads results/count/next/previous) — captured here as a
+    // side effect on a sibling ref so the stat tiles/chart below keep
+    // working unchanged.
     portfolioSummary.value = page.summary
-    portfolioHasNext.value = page.next !== null
-    portfolioHasPrevious.value = page.previous !== null
-    portfolioStatus.value = 'ready'
-  } catch (error) {
-    portfolioErrorMessage.value =
-      error instanceof ApiError
-        ? error.message
-        : t('limitsAccountingEtc.accountingOrganizationView.portfolioLoadError')
-    portfolioStatus.value = 'error'
-  }
-}
+    return page
+  },
+  {
+    genericErrorMessage: t('limitsAccountingEtc.accountingOrganizationView.portfolioLoadError'),
+    initialSort: { key: 'name', direction: 'asc' },
+  },
+)
 
-watch([portfolioSearch, portfolioStatusFilter, portfolioOrdering], () => {
-  portfolioPage.value = 1
-  loadPortfolio()
-})
-
-function onPrevPortfolioPage() {
-  if (portfolioPage.value <= 1) return
-  portfolioPage.value -= 1
-  loadPortfolio()
-}
-
-function onNextPortfolioPage() {
-  if (!portfolioHasNext.value) return
-  portfolioPage.value += 1
-  loadPortfolio()
-}
+watch(portfolioStatusFilter, reloadPortfolio)
 
 // "Klik na klijenta otvara detaljan pregled" (§29) — reuses the existing
 // company switcher instead of a new detail page: switching + landing on
@@ -383,22 +385,28 @@ async function onOpenClient(companyId: number) {
           </ul>
         </div>
 
-        <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryTotal') }}</p>
-            <p class="text-xl font-semibold text-navy">{{ portfolioSummary.total }}</p>
+        <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-2">
+            <div class="rounded-lg bg-background p-3">
+              <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryTotal') }}</p>
+              <p class="text-xl font-semibold text-navy">{{ portfolioSummary.total }}</p>
+            </div>
+            <div class="rounded-lg bg-background p-3">
+              <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryOk') }}</p>
+              <p class="text-xl font-semibold text-success">{{ portfolioSummary.ok }}</p>
+            </div>
+            <div class="rounded-lg bg-background p-3">
+              <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryAttention') }}</p>
+              <p class="text-xl font-semibold text-warning">{{ portfolioSummary.attention }}</p>
+            </div>
+            <div class="rounded-lg bg-background p-3">
+              <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryCritical') }}</p>
+              <p class="text-xl font-semibold text-danger">{{ portfolioSummary.critical }}</p>
+            </div>
           </div>
           <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryOk') }}</p>
-            <p class="text-xl font-semibold text-success">{{ portfolioSummary.ok }}</p>
-          </div>
-          <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryAttention') }}</p>
-            <p class="text-xl font-semibold text-warning">{{ portfolioSummary.attention }}</p>
-          </div>
-          <div class="rounded-lg bg-background p-3">
-            <p class="text-xs text-text-secondary">{{ t('limitsAccountingEtc.accountingOrganizationView.summaryCritical') }}</p>
-            <p class="text-xl font-semibold text-danger">{{ portfolioSummary.critical }}</p>
+            <p class="mb-1 text-xs text-text-secondary">{{ t('limitsAccountingEtc.charts.clientStatusDistribution.title') }}</p>
+            <ClientStatusDistribution :summary="portfolioSummary" />
           </div>
         </div>
 
@@ -409,11 +417,6 @@ async function onOpenClient(companyId: number) {
             :label="t('limitsAccountingEtc.accountingOrganizationView.portfolioStatusLabel')"
             :options="PORTFOLIO_STATUS_FILTER_OPTIONS"
           />
-          <Select
-            v-model="portfolioOrdering"
-            :label="t('limitsAccountingEtc.accountingOrganizationView.sortByLabel')"
-            :options="PORTFOLIO_ORDERING_OPTIONS"
-          />
         </div>
 
         <Alert v-if="portfolioStatus === 'error'" variant="danger">
@@ -421,7 +424,7 @@ async function onOpenClient(companyId: number) {
           <button class="ml-2 underline" @click="loadPortfolio">{{ t('limitsAccountingEtc.accountingOrganizationView.retryButton') }}</button>
         </Alert>
 
-        <Skeleton v-else-if="portfolioStatus === 'loading'" :count="3" />
+        <Skeleton v-else-if="portfolioStatus === 'loading' && portfolioRows.length === 0" :count="3" />
 
         <EmptyState
           v-else-if="portfolioRows.length === 0"
@@ -429,78 +432,56 @@ async function onOpenClient(companyId: number) {
           :description="t('limitsAccountingEtc.accountingOrganizationView.emptyPortfolioDescription')"
         />
 
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnClient') }}</th>
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnStatus') }}</th>
-                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.accountingOrganizationView.columnRevenueYtd') }}</th>
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnLimits') }}</th>
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnNextObligation') }}</th>
-                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.accountingOrganizationView.columnOverdue') }}</th>
-                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.accountingOrganizationView.columnMissingDocs') }}</th>
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.accountingOrganizationView.columnIntegrations') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="row in portfolioRows"
-                :key="row.company_id"
-                class="cursor-pointer border-b border-border hover:bg-background"
-                @click="onOpenClient(row.company_id)"
-              >
-                <td class="py-2 pr-3">
-                  <p class="font-medium text-navy">{{ row.company_name }}</p>
-                  <p class="text-xs text-text-secondary">{{ row.company_pib }}</p>
-                </td>
-                <td class="py-2 pr-3">
-                  <Badge :variant="PORTFOLIO_STATUS_VARIANTS[row.status]">
-                    {{ PORTFOLIO_STATUS_LABELS[row.status] }}
-                  </Badge>
-                </td>
-                <td class="py-2 pr-3 text-right">
-                  <MoneyDisplay :amount="row.revenue_ytd" :currency="row.currency" />
-                </td>
-                <td class="py-2 pr-3">
-                  <div class="flex gap-1">
-                    <Badge :variant="LIMIT_VARIANTS[row.pausal_limit.warning_level ?? 'ok']">
-                      {{ t('limitsAccountingEtc.accountingOrganizationView.pausalBadge', { percentage: row.pausal_limit.percentage ?? '—' }) }}
-                    </Badge>
-                    <Badge :variant="LIMIT_VARIANTS[row.vat_threshold.warning_level ?? 'ok']">
-                      {{ t('limitsAccountingEtc.accountingOrganizationView.vatBadge', { percentage: row.vat_threshold.percentage ?? '—' }) }}
-                    </Badge>
-                  </div>
-                </td>
-                <td class="py-2 pr-3" :class="row.next_obligation_overdue ? 'text-danger' : 'text-navy'">
-                  {{ row.next_obligation_due ?? '—' }}
-                </td>
-                <td class="py-2 pr-3 text-right">{{ row.overdue_invoice_count }}</td>
-                <td class="py-2 pr-3 text-right">{{ row.missing_document_count }}</td>
-                <td class="py-2 pr-3 text-text-secondary">{{ row.integration_errors ?? '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <template v-else>
+          <DataTable
+            :columns="portfolioColumns"
+            :rows="portfolioRows"
+            :loading="portfolioStatus === 'loading'"
+            :sort="portfolioSort"
+            row-key="company_id"
+            row-clickable
+            @sort="onPortfolioSort"
+            @row-click="(row) => onOpenClient(row.company_id)"
+          >
+            <template #cell-company_name="{ row }">
+              <p class="font-medium text-navy">{{ row.company_name }}</p>
+              <p class="text-xs text-text-secondary">{{ row.company_pib }}</p>
+            </template>
+            <template #cell-status="{ row }">
+              <Badge :variant="PORTFOLIO_STATUS_VARIANTS[row.status]">
+                {{ PORTFOLIO_STATUS_LABELS[row.status] }}
+              </Badge>
+            </template>
+            <template #cell-revenue_ytd="{ row }">
+              <MoneyDisplay :amount="row.revenue_ytd" :currency="row.currency" />
+            </template>
+            <template #cell-pausal_limit="{ row }">
+              <div class="flex gap-1">
+                <Badge :variant="LIMIT_VARIANTS[row.pausal_limit.warning_level ?? 'ok']">
+                  {{ t('limitsAccountingEtc.accountingOrganizationView.pausalBadge', { percentage: row.pausal_limit.percentage ?? '—' }) }}
+                </Badge>
+                <Badge :variant="LIMIT_VARIANTS[row.vat_threshold.warning_level ?? 'ok']">
+                  {{ t('limitsAccountingEtc.accountingOrganizationView.vatBadge', { percentage: row.vat_threshold.percentage ?? '—' }) }}
+                </Badge>
+              </div>
+            </template>
+            <template #cell-next_obligation_due="{ row }">
+              <span :class="row.next_obligation_overdue ? 'text-danger' : 'text-navy'">
+                {{ row.next_obligation_due ?? '—' }}
+              </span>
+            </template>
+          </DataTable>
 
-          <div class="mt-3 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              class="text-sm text-primary-dark hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
-              :disabled="!portfolioHasPrevious"
-              @click="onPrevPortfolioPage"
-            >
-              {{ t('limitsAccountingEtc.accountingOrganizationView.prevPage') }}
-            </button>
-            <button
-              type="button"
-              class="text-sm text-primary-dark hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
-              :disabled="!portfolioHasNext"
-              @click="onNextPortfolioPage"
-            >
-              {{ t('limitsAccountingEtc.accountingOrganizationView.nextPage') }}
-            </button>
-          </div>
-        </div>
+          <Pagination
+            class="mt-3"
+            :has-next="portfolioHasNext"
+            :has-previous="portfolioHasPrevious"
+            :page="portfolioPage"
+            :total-pages="portfolioTotalPages"
+            @next="nextPortfolioPage"
+            @previous="prevPortfolioPage"
+          />
+        </template>
       </Card>
     </template>
   </div>

@@ -22,6 +22,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         "tax_obligation",
     ]
     search_fields = ["title", "description", "original_filename"]
+    ordering_fields = ["created_at", "title"]
 
     def get_permissions(self):
         codename = "upload_documents" if self.action in ("create", "destroy") else "view_documents"

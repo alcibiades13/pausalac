@@ -108,4 +108,61 @@ describe('DataTable', () => {
     expect(cardList.text()).toContain('Naziv')
     expect(cardList.findAll('.act')).toHaveLength(2)
   })
+
+  it('renders a plain header (no button) for a non-sortable column', () => {
+    const wrapper = mount(DataTable, { props: { columns, rows } })
+    expect(wrapper.find('th button').exists()).toBe(false)
+  })
+
+  it('cycles asc -> desc -> off and emits the new sort on each header click', async () => {
+    const sortableColumns = [{ key: 'name', label: 'Naziv', sortable: true }, columns[1]!]
+    const wrapper = mount(DataTable, { props: { columns: sortableColumns, rows, sort: null } })
+    const header = wrapper.find('th button')
+
+    await header.trigger('click')
+    expect(wrapper.emitted('sort')![0]).toEqual([{ key: 'name', direction: 'asc' }])
+
+    await wrapper.setProps({ sort: { key: 'name', direction: 'asc' } })
+    await header.trigger('click')
+    expect(wrapper.emitted('sort')![1]).toEqual([{ key: 'name', direction: 'desc' }])
+
+    await wrapper.setProps({ sort: { key: 'name', direction: 'desc' } })
+    await header.trigger('click')
+    expect(wrapper.emitted('sort')![2]).toEqual([null])
+  })
+
+  it('uses sortKey instead of key for the sort event when provided', async () => {
+    const sortableColumns = [{ key: 'name', label: 'Naziv', sortable: true, sortKey: '-custom' }]
+    const wrapper = mount(DataTable, { props: { columns: sortableColumns, rows } })
+    await wrapper.find('th button').trigger('click')
+    expect(wrapper.emitted('sort')![0]).toEqual([{ key: '-custom', direction: 'asc' }])
+  })
+
+  it('does not toggle sort for a non-sortable column even if clicked programmatically', () => {
+    const wrapper = mount(DataTable, { props: { columns, rows } })
+    expect(wrapper.emitted('sort')).toBeUndefined()
+  })
+
+  it('emits row-click with the row when rowClickable and a row is clicked', async () => {
+    const wrapper = mount(DataTable, { props: { columns, rows, rowClickable: true } })
+    await wrapper.find('tbody tr').trigger('click')
+    expect(wrapper.emitted('row-click')![0]).toEqual([rows[0]])
+  })
+
+  it('does not emit row-click when rowClickable is false', async () => {
+    const wrapper = mount(DataTable, { props: { columns, rows } })
+    await wrapper.find('tbody tr').trigger('click')
+    expect(wrapper.emitted('row-click')).toBeUndefined()
+  })
+
+  it('does not emit row-click when an actions button inside the row is clicked', async () => {
+    const wrapper = mount(DataTable, {
+      props: { columns, rows, rowClickable: true },
+      slots: {
+        actions: `<template #actions="{ row }"><button class="act">{{ row.id }}</button></template>`,
+      },
+    })
+    await wrapper.find('table .act').trigger('click')
+    expect(wrapper.emitted('row-click')).toBeUndefined()
+  })
 })

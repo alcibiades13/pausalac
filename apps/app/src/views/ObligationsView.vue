@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Button, Card, DatePicker, Alert, Badge, EmptyState, MoneyDisplay, Skeleton, MoneyInput } from '@pausalac/ui'
+import { Button, Card, DatePicker, Alert, Badge, EmptyState, MoneyDisplay, Skeleton, MoneyInput, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import {
   createTaxResolution,
   listTaxObligations,
@@ -13,6 +13,7 @@ import {
 import { useCompanyStore } from '@/stores/company'
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
+import { useTableQuery } from '@/composables/useTableQuery'
 
 const { t } = useI18n()
 const company = useCompanyStore()
@@ -37,37 +38,53 @@ const WHY_UNEMPLOYMENT = computed(() => t('limitsAccountingEtc.obligationsView.u
 
 // --- obligations list ---------------------------------------------------
 
-const obligations = ref<TaxObligation[]>([])
-const status = ref<'loading' | 'ready' | 'error'>('loading')
-const errorMessage = ref('')
 // Seeded from ?status= on first load (master prompt §115 deep links —
 // e.g. the tax_obligation_overdue notification's "Pogledaj →" link).
 const statusFilter = ref<TaxObligation['status'] | ''>(
   (route.query.status as TaxObligation['status'] | undefined) ?? '',
 )
 
-async function loadObligations() {
-  status.value = 'loading'
-  try {
-    obligations.value = (
-      await listTaxObligations({ status: statusFilter.value || undefined })
-    ).results
-    status.value = 'ready'
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.obligationsView.loadError')
-    status.value = 'error'
-  }
-}
+const columns: DataTableColumn<TaxObligation>[] = [
+  { key: 'period_start', label: t('limitsAccountingEtc.obligationsView.columnPeriod'), sortable: true },
+  { key: 'due_date', label: t('limitsAccountingEtc.obligationsView.columnDueDate'), sortable: true },
+  { key: 'total_amount', label: t('limitsAccountingEtc.obligationsView.columnAmount') },
+  { key: 'status', label: t('limitsAccountingEtc.obligationsView.columnStatus'), sortable: true },
+]
+
+const {
+  rows: obligations,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load: loadObligations,
+  reload: reloadObligations,
+} = useTableQuery<TaxObligation>(
+  (q) =>
+    listTaxObligations({
+      status: statusFilter.value || undefined,
+      page: q.page,
+      pageSize: q.pageSize,
+      ordering: q.ordering,
+    }),
+  { genericErrorMessage: t('limitsAccountingEtc.obligationsView.loadError') },
+)
 
 onMounted(loadObligations)
-watch(statusFilter, loadObligations)
+watch(statusFilter, reloadObligations)
 
 const markingPaidId = ref<number | null>(null)
 async function onMarkPaid(id: number) {
   markingPaidId.value = id
   try {
     await markObligationPaid(id)
-    await loadObligations()
+    await reloadObligations()
   } finally {
     markingPaidId.value = null
   }
@@ -165,7 +182,7 @@ async function onCreateResolution() {
 
       <Alert v-if="status === 'error'" variant="danger">
         {{ errorMessage }}
-        <button class="ml-2 underline" @click="loadObligations">{{ t('limitsAccountingEtc.obligationsView.retryButton') }}</button>
+        <button class="ml-2 underline" @click="reloadObligations">{{ t('limitsAccountingEtc.obligationsView.retryButton') }}</button>
       </Alert>
 
       <Card v-else>
@@ -183,7 +200,7 @@ async function onCreateResolution() {
           </select>
         </div>
 
-        <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
+        <Skeleton v-if="status === 'loading' && obligations.length === 0" class="mt-4" :count="3" />
 
         <EmptyState
           v-else-if="obligations.length === 0"
@@ -192,44 +209,48 @@ async function onCreateResolution() {
           :description="t('limitsAccountingEtc.obligationsView.emptyDescription')"
         />
 
-        <div v-else class="mt-4 overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnPeriod') }}</th>
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnDueDate') }}</th>
-                <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.obligationsView.columnAmount') }}</th>
-                <th class="py-2 pr-3">{{ t('limitsAccountingEtc.obligationsView.columnStatus') }}</th>
-                <th class="py-2 pr-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="obligation in obligations" :key="obligation.id" class="border-b border-border">
-                <td class="py-2 pr-3">{{ formatDate(obligation.period_start) }}</td>
-                <td class="py-2 pr-3">{{ formatDate(obligation.due_date) }}</td>
-                <td class="py-2 pr-3 text-right">
-                  <MoneyDisplay :amount="obligation.total_amount" :currency="currency" />
-                </td>
-                <td class="py-2 pr-3">
-                  <Badge :variant="STATUS_VARIANTS[obligation.status]">
-                    {{ STATUS_LABELS[obligation.status] }}
-                  </Badge>
-                </td>
-                <td class="py-2 pr-3">
-                  <button
-                    v-if="obligation.status !== 'paid'"
-                    type="button"
-                    class="text-sm text-primary-dark hover:underline disabled:opacity-40"
-                    :disabled="markingPaidId === obligation.id"
-                    @click="onMarkPaid(obligation.id)"
-                  >
-                    {{ t('limitsAccountingEtc.obligationsView.markPaidButton') }}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <template v-else>
+          <DataTable
+            class="mt-4"
+            :columns="columns"
+            :rows="obligations"
+            :loading="status === 'loading'"
+            :sort="sort"
+            @sort="onSort"
+          >
+            <template #cell-period_start="{ row }">{{ formatDate(row.period_start) }}</template>
+            <template #cell-due_date="{ row }">{{ formatDate(row.due_date) }}</template>
+            <template #cell-total_amount="{ row }">
+              <MoneyDisplay :amount="row.total_amount" :currency="currency" />
+            </template>
+            <template #cell-status="{ row }">
+              <Badge :variant="STATUS_VARIANTS[row.status]">
+                {{ STATUS_LABELS[row.status] }}
+              </Badge>
+            </template>
+            <template #actions="{ row }">
+              <button
+                v-if="row.status !== 'paid'"
+                type="button"
+                class="text-sm text-primary-dark hover:underline disabled:opacity-40"
+                :disabled="markingPaidId === row.id"
+                @click="onMarkPaid(row.id)"
+              >
+                {{ t('limitsAccountingEtc.obligationsView.markPaidButton') }}
+              </button>
+            </template>
+          </DataTable>
+
+          <Pagination
+            class="mt-4"
+            :has-next="hasNext"
+            :has-previous="hasPrevious"
+            :page="page"
+            :total-pages="totalPages"
+            @next="nextPage"
+            @previous="prevPage"
+          />
+        </template>
       </Card>
     </div>
   </div>

@@ -6,6 +6,7 @@ runs hourly (apps/taxes/tasks.py::mark_overdue_tax_obligations_task).
 from django.core.management.base import BaseCommand
 
 from apps.taxes.services import TaxService
+from config.pluralize import pluralize_sr
 
 
 class Command(BaseCommand):
@@ -13,4 +14,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         count = TaxService.mark_overdue_all()
-        self.stdout.write(self.style.SUCCESS(f"Označeno kao 'kasni': {count} obaveza(a)."))
+        noun = pluralize_sr(count, "obaveza", "obaveze", "obaveza")
+        self.stdout.write(self.style.SUCCESS(f"Označeno kao 'kasni': {count} {noun}."))

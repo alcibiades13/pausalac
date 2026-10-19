@@ -51,6 +51,9 @@ export function listDocuments(
     client?: number | string
     invoice?: number | string
     search?: string
+    page?: number
+    pageSize?: number
+    ordering?: string
   } = {},
 ): Promise<Paginated<AppDocument>> {
   return apiFetch<Paginated<AppDocument>>('documents/', {
@@ -61,6 +64,9 @@ export function listDocuments(
       client: options.client,
       invoice: options.invoice,
       search: options.search,
+      page: options.page,
+      page_size: options.pageSize,
+      ordering: options.ordering,
     },
   })
 }

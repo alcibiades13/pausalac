@@ -69,7 +69,7 @@ describe('ClientsListView', () => {
     expect(wrapper.text()).toContain('Ne možemo trenutno.')
   })
 
-  it('links each client row to its detail page', async () => {
+  it('navigates to the client detail route when a row is clicked', async () => {
     vi.mocked(listClients).mockResolvedValue({
       count: 1,
       next: null,
@@ -94,9 +94,11 @@ describe('ClientsListView', () => {
     })
     const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
     await flushPromises()
+    const pushSpy = vi.spyOn(router, 'push')
 
-    const link = wrapper.find('a[href="/klijenti/5"]')
-    expect(link.exists()).toBe(true)
+    await wrapper.find('tbody tr').trigger('click')
+
+    expect(pushSpy).toHaveBeenCalledWith({ name: 'client-detail', params: { id: 5 } })
   })
 
   it('re-searches from page 1 when the search term changes', async () => {
@@ -110,6 +112,38 @@ describe('ClientsListView', () => {
     expect(listClients).toHaveBeenLastCalledWith(
       expect.objectContaining({ page: 1, search: 'Petar' }),
     )
+  })
+
+  it('re-fetches with an ordering param when a sortable column header is clicked', async () => {
+    vi.mocked(listClients).mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [
+        {
+          id: 1,
+          client_type: 'company',
+          name: 'Test Klijent DOO',
+          tax_id: '',
+          email: '',
+          phone: '',
+          address: '',
+          country: 'RS',
+          default_currency: 'RSD',
+          notes: '',
+          is_active: true,
+          created_at: '',
+          updated_at: '',
+        },
+      ],
+    })
+    const wrapper = mount(ClientsListView, { global: { plugins: [router, i18n] } })
+    await flushPromises()
+
+    await wrapper.find('th button').trigger('click')
+    await flushPromises()
+
+    expect(listClients).toHaveBeenLastCalledWith(expect.objectContaining({ ordering: 'name' }))
   })
 
   it('hides pagination controls when there is only one page', async () => {

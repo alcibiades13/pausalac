@@ -8,44 +8,41 @@ import {
   reactivateAdminUser,
   type AdminUser,
 } from '@/services/admin'
-import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
+import { useTableQuery } from '@/composables/useTableQuery'
 
 const { t } = useI18n()
 
-const users = ref<AdminUser[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
 const actingOnId = ref<number | null>(null)
-const page = ref(1)
-const hasNext = ref(false)
-const hasPrevious = ref(false)
 
 const columns = computed<DataTableColumn<AdminUser>[]>(() => [
-  { key: 'email', label: t('admin.adminUsersView.emailColumn') },
+  { key: 'email', label: t('admin.adminUsersView.emailColumn'), sortable: true },
   { key: 'name', label: t('admin.adminUsersView.nameColumn'), format: (r) => `${r.first_name} ${r.last_name}`.trim() || '—' },
   {
     key: 'date_joined',
     label: t('admin.adminUsersView.registeredColumn'),
     format: (r) => formatDate(r.date_joined),
+    sortable: true,
   },
 ])
 
-async function load() {
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    const result = await listAdminUsers({ page: page.value })
-    users.value = result.results
-    hasNext.value = result.next !== null
-    hasPrevious.value = result.previous !== null
-  } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError ? error.message : t('admin.adminUsersView.loadError')
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  rows: users,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+} = useTableQuery<AdminUser>(
+  (q) => listAdminUsers({ page: q.page, page_size: q.pageSize, search: q.search, ordering: q.ordering }),
+  { genericErrorMessage: t('admin.adminUsersView.loadError') },
+)
 
 async function onToggle(user: AdminUser) {
   actingOnId.value = user.id
@@ -56,20 +53,11 @@ async function onToggle(user: AdminUser) {
       await reactivateAdminUser(user.id)
     }
     await load()
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminUsersView.actionError')
+  } catch {
+    errorMessage.value = t('admin.adminUsersView.actionError')
   } finally {
     actingOnId.value = null
   }
-}
-
-function goNext() {
-  page.value += 1
-  load()
-}
-function goPrevious() {
-  page.value = Math.max(1, page.value - 1)
-  load()
 }
 
 onMounted(load)
@@ -81,7 +69,14 @@ onMounted(load)
 
     <Alert v-if="errorMessage" variant="danger">{{ errorMessage }}</Alert>
 
-    <DataTable :columns="columns" :rows="users" :loading="loading" :empty-title="t('admin.adminUsersView.emptyTitle')">
+    <DataTable
+      :columns="columns"
+      :rows="users"
+      :loading="status === 'loading'"
+      :sort="sort"
+      :empty-title="t('admin.adminUsersView.emptyTitle')"
+      @sort="onSort"
+    >
       <template #actions="{ row }">
         <div class="flex items-center gap-2">
           <Badge :variant="row.is_active ? 'success' : 'neutral'">
@@ -98,6 +93,13 @@ onMounted(load)
       </template>
     </DataTable>
 
-    <Pagination :has-next="hasNext" :has-previous="hasPrevious" @next="goNext" @previous="goPrevious" />
+    <Pagination
+      :has-next="hasNext"
+      :has-previous="hasPrevious"
+      :page="page"
+      :total-pages="totalPages"
+      @next="nextPage"
+      @previous="prevPage"
+    />
   </div>
 </template>

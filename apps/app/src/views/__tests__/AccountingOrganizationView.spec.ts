@@ -298,9 +298,11 @@ describe('AccountingOrganizationView', () => {
 
       const selects = wrapper.findAll('select')
       // DOM order: staff-role select, connection-granted-role select, then
-      // the portfolio's status filter, then its ordering select — status
-      // filter is the third <select> on the page (org().my_role is admin,
-      // so the staff-invite form's select renders first).
+      // the portfolio's status filter — status filter is the third
+      // <select> on the page (org().my_role is admin, so the
+      // staff-invite form's select renders first). Sorting moved from a
+      // combined ordering <select> to the DataTable's sortable column
+      // headers, so this is the last select on the page now.
       await selects[2]!.setValue('critical')
       await flushPromises()
 
@@ -308,6 +310,28 @@ describe('AccountingOrganizationView', () => {
         1,
         expect.objectContaining({ status: 'critical' }),
       )
+    })
+
+    it('re-fetches with an ordering param when a sortable column header is clicked', async () => {
+      vi.mocked(getClientPortfolio).mockResolvedValue({
+        count: 1,
+        next: null,
+        previous: null,
+        results: [portfolioRow()],
+        summary: { total: 1, ok: 1, attention: 0, critical: 0 },
+      })
+      const wrapper = mountView()
+      await flushPromises()
+      vi.mocked(getClientPortfolio).mockClear()
+
+      // The client-name column is the first sortable header (sortKey
+      // 'name') — it's already sorted ascending by default (the old
+      // ordering <select>'s "Naziv (A-Š)" default), so one click cycles
+      // it to descending.
+      await wrapper.find('th button').trigger('click')
+      await flushPromises()
+
+      expect(getClientPortfolio).toHaveBeenCalledWith(1, expect.objectContaining({ ordering: '-name' }))
     })
 
     it('clicking a row switches the active company and navigates home', async () => {

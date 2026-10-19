@@ -1,6 +1,9 @@
+from datetime import date
+
 from django.http import HttpResponse
 from rest_framework import generics, permissions
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.companies.models import Company, Membership
@@ -10,6 +13,7 @@ from .excel import render_kpo_excel
 from .models import KPOEntry
 from .pdf import render_kpo_pdf
 from .serializers import KPOEntrySerializer
+from .services import monthly_summary
 
 
 class KPOEntryListView(generics.ListAPIView):
@@ -18,6 +22,11 @@ class KPOEntryListView(generics.ListAPIView):
 
     serializer_class = KPOEntrySerializer
     permission_classes = [permissions.IsAuthenticated, HasCompanyPermission("view_financial_data")]
+    ordering_fields = ["entry_date", "sequence_number", "created_at"]
+    # description is auto-generated per entry as "Faktura <broj> — <klijent>"
+    # (apps.kpo.services), so it's genuinely distinct per row and worth
+    # searching, unlike e.g. entry_type (two fixed values only).
+    search_fields = ["description"]
 
     def get_queryset(self):
         queryset = KPOEntry.objects.for_company(self.request.company)
@@ -28,6 +37,22 @@ class KPOEntryListView(generics.ListAPIView):
         if date_to:
             queryset = queryset.filter(entry_date__lte=date_to)
         return queryset
+
+
+class KPOMonthlySummaryView(APIView):
+    """Aggregate for `KpoMonthlyBarChart` — a thin wrapper over
+    `apps.kpo.services.monthly_summary`, not a second implementation of
+    KPO totals (the same `KPOEntry` rows the table itself lists)."""
+
+    permission_classes = [permissions.IsAuthenticated, HasCompanyPermission("view_financial_data")]
+
+    def get(self, request, *args, **kwargs):
+        raw_year = request.query_params.get("year")
+        try:
+            year = int(raw_year) if raw_year else date.today().year
+        except ValueError:
+            raise ValidationError({"year": ["Unesite ispravnu godinu."]}) from None
+        return Response(monthly_summary(request.company, year))
 
 
 def _company_for_export(request, company_id) -> Company:

@@ -40,11 +40,16 @@ function currentCompanyId(): number {
 }
 
 export function listClients(
-  options: { pageSize?: number; page?: number; search?: string } = {},
+  options: { pageSize?: number; page?: number; search?: string; ordering?: string } = {},
 ): Promise<Paginated<Client>> {
   return apiFetch<Paginated<Client>>('clients/', {
     companyId: currentCompanyId(),
-    params: { page_size: options.pageSize, page: options.page, search: options.search },
+    params: {
+      page_size: options.pageSize,
+      page: options.page,
+      search: options.search,
+      ordering: options.ordering,
+    },
   })
 }
 

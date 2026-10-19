@@ -103,8 +103,8 @@ describe('HomeView (dashboard)', () => {
     vi.mocked(getDashboard).mockResolvedValue({
       business_health: { status: 'ok', reasons: [] },
       attention: [],
-      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
-      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced', monthly_series: [] },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00', paid_ytd: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
       next_obligation: null,
@@ -117,16 +117,16 @@ describe('HomeView (dashboard)', () => {
 
   it('shows the critical status and an overdue attention item', async () => {
     vi.mocked(getDashboard).mockResolvedValue({
-      business_health: { status: 'critical', reasons: ['1 faktura(e) kasni sa naplatom.'] },
+      business_health: { status: 'critical', reasons: ['1 faktura kasni sa naplatom.'] },
       attention: [
         {
           type: 'overdue_invoices',
-          message: '1 faktura(e) kasni sa ukupno 1.000,00 RSD potraživanja.',
+          message: '1 faktura kasni sa ukupno 1.000,00 RSD potraživanja.',
           action: { route: 'invoices', query: { status: 'overdue' } },
         },
       ],
-      revenue: { ytd: '1000.00', currency: 'RSD', basis: 'invoiced' },
-      outstanding: { count: 1, total: '1000.00', currency: 'RSD', overdue_count: 1, overdue_total: '1000.00' },
+      revenue: { ytd: '1000.00', currency: 'RSD', basis: 'invoiced', monthly_series: [] },
+      outstanding: { count: 1, total: '1000.00', currency: 'RSD', overdue_count: 1, overdue_total: '1000.00', paid_ytd: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
       next_obligation: null,
@@ -134,15 +134,15 @@ describe('HomeView (dashboard)', () => {
     const wrapper = mountHome()
     await flushPromises()
     expect(wrapper.text()).toContain('Potrebna akcija')
-    expect(wrapper.text()).toContain('1 faktura(e) kasni')
+    expect(wrapper.text()).toContain('1 faktura kasni')
   })
 
   it('shows the onboarding-completion bar only when incomplete', async () => {
     vi.mocked(getDashboard).mockResolvedValue({
       business_health: { status: 'ok', reasons: [] },
       attention: [],
-      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
-      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced', monthly_series: [] },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00', paid_ytd: '0.00' },
       onboarding: { completed: [], missing: [], percentage: 100 },
       limits: limitsFixture(),
       next_obligation: null,
@@ -156,8 +156,8 @@ describe('HomeView (dashboard)', () => {
     vi.mocked(getDashboard).mockResolvedValue({
       business_health: { status: 'ok', reasons: [] },
       attention: [],
-      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
-      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced', monthly_series: [] },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00', paid_ytd: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
       next_obligation: null,
@@ -182,8 +182,8 @@ describe('HomeView (dashboard)', () => {
           action: { route: 'obligations' },
         },
       ],
-      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
-      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced', monthly_series: [] },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00', paid_ytd: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
       next_obligation: {
@@ -205,8 +205,8 @@ describe('HomeView (dashboard)', () => {
     vi.mocked(getDashboard).mockResolvedValue({
       business_health: { status: 'ok', reasons: [] },
       attention: [],
-      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced' },
-      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00' },
+      revenue: { ytd: '0.00', currency: 'RSD', basis: 'invoiced', monthly_series: [] },
+      outstanding: { count: 0, total: '0.00', currency: 'RSD', overdue_count: 0, overdue_total: '0.00', paid_ytd: '0.00' },
       onboarding: { completed: ['company', 'bank', 'client'], missing: ['sef', 'tax_document'], percentage: 60 },
       limits: limitsFixture(),
       next_obligation: null,

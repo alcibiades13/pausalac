@@ -159,3 +159,84 @@ class LimitsServiceTests(TestCase):
 
         tracker = LimitsService.compute_pausal_limit(self.company, as_of=self.today)
         self.assertEqual(tracker["current"], Decimal("0.00"))
+
+
+class LimitsHistoryTests(TestCase):
+    """`compute_pausal_limit_history` — LimitProgressChart's data source."""
+
+    def setUp(self):
+        seed_test_rules()
+        self.company = Company.objects.create(name="Firma A", pib="123456789")
+        self.client_obj = Client.objects.create(company=self.company, name="Klijent A")
+
+    def test_history_is_cumulative_and_zero_filled(self):
+        jan = _issued_invoice(self.company, self.client_obj, unit_price="100000.00", issue_date=date(2026, 1, 10))
+        FinancialEvent.objects.filter(invoice=jan).update(
+            occurred_at=timezone.make_aware(timezone.datetime(2026, 1, 10))
+        )
+        mar = _issued_invoice(self.company, self.client_obj, unit_price="50000.00", issue_date=date(2026, 3, 5))
+        FinancialEvent.objects.filter(invoice=mar).update(
+            occurred_at=timezone.make_aware(timezone.datetime(2026, 3, 5))
+        )
+
+        result = LimitsService.compute_pausal_limit_history(
+            self.company, 2026, as_of=date(2026, 3, 31)
+        )
+        self.assertEqual(result["threshold"], Decimal("6000000.00"))
+        history_by_month = {row["month"]: row["cumulative"] for row in result["history"]}
+        self.assertEqual(history_by_month["2026-01-01"], Decimal("100000.00"))
+        self.assertEqual(history_by_month["2026-02-01"], Decimal("100000.00"))  # carried forward, no new activity
+        self.assertEqual(history_by_month["2026-03-01"], Decimal("150000.00"))
+
+    def test_projection_continues_from_the_last_real_point(self):
+        invoice = _issued_invoice(
+            self.company, self.client_obj, unit_price="600000.00", issue_date=date(2026, 1, 10)
+        )
+        FinancialEvent.objects.filter(invoice=invoice).update(
+            occurred_at=timezone.make_aware(timezone.datetime(2026, 1, 10))
+        )
+        result = LimitsService.compute_pausal_limit_history(self.company, 2026, as_of=date(2026, 1, 20))
+        self.assertTrue(result["projection"])
+        # First projection point is exactly where history leaves off — no
+        # visible jump/kink where the two lines are meant to meet.
+        self.assertEqual(result["projection"][0]["month"], result["history"][-1]["month"])
+        self.assertEqual(result["projection"][0]["cumulative"], result["history"][-1]["cumulative"])
+        # Later projected months keep climbing toward the year-end estimate.
+        self.assertGreater(result["projection"][-1]["cumulative"], result["projection"][0]["cumulative"])
+
+    def test_no_projection_before_minimum_days_elapsed(self):
+        result = LimitsService.compute_pausal_limit_history(self.company, 2026, as_of=date(2026, 1, 3))
+        self.assertEqual(result["projection"], [])
+
+    def test_past_year_has_no_projection(self):
+        result = LimitsService.compute_pausal_limit_history(
+            self.company, 2020, as_of=date(2026, 6, 1)
+        )
+        self.assertEqual(result["projection"], [])
+        self.assertEqual(len(result["history"]), 12)
+
+    def test_negative_month_from_cancellation_is_reflected(self):
+        invoice = _issued_invoice(
+            self.company, self.client_obj, unit_price="300000.00", issue_date=date(2026, 2, 1)
+        )
+        FinancialEvent.objects.filter(invoice=invoice).update(
+            occurred_at=timezone.make_aware(timezone.datetime(2026, 2, 1))
+        )
+        invoice2 = _issued_invoice(
+            self.company, self.client_obj, unit_price="100000.00", issue_date=date(2026, 3, 1)
+        )
+        FinancialEvent.objects.filter(invoice=invoice2).update(
+            occurred_at=timezone.make_aware(timezone.datetime(2026, 3, 1))
+        )
+        InvoiceService.cancel(invoice2, actor=None)
+        FinancialEvent.objects.filter(
+            invoice=invoice2, event_type=FinancialEvent.EventType.INVOICE_CANCELLED
+        ).update(occurred_at=timezone.make_aware(timezone.datetime(2026, 3, 2)))
+
+        result = LimitsService.compute_pausal_limit_history(
+            self.company, 2026, as_of=date(2026, 3, 31)
+        )
+        history_by_month = {row["month"]: row["cumulative"] for row in result["history"]}
+        # March's own net activity is -100000 + 100000 = 0, so cumulative
+        # stays at February's 300000 rather than climbing further.
+        self.assertEqual(history_by_month["2026-03-01"], Decimal("300000.00"))

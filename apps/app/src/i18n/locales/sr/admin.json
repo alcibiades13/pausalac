@@ -8,9 +8,7 @@
     "entityColumn": "Entitet",
     "actionColumn": "Akcija",
     "loadError": "Ne možemo trenutno da učitamo audit log.",
-    "emptyTitle": "Nema zapisa.",
-    "previousButton": "Prethodna",
-    "nextButton": "Sledeća"
+    "emptyTitle": "Nema zapisa."
   },
   "adminCompaniesView": {
     "title": "Kompanije",
@@ -21,8 +19,6 @@
     "loadError": "Ne možemo trenutno da učitamo kompanije.",
     "emptyTitle": "Nema kompanija.",
     "membersButton": "Članovi",
-    "previousButton": "Prethodna",
-    "nextButton": "Sledeća",
     "membersHeading": "Članovi — {name}",
     "closeButton": "Zatvori",
     "loadingMembers": "Učitavanje...",
@@ -37,9 +33,7 @@
     "uploadedByColumn": "Otpremio",
     "dateColumn": "Datum",
     "loadError": "Ne možemo trenutno da učitamo dokumente.",
-    "emptyTitle": "Nema dokumenata.",
-    "previousButton": "Prethodna",
-    "nextButton": "Sledeća"
+    "emptyTitle": "Nema dokumenata."
   },
   "adminIntegrationsView": {
     "title": "Integracije",
@@ -62,10 +56,9 @@
     "numberColumn": "Broj",
     "draftFallback": "nacrt",
     "issueDateColumn": "Datum izdavanja",
+    "dueDateColumn": "Rok",
     "loadError": "Ne možemo trenutno da učitamo fakture.",
-    "emptyTitle": "Nema faktura.",
-    "previousButton": "Prethodna",
-    "nextButton": "Sledeća"
+    "emptyTitle": "Nema faktura."
   },
   "adminNotificationsView": {
     "title": "Obaveštenja",
@@ -75,9 +68,7 @@
     "channelColumn": "Kanal",
     "dateColumn": "Datum",
     "loadError": "Ne možemo trenutno da učitamo obaveštenja.",
-    "emptyTitle": "Nema obaveštenja.",
-    "previousButton": "Prethodna",
-    "nextButton": "Sledeća"
+    "emptyTitle": "Nema obaveštenja."
   },
   "adminPlansView": {
     "title": "Planovi",
@@ -134,9 +125,7 @@
     "statusActive": "Aktivna",
     "statusGracePeriod": "Period odlaganja",
     "statusCancelled": "Otkazana",
-    "statusExpired": "Istekla",
-    "previousButton": "Prethodna",
-    "nextButton": "Sledeća"
+    "statusExpired": "Istekla"
   },
   "adminTaxObligationsView": {
     "title": "Poreske obaveze",
@@ -147,9 +136,7 @@
     "dueDateColumn": "Rok",
     "statusPending": "Na čekanju",
     "statusPaid": "Plaćeno",
-    "statusOverdue": "Kasni",
-    "previousButton": "Prethodna",
-    "nextButton": "Sledeća"
+    "statusOverdue": "Kasni"
   },
   "adminUsersView": {
     "title": "Korisnici",

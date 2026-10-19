@@ -50,13 +50,41 @@ class DashboardTests(TestCase):
         body = response.json()
         self.assertEqual(body["business_health"]["status"], "ok")
         self.assertEqual(body["attention"], [])
-        self.assertEqual(Decimal(body["revenue"]["ytd"]), Decimal("0.00"))
+        self.assertEqual(Decimal(str(body["revenue"]["ytd"])), Decimal("0.00"))
         self.assertEqual(body["revenue"]["basis"], "invoiced")
         self.assertEqual(body["outstanding"]["count"], 0)
         self.assertIn("limits", body)
         self.assertIn("pausal_limit", body["limits"])
         self.assertIn("vat_threshold", body["limits"])
         self.assertIsNone(body["next_obligation"])
+
+    def test_revenue_monthly_series_covers_the_whole_calendar_year(self):
+        # All 12 months, including ones still in the future — the chart
+        # shows the year's shape end to end, future months zero-filled
+        # rather than the series just stopping at "today".
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        series = body["revenue"]["monthly_series"]
+        self.assertEqual(len(series), 12)
+        self.assertEqual(series[0]["month"], f"{timezone.now().date().year}-01-01")
+        self.assertTrue(all(Decimal(str(row["amount"])) == Decimal("0.00") for row in series))
+
+    def test_outstanding_paid_ytd_reflects_paid_invoices_only(self):
+        invoice = _issued_invoice(self.company, self.client_obj, unit_price="50000.00")
+        PaymentService.record_payment(
+            invoice,
+            amount=Decimal("50000.00"),
+            paid_at=timezone.now().date(),
+            method="bank_transfer",
+            notes="",
+            actor=None,
+        )
+        # Outstanding invoice, not paid — must not leak into paid_ytd.
+        _issued_invoice(self.company, self.client_obj, unit_price="10000.00")
+
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(Decimal(str(body["outstanding"]["paid_ytd"])), Decimal("50000.00"))
 
     def test_tax_resolution_without_document_produces_attention_entry(self):
         from datetime import date
@@ -179,10 +207,104 @@ class DashboardTests(TestCase):
 
         response = self.client.get(self.url, **self.headers)
         body = response.json()
-        self.assertEqual(body["next_obligation"]["status"], "overdue")
+        # An overdue obligation is never "next" — it already surfaces via
+        # the tax_obligation_overdue attention item below; with no pending
+        # obligation in this scenario, "next" is genuinely empty.
+        self.assertIsNone(body["next_obligation"])
         self.assertEqual(body["business_health"]["status"], "critical")
         types = [item["type"] for item in body["attention"]]
         self.assertIn("tax_obligation_overdue", types)
+
+    def test_overdue_obligation_does_not_hide_a_genuinely_upcoming_one(self):
+        from datetime import date, timedelta
+        from decimal import Decimal as D
+
+        from apps.taxes.services import TaxService
+        from apps.taxes.testing import seed_test_rates
+
+        seed_test_rates()
+        past_month = date(timezone.now().year - 1, 1, 1)
+        TaxService.create_resolution(
+            self.company,
+            effective_from=past_month,
+            effective_until=past_month,
+            tax_base=D("100000.00"),
+            income_tax_amount=D("10000.00"),
+            pio_amount=D("24000.00"),
+            health_amount=D("10300.00"),
+            unemployment_amount=D("750.00"),
+        )
+        TaxService.mark_overdue_all()
+
+        future_month = (timezone.now().date().replace(day=1) + timedelta(days=60)).replace(day=1)
+        TaxService.create_resolution(
+            self.company,
+            effective_from=future_month,
+            effective_until=future_month,
+            tax_base=D("50000.00"),
+            income_tax_amount=D("5000.00"),
+            pio_amount=D("12000.00"),
+            health_amount=D("5150.00"),
+            unemployment_amount=D("375.00"),
+        )
+
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["next_obligation"]["status"], "pending")
+        self.assertEqual(Decimal(body["next_obligation"]["total_amount"]), Decimal("22525.00"))
+        types = [item["type"] for item in body["attention"]]
+        self.assertIn("tax_obligation_overdue", types)
+
+    def test_next_obligation_is_deterministic_when_two_share_a_due_date(self):
+        # Nothing in the model stops two obligations from sharing a
+        # due_date. `.order_by("due_date")` alone leaves the choice
+        # between tied rows to the database's own unspecified order —
+        # deterministic within one run, but not guaranteed stable
+        # between runs. `id` as a secondary sort key removes that.
+        from datetime import date
+        from decimal import Decimal as D
+
+        from apps.taxes.models import TaxObligation
+        from apps.taxes.services import TaxService
+        from apps.taxes.testing import seed_test_rates
+
+        seed_test_rates()
+        shared_due_date = date(timezone.now().year, 12, 15)
+        resolution = TaxService.create_resolution(
+            self.company,
+            effective_from=date(timezone.now().year, 11, 1),
+            effective_until=date(timezone.now().year, 11, 1),
+            tax_base=D("100000.00"),
+            income_tax_amount=D("10000.00"),
+            pio_amount=D("24000.00"),
+            health_amount=D("10300.00"),
+            unemployment_amount=D("750.00"),
+        )
+        obligation = resolution.obligations.get()
+        obligation.due_date = shared_due_date
+        obligation.save(update_fields=["due_date"])
+
+        later_duplicate = TaxObligation.objects.create(
+            company=self.company,
+            resolution=resolution,
+            # A different period_start (the unique constraint is on
+            # company+period_start, not company+due_date) — the point
+            # here is only that two rows can share a due_date.
+            period_start=date(timezone.now().year, 10, 1),
+            due_date=shared_due_date,
+            income_tax_amount=D("10000.00"),
+            pio_amount=D("24000.00"),
+            health_amount=D("10300.00"),
+            unemployment_amount=D("750.00"),
+        )
+        self.assertGreater(later_duplicate.id, obligation.id)
+
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["next_obligation"]["due_date"], shared_due_date.isoformat())
+        # The lower-id row wins consistently, not whichever the database
+        # happens to return first for the tied due_date.
+        self.assertEqual(Decimal(body["next_obligation"]["total_amount"]), obligation.total_amount)
 
     def test_limit_at_warning_level_produces_attention_without_being_critical(self):
         # 5,100,000 / 6,000,000 = 85% -> "warning", not "critical".

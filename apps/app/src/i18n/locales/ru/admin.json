@@ -8,9 +8,7 @@
     "entityColumn": "Сущность",
     "actionColumn": "Действие",
     "loadError": "Не удаётся загрузить журнал аудита.",
-    "emptyTitle": "Нет записей.",
-    "previousButton": "Назад",
-    "nextButton": "Далее"
+    "emptyTitle": "Нет записей."
   },
   "adminCompaniesView": {
     "title": "Компании",
@@ -21,8 +19,6 @@
     "loadError": "Не удаётся загрузить компании.",
     "emptyTitle": "Нет компаний.",
     "membersButton": "Участники",
-    "previousButton": "Назад",
-    "nextButton": "Далее",
     "membersHeading": "Участники — {name}",
     "closeButton": "Закрыть",
     "loadingMembers": "Загрузка...",
@@ -37,9 +33,7 @@
     "uploadedByColumn": "Загрузил",
     "dateColumn": "Дата",
     "loadError": "Не удаётся загрузить документы.",
-    "emptyTitle": "Нет документов.",
-    "previousButton": "Назад",
-    "nextButton": "Далее"
+    "emptyTitle": "Нет документов."
   },
   "adminIntegrationsView": {
     "title": "Интеграции",
@@ -62,10 +56,9 @@
     "numberColumn": "Номер",
     "draftFallback": "черновик",
     "issueDateColumn": "Дата выставления",
+    "dueDateColumn": "Срок",
     "loadError": "Не удаётся загрузить счета.",
-    "emptyTitle": "Нет счетов.",
-    "previousButton": "Назад",
-    "nextButton": "Далее"
+    "emptyTitle": "Нет счетов."
   },
   "adminNotificationsView": {
     "title": "Уведомления",
@@ -75,9 +68,7 @@
     "channelColumn": "Канал",
     "dateColumn": "Дата",
     "loadError": "Не удаётся загрузить уведомления.",
-    "emptyTitle": "Нет уведомлений.",
-    "previousButton": "Назад",
-    "nextButton": "Далее"
+    "emptyTitle": "Нет уведомлений."
   },
   "adminPlansView": {
     "title": "Планы",
@@ -134,9 +125,7 @@
     "statusActive": "Активна",
     "statusGracePeriod": "Период отсрочки",
     "statusCancelled": "Отменена",
-    "statusExpired": "Истекла",
-    "previousButton": "Назад",
-    "nextButton": "Далее"
+    "statusExpired": "Истекла"
   },
   "adminTaxObligationsView": {
     "title": "Налоговые обязательства",
@@ -147,9 +136,7 @@
     "dueDateColumn": "Срок",
     "statusPending": "В ожидании",
     "statusPaid": "Оплачено",
-    "statusOverdue": "Просрочено",
-    "previousButton": "Назад",
-    "nextButton": "Далее"
+    "statusOverdue": "Просрочено"
   },
   "adminUsersView": {
     "title": "Пользователи",

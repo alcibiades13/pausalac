@@ -11,7 +11,7 @@ the Dashboard's own revenue-YTD card uses.
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
-from apps.invoices.ledger import sum_issued_revenue
+from apps.invoices.ledger import monthly_issued_revenue, sum_issued_revenue
 from apps.limits.rules import get_active_rule
 
 MIN_DAYS_FOR_PROJECTION = 7
@@ -104,6 +104,68 @@ class LimitsService:
             as_of=as_of,
             include_projection=True,
         )
+
+    @staticmethod
+    def compute_pausal_limit_history(company, year: int, as_of: date | None = None) -> dict:
+        """Monthly cumulative revenue toward the calendar-year paušal
+        limit, plus a projected path to year-end for `LimitProgressChart`
+        (blueprint §6.5). Shares its numbers with `compute_pausal_limit`
+        rather than recomputing them separately: `monthly_issued_revenue`
+        is the same ledger function `_build_tracker` calls (via
+        `sum_issued_revenue`), and the projected year-end total is the
+        exact same `_projection` linear-extrapolation the dashboard's
+        text line already shows — this just spreads that one number
+        across the remaining months as a path instead of stating it once.
+        """
+        as_of = as_of or date.today()
+        period_start = date(year, 1, 1)
+        period_end = date(year, 12, 31)
+        is_current_year = period_start <= as_of <= period_end
+        history_end = as_of if is_current_year else period_end
+
+        history: list[dict] = []
+        running = Decimal("0.00")
+        for row in monthly_issued_revenue(company, period_start, history_end):
+            running += row["amount"]
+            history.append({"month": row["month"], "cumulative": running})
+
+        rule = get_active_rule("pausal_turnover_limit", as_of)
+        threshold = Decimal(str(rule.config["amount"]))
+        currency = rule.config.get("currency", company.default_currency)
+
+        projection: list[dict] = []
+        if is_current_year:
+            current_total = running  # last history point — computed from the same partial-month query, so the two lines meet exactly
+            estimate = _projection(current_total, period_start, period_end, as_of)
+            if estimate is not None:
+                end_of_year_total = estimate["estimated_period_end"]
+                remaining_months: list[str] = []
+                cursor = date(as_of.year, as_of.month, 1)
+                end_marker = date(period_end.year, period_end.month, 1)
+                while cursor <= end_marker:
+                    remaining_months.append(cursor.isoformat())
+                    cursor = (
+                        date(cursor.year + 1, 1, 1)
+                        if cursor.month == 12
+                        else date(cursor.year, cursor.month + 1, 1)
+                    )
+                steps = len(remaining_months) - 1
+                for i, month in enumerate(remaining_months):
+                    value = (
+                        current_total
+                        if steps == 0
+                        else current_total
+                        + (end_of_year_total - current_total) * Decimal(i) / Decimal(steps)
+                    )
+                    projection.append({"month": month, "cumulative": value.quantize(Decimal("0.01"))})
+
+        return {
+            "year": year,
+            "threshold": threshold,
+            "currency": currency,
+            "history": history,
+            "projection": projection,
+        }
 
     @staticmethod
     def compute_vat_threshold(company, as_of: date | None = None) -> dict:

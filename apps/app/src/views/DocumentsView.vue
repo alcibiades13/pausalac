@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Button, Card, Input, Select, Alert, EmptyState, Badge, Skeleton } from '@pausalac/ui'
+import { Button, Card, Input, Select, Alert, EmptyState, Badge, DataTable, Pagination, Skeleton, type DataTableColumn } from '@pausalac/ui'
 import {
   listDocuments,
   uploadDocument,
@@ -14,6 +14,8 @@ import { listTaxResolutions, type TaxResolution } from '@/services/taxes'
 import { listClients, type Client } from '@/services/clients'
 import { listInvoices, type Invoice } from '@/services/invoices'
 import { ApiError } from '@/lib/api'
+import { useTableQuery } from '@/composables/useTableQuery'
+import { formatDate } from '@/lib/formatDate'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -35,27 +37,42 @@ const CATEGORY_FILTER_OPTIONS = computed(() => [
 
 // --- list ------------------------------------------------------------
 
-const documents = ref<AppDocument[]>([])
-const status = ref<'loading' | 'ready' | 'error'>('loading')
-const errorMessage = ref('')
 const categoryFilter = ref('')
-const searchTerm = ref('')
 
-async function load() {
-  status.value = 'loading'
-  try {
-    documents.value = (
-      await listDocuments({
-        category: (categoryFilter.value || undefined) as DocumentCategory | undefined,
-        search: searchTerm.value || undefined,
-      })
-    ).results
-    status.value = 'ready'
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.documentsView.loadError')
-    status.value = 'error'
-  }
-}
+const columns: DataTableColumn<AppDocument>[] = [
+  { key: 'title', label: t('limitsAccountingEtc.documentsView.columnTitle'), sortable: true },
+  { key: 'category', label: t('limitsAccountingEtc.documentsView.columnCategory') },
+  { key: 'original_filename', label: t('limitsAccountingEtc.documentsView.columnFile') },
+  { key: 'size_bytes', label: t('limitsAccountingEtc.documentsView.columnSize') },
+  { key: 'created_at', label: t('limitsAccountingEtc.documentsView.columnCreatedAt'), sortable: true },
+]
+
+const {
+  rows: documents,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  search: searchTerm,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+  reload,
+} = useTableQuery<AppDocument>(
+  (q) =>
+    listDocuments({
+      category: (categoryFilter.value || undefined) as DocumentCategory | undefined,
+      page: q.page,
+      pageSize: q.pageSize,
+      search: q.search,
+      ordering: q.ordering,
+    }),
+  { genericErrorMessage: t('limitsAccountingEtc.documentsView.loadError') },
+)
 
 onMounted(async () => {
   await load()
@@ -67,14 +84,14 @@ onMounted(async () => {
     document.getElementById(`document-${route.query.document}`)?.scrollIntoView({ block: 'center' })
   }
 })
-watch([categoryFilter, searchTerm], load)
+watch(categoryFilter, reload)
 
 const deletingId = ref<number | null>(null)
 async function onDelete(id: number) {
   deletingId.value = id
   try {
     await deleteDocument(id)
-    await load()
+    await reload()
   } finally {
     deletingId.value = null
   }
@@ -230,7 +247,7 @@ async function onUpload() {
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
-      <button class="ml-2 underline" @click="load">{{ t('limitsAccountingEtc.documentsView.retryButton') }}</button>
+      <button class="ml-2 underline" @click="reload">{{ t('limitsAccountingEtc.documentsView.retryButton') }}</button>
     </Alert>
 
     <Card v-else>
@@ -244,7 +261,7 @@ async function onUpload() {
         />
       </div>
 
-      <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
+      <Skeleton v-if="status === 'loading' && documents.length === 0" class="mt-4" :count="3" />
 
       <EmptyState
         v-else-if="documents.length === 0"
@@ -253,60 +270,84 @@ async function onUpload() {
         :description="t('limitsAccountingEtc.documentsView.emptyDescription')"
       />
 
-      <ul v-else class="mt-4 flex flex-col divide-y divide-border">
-        <li
-          v-for="doc in documents"
-          :id="`document-${doc.id}`"
-          :key="doc.id"
-          class="flex flex-col gap-3 rounded-lg px-2 py-3 sm:flex-row sm:items-center"
-          :class="String(doc.id) === route.query.document ? 'ring-2 ring-primary' : ''"
+      <template v-else>
+        <DataTable
+          class="mt-4"
+          :columns="columns"
+          :rows="documents"
+          :loading="status === 'loading'"
+          :sort="sort"
+          @sort="onSort"
         >
-          <div class="flex min-w-0 flex-1 items-center gap-4">
-            <img
-              v-if="isImage(doc)"
-              :src="doc.file_url ?? undefined"
-              class="h-12 w-12 shrink-0 rounded object-cover"
-              :alt="t('limitsAccountingEtc.documentsView.previewAlt', { title: doc.title })"
-            />
-            <div
-              v-else
-              class="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-background text-xl"
-              aria-hidden="true"
-            >
-              📄
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <Badge variant="neutral">{{ CATEGORY_LABELS[doc.category] }}</Badge>
-                <span class="font-medium text-navy">{{ doc.title }}</span>
+          <template #cell-title="{ row }">
+            <div class="flex min-w-0 items-center gap-3">
+              <img
+                v-if="isImage(row)"
+                :src="row.file_url ?? undefined"
+                class="h-8 w-8 shrink-0 rounded object-cover"
+                :alt="t('limitsAccountingEtc.documentsView.previewAlt', { title: row.title })"
+              />
+              <div
+                v-else
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-background text-base"
+                aria-hidden="true"
+              >
+                📄
               </div>
-              <p class="text-sm text-text-secondary">
-                {{ doc.original_filename }} · {{ formatSize(doc.size_bytes) }}
-                <span v-if="doc.uploaded_by_name"> · {{ doc.uploaded_by_name }}</span>
-              </p>
+              <div class="min-w-0">
+                <span
+                  :id="`document-${row.id}`"
+                  class="font-medium text-navy"
+                  :class="String(row.id) === route.query.document ? 'rounded ring-2 ring-primary' : ''"
+                >
+                  {{ row.title }}
+                </span>
+                <p v-if="row.uploaded_by_name" class="text-xs text-text-secondary">{{ row.uploaded_by_name }}</p>
+              </div>
             </div>
-          </div>
-          <div class="flex items-center gap-3 sm:shrink-0">
-            <a
-              v-if="doc.file_url"
-              :href="doc.file_url"
-              target="_blank"
-              rel="noopener"
-              class="text-sm text-primary-dark hover:underline"
-            >
-              {{ t('limitsAccountingEtc.documentsView.openLink') }}
-            </a>
-            <button
-              type="button"
-              class="text-sm text-danger hover:underline disabled:opacity-40"
-              :disabled="deletingId === doc.id"
-              @click="onDelete(doc.id)"
-            >
-              {{ t('limitsAccountingEtc.documentsView.deleteButton') }}
-            </button>
-          </div>
-        </li>
-      </ul>
+          </template>
+          <template #cell-category="{ row }">
+            <Badge variant="neutral">{{ CATEGORY_LABELS[row.category] }}</Badge>
+          </template>
+          <template #cell-size_bytes="{ row }">
+            {{ formatSize(row.size_bytes) }}
+          </template>
+          <template #cell-created_at="{ row }">
+            {{ formatDate(row.created_at) }}
+          </template>
+          <template #actions="{ row }">
+            <div class="flex items-center gap-3">
+              <a
+                v-if="row.file_url"
+                :href="row.file_url"
+                target="_blank"
+                rel="noopener"
+                class="text-sm text-primary-dark hover:underline"
+              >
+                {{ t('limitsAccountingEtc.documentsView.openLink') }}
+              </a>
+              <button
+                type="button"
+                class="text-sm text-danger hover:underline disabled:opacity-40"
+                :disabled="deletingId === row.id"
+                @click="onDelete(row.id)"
+              >
+                {{ t('limitsAccountingEtc.documentsView.deleteButton') }}
+              </button>
+            </div>
+          </template>
+        </DataTable>
+
+        <Pagination
+          class="mt-4"
+          :has-next="hasNext"
+          :has-previous="hasPrevious"
+          :page="page"
+          :total-pages="totalPages"
+          @next="nextPage"
+          @previous="prevPage"
+        />
+      </template>
     </Card>
   </div>
 </template>

@@ -26,12 +26,24 @@
     "outstandingOverdue": "of which {count} overdue",
     "nextObligationTitle": "Next obligation",
     "nextObligationDue": "Due: {date}",
-    "nextObligationOverdueSuffix": "— overdue",
     "noUpcomingObligation": "No upcoming obligations.",
     "onboardingProgress": "Your account is {percentage}% set up.",
-    "completeSetupLink": "Finish setup →",
-    "newInvoiceButton": "+ New invoice",
-    "newClientButton": "+ New client"
+    "completeSetupLink": "Finish setup →"
+  },
+  "charts": {
+    "revenueTrend": {
+      "title": "Revenue trend",
+      "emptyTitle": "No revenue data yet.",
+      "emptyDescription": "The chart will fill in as soon as you issue your first invoice."
+    },
+    "invoiceStatusBreakdown": {
+      "title": "Payment status",
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "emptyTitle": "No invoices this year yet.",
+      "emptyDescription": "The chart will fill in as soon as you issue your first invoice."
+    }
   },
   "settingsView": {
     "title": "Settings",
@@ -86,7 +98,19 @@
     "emptyTitle": "You don't have any invoices yet.",
     "emptyDescription": "Your first invoice can be ready in under a minute.",
     "newInvoiceCta": "+ New invoice",
-    "draftNumberFallback": "Draft #{id}"
+    "draftNumberFallback": "Draft #{id}",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Invoice number, notes...",
+    "columnNumber": "Number",
+    "columnClient": "Client",
+    "columnIssueDate": "Issue date",
+    "columnDueDate": "Due date",
+    "columnAmount": "Amount",
+    "columnStatus": "Status",
+    "statTotalLabel": "Total invoiced",
+    "statCountLabel": "Number of invoices",
+    "statOverdueLabel": "Overdue",
+    "statPaidYtdLabel": "Collected (this year)"
   },
   "invoiceFormView": {
     "loadError": "We can't load the data right now.",
@@ -195,6 +219,11 @@
     "loadError": "We can't load clients right now.",
     "emptyTitle": "You don't have any clients yet.",
     "emptyDescription": "Your first client can be added in under a minute.",
+    "columnName": "Name",
+    "columnTaxId": "Tax ID",
+    "columnEmail": "Email",
+    "columnType": "Type",
+    "columnCreatedAt": "Added",
     "clientTypeLabels": {
       "company": "Company",
       "individual": "Individual"

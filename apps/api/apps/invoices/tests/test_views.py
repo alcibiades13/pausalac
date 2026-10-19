@@ -1,3 +1,6 @@
+from datetime import timedelta
+from decimal import Decimal
+
 from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
@@ -6,6 +9,10 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.clients.models import Client
 from apps.companies.models import Company, Membership
+from apps.invoices.services import InvoiceService
+from apps.limits.testing import seed_test_rules
+from apps.payments.models import Payment
+from apps.payments.services import PaymentService
 
 
 def _dates():
@@ -435,3 +442,90 @@ class InvoiceDuplicateApiTests(TestCase):
         self.assertNotEqual(body["id"], invoice_id)
         self.assertEqual(body["status"], "draft")
         self.assertEqual(body["total"], "1000.00")
+
+
+class InvoiceStatusBreakdownApiTests(TestCase):
+    """For `InvoiceStatusBreakdown` — same computation DashboardView's
+    `outstanding` field exposes, reached here without a full dashboard
+    fetch (apps.invoices.ledger.outstanding_summary)."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(email="owner@pausalac.rs", password="s3cr3t-pass")
+        self.company = Company.objects.create(name="Firma A")
+        self.client_obj = Client.objects.create(company=self.company, name="Klijent A")
+        Membership.objects.create(user=self.owner, company=self.company)
+        self.client.login(username="owner@pausalac.rs", password="s3cr3t-pass")
+        self.headers = {"HTTP_X_COMPANY_ID": str(self.company.id)}
+        self.url = reverse("invoice-status-breakdown", kwargs={"version": "v1"})
+
+    def _issued_invoice(self, *, unit_price="1000.00", due_date=None):
+        today = timezone.now().date()
+        invoice = InvoiceService.create_draft(
+            company=self.company,
+            client=self.client_obj,
+            issue_date=today,
+            due_date=due_date or today,
+            service_date=today,
+            notes="",
+            line_items=[{"description": "Usluga", "quantity": "1", "unit_price": unit_price}],
+        )
+        return InvoiceService.issue(invoice, actor=None)
+
+    def test_matches_dashboard_outstanding_figures(self):
+        seed_test_rules()
+        past_due = timezone.now().date() - timedelta(days=5)
+        self._issued_invoice(unit_price="500.00", due_date=past_due)
+        InvoiceService.mark_overdue_all()
+        paid = self._issued_invoice(unit_price="1000.00")
+        PaymentService.record_payment(
+            invoice=paid,
+            amount=Decimal("1000.00"),
+            paid_at=timezone.now().date(),
+            method=Payment.Method.CASH,
+            notes="",
+            actor=self.owner,
+        )
+
+        response = self.client.get(self.url, **self.headers)
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["overdue_count"], 1)
+        self.assertEqual(Decimal(str(body["overdue_total"])), Decimal("500.00"))
+        self.assertEqual(Decimal(str(body["paid_ytd"])), Decimal("1000.00"))
+
+        dashboard_body = self.client.get(
+            reverse("dashboard", kwargs={"version": "v1"}), **self.headers
+        ).json()
+        self.assertEqual(body, dashboard_body["outstanding"])
+
+    def test_empty_company_returns_zeroed_summary(self):
+        response = self.client.get(self.url, **self.headers)
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["count"], 0)
+        self.assertEqual(Decimal(str(body["total"])), Decimal("0.00"))
+        self.assertEqual(Decimal(str(body["paid_ytd"])), Decimal("0.00"))
+
+    def test_tenant_isolation(self):
+        other_company = Company.objects.create(name="Firma B")
+        other_client = Client.objects.create(company=other_company, name="Klijent B")
+        other_owner = User.objects.create_user(email="other@pausalac.rs", password="s3cr3t-pass")
+        Membership.objects.create(user=other_owner, company=other_company)
+        InvoiceService.issue(
+            InvoiceService.create_draft(
+                company=other_company,
+                client=other_client,
+                issue_date=timezone.now().date(),
+                due_date=timezone.now().date(),
+                service_date=timezone.now().date(),
+                notes="",
+                line_items=[
+                    {"description": "Usluga", "quantity": "1", "unit_price": "1000.00"}
+                ],
+            ),
+            actor=None,
+        )
+
+        response = self.client.get(self.url, **self.headers)
+        body = response.json()
+        self.assertEqual(body["count"], 0)

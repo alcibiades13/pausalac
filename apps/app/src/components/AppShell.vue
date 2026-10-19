@@ -333,7 +333,11 @@ async function onLogout() {
         </div>
       </header>
 
-      <main id="main-content" class="mx-auto max-w-5xl px-4 py-8 pb-24 sm:pb-8">
+      <main
+        id="main-content"
+        class="mx-auto px-4 py-8 pb-24 sm:pb-8"
+        :class="route.meta.wideContent ? 'max-w-[1600px]' : 'max-w-5xl'"
+      >
         <RouterView v-slot="{ Component }">
           <Transition name="page" mode="out-in">
             <component :is="Component" />

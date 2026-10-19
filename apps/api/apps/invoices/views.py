@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from apps.companies.models import Membership
 from apps.companies.permissions import HasCompanyPermission
 
+from .ledger import outstanding_summary
 from .models import Invoice
 from .pdf import render_invoice_pdf
 from .serializers import InvoiceSerializer
@@ -30,7 +31,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
     http_method_names = ["get", "post", "patch", "head", "options"]
     filterset_fields = ["status", "client", "document_type"]
-    search_fields = ["invoice_number", "notes"]
+    search_fields = ["invoice_number", "notes", "client__name"]
     ordering_fields = ["issue_date", "due_date", "created_at"]
 
     def get_permissions(self):
@@ -39,6 +40,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         codename = {
             "list": "view_financial_data",
             "retrieve": "view_financial_data",
+            "status_breakdown": "view_financial_data",
             "create": "create_invoice",
             "update": "edit_invoice",
             "partial_update": "edit_invoice",
@@ -91,6 +93,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             invoice_id=invoice.id,
             document_type=invoice.document_type,
         )
+
+    @action(detail=False, methods=["get"], url_path="status-breakdown")
+    def status_breakdown(self, request, *args, **kwargs):
+        """For `InvoiceStatusBreakdown` — a thin wrapper over the same
+        `outstanding_summary` DashboardView reads, so a page that only
+        needs paid/pending/overdue doesn't have to fetch the whole
+        Dashboard payload for it."""
+        return Response(outstanding_summary(request.company))
 
     @action(detail=True, methods=["post"])
     def issue(self, request, pk=None, *args, **kwargs):

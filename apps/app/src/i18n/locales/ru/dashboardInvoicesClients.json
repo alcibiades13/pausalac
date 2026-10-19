@@ -26,12 +26,24 @@
     "outstandingOverdue": "из них просрочено: {count}",
     "nextObligationTitle": "Ближайшее обязательство",
     "nextObligationDue": "Срок: {date}",
-    "nextObligationOverdueSuffix": "— просрочено",
     "noUpcomingObligation": "Нет предстоящих обязательств.",
     "onboardingProgress": "Аккаунт настроен на {percentage}%.",
-    "completeSetupLink": "Завершить настройку →",
-    "newInvoiceButton": "+ Новый счёт",
-    "newClientButton": "+ Новый клиент"
+    "completeSetupLink": "Завершить настройку →"
+  },
+  "charts": {
+    "revenueTrend": {
+      "title": "Динамика дохода",
+      "emptyTitle": "Пока нет данных о доходе.",
+      "emptyDescription": "График заполнится, как только вы выставите первый счёт."
+    },
+    "invoiceStatusBreakdown": {
+      "title": "Статус оплаты",
+      "paid": "Оплачено",
+      "pending": "В ожидании",
+      "overdue": "Просрочено",
+      "emptyTitle": "В этом году пока нет счетов.",
+      "emptyDescription": "График заполнится, как только вы выставите первый счёт."
+    }
   },
   "settingsView": {
     "title": "Настройки",
@@ -86,7 +98,19 @@
     "emptyTitle": "У вас пока нет счетов.",
     "emptyDescription": "Первый счёт можно создать меньше чем за минуту.",
     "newInvoiceCta": "+ Новый счёт",
-    "draftNumberFallback": "Черновик №{id}"
+    "draftNumberFallback": "Черновик №{id}",
+    "searchLabel": "Поиск",
+    "searchPlaceholder": "Номер счёта, заметка...",
+    "columnNumber": "Номер",
+    "columnClient": "Клиент",
+    "columnIssueDate": "Дата выставления",
+    "columnDueDate": "Срок оплаты",
+    "columnAmount": "Сумма",
+    "columnStatus": "Статус",
+    "statTotalLabel": "Всего выставлено",
+    "statCountLabel": "Количество счетов",
+    "statOverdueLabel": "Просрочено",
+    "statPaidYtdLabel": "Получено (в этом году)"
   },
   "invoiceFormView": {
     "loadError": "Не можем сейчас загрузить данные.",
@@ -195,6 +219,11 @@
     "loadError": "Не можем сейчас загрузить клиентов.",
     "emptyTitle": "У вас пока нет клиентов.",
     "emptyDescription": "Первого клиента можно добавить меньше чем за минуту.",
+    "columnName": "Название",
+    "columnTaxId": "Налоговый номер",
+    "columnEmail": "Email",
+    "columnType": "Тип",
+    "columnCreatedAt": "Добавлен",
     "clientTypeLabels": {
       "company": "Юридическое лицо",
       "individual": "Физическое лицо"

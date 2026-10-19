@@ -2,9 +2,10 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Button, Card, Input, Alert, Skeleton } from '@pausalac/ui'
-import { getLimits, simulateLimits, type Limits, type LimitsSimulation } from '@/services/limits'
+import { getLimits, getLimitHistory, simulateLimits, type Limits, type LimitHistory, type LimitsSimulation } from '@/services/limits'
 import { ApiError } from '@/lib/api'
 import LimitTracker from '@/components/LimitTracker.vue'
+import LimitProgressChart from '@/components/charts/LimitProgressChart.vue'
 
 const { t } = useI18n()
 
@@ -24,6 +25,25 @@ async function load() {
 }
 
 onMounted(load)
+
+// --- history + projection chart (blueprint §6.5, detail page only) ------
+
+const history = ref<LimitHistory | null>(null)
+const historyStatus = ref<'loading' | 'ready' | 'error'>('loading')
+const historyError = ref('')
+
+async function loadHistory() {
+  historyStatus.value = 'loading'
+  try {
+    history.value = await getLimitHistory()
+    historyStatus.value = 'ready'
+  } catch (error) {
+    historyError.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.limitsView.loadError')
+    historyStatus.value = 'error'
+  }
+}
+
+onMounted(loadHistory)
 
 // --- what-if calculator (§19/§98 — pure simulation, ništa se ne čuva) ---
 
@@ -68,6 +88,22 @@ async function onSimulate() {
           <LimitTracker :label="t('limitsAccountingEtc.limitsView.vatThresholdLabel')" :tracker="limits.vat_threshold" />
         </Card>
       </div>
+
+      <Card>
+        <h2 class="mb-3 text-sm font-medium text-navy">{{ t('limitsAccountingEtc.charts.limitProgress.title') }}</h2>
+        <Alert v-if="historyStatus === 'error'" variant="danger">
+          {{ historyError }}
+          <button class="ml-2 underline" @click="loadHistory">{{ t('limitsAccountingEtc.limitsView.retryButton') }}</button>
+        </Alert>
+        <Skeleton v-else-if="historyStatus === 'loading'" :count="1" height="220px" />
+        <LimitProgressChart
+          v-else-if="history"
+          :history="history.history"
+          :projection="history.projection"
+          :threshold="history.threshold"
+          :currency="history.currency"
+        />
+      </Card>
 
       <Card>
         <h2 class="mb-1 text-base font-semibold text-navy">{{ t('limitsAccountingEtc.limitsView.simulationTitle') }}</h2>

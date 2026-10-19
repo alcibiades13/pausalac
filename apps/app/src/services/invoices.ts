@@ -75,6 +75,10 @@ export function listInvoices(
     status?: InvoiceStatus
     documentType?: InvoiceDocumentType
     client?: number | string
+    page?: number
+    pageSize?: number
+    search?: string
+    ordering?: string
   } = {},
 ): Promise<Paginated<Invoice>> {
   return apiFetch<Paginated<Invoice>>('invoices/', {
@@ -83,6 +87,10 @@ export function listInvoices(
       status: options.status,
       document_type: options.documentType,
       client: options.client,
+      page: options.page,
+      page_size: options.pageSize,
+      search: options.search,
+      ordering: options.ordering,
     },
   })
 }
@@ -148,6 +156,26 @@ export function sendInvoice(
   return apiFetch<{ detail: string }>(`invoices/${id}/send/`, {
     method: 'POST',
     body: { recipient_email: payload.recipientEmail, message: payload.message },
+    companyId: currentCompanyId(),
+  })
+}
+
+export interface InvoiceStatusBreakdown {
+  count: number
+  total: string
+  currency: string
+  overdue_count: number
+  overdue_total: string
+  paid_ytd: string
+}
+
+/**
+ * For `InvoiceStatusBreakdown` — the same `outstanding_summary` figures
+ * DashboardView's `outstanding` field exposes, reached here without a
+ * full dashboard fetch (apps.invoices.ledger.outstanding_summary).
+ */
+export function getInvoiceStatusBreakdown(): Promise<InvoiceStatusBreakdown> {
+  return apiFetch<InvoiceStatusBreakdown>('invoices/status-breakdown/', {
     companyId: currentCompanyId(),
   })
 }

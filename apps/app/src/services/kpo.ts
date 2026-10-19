@@ -12,6 +12,13 @@ export interface KPOEntry {
   entry_type: 'original' | 'storno'
 }
 
+export interface KpoMonthlySummaryRow {
+  month: string
+  products: string
+  services: string
+  total: string
+}
+
 function currentCompanyId(): number {
   const id = useCompanyStore().currentCompanyId
   if (id === null) {
@@ -21,11 +28,32 @@ function currentCompanyId(): number {
 }
 
 export function listKpoEntries(
-  options: { dateFrom?: string; dateTo?: string } = {},
+  options: {
+    dateFrom?: string
+    dateTo?: string
+    page?: number
+    pageSize?: number
+    search?: string
+    ordering?: string
+  } = {},
 ): Promise<Paginated<KPOEntry>> {
   return apiFetch<Paginated<KPOEntry>>('kpo/', {
     companyId: currentCompanyId(),
-    params: { date_from: options.dateFrom, date_to: options.dateTo },
+    params: {
+      date_from: options.dateFrom,
+      date_to: options.dateTo,
+      page: options.page,
+      page_size: options.pageSize,
+      search: options.search,
+      ordering: options.ordering,
+    },
+  })
+}
+
+export function getKpoMonthlySummary(year?: number): Promise<KpoMonthlySummaryRow[]> {
+  return apiFetch<KpoMonthlySummaryRow[]>('kpo/monthly-summary/', {
+    companyId: currentCompanyId(),
+    params: { year },
   })
 }
 

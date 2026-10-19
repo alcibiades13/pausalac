@@ -27,6 +27,7 @@ class TaxResolutionViewSet(viewsets.ModelViewSet):
 class TaxObligationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TaxObligationSerializer
     filterset_fields = ["status"]
+    ordering_fields = ["due_date", "period_start", "status"]
 
     def get_permissions(self):
         codename = "manage_tax_obligations" if self.action == "mark_paid" else "view_financial_data"

@@ -1,54 +1,51 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Alert, Button, Card , DataTable, type DataTableColumn } from '@pausalac/ui'
+import { Alert, Button, Card, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
 import {
   listAdminCompanies,
   listAdminCompanyMembers,
   type AdminCompany,
   type AdminMembership,
 } from '@/services/admin'
-import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/formatDate'
+import { useTableQuery } from '@/composables/useTableQuery'
 
 const { t } = useI18n()
-
-const companies = ref<AdminCompany[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const page = ref(1)
-const hasNext = ref(false)
-const hasPrevious = ref(false)
 
 const membersFor = ref<AdminCompany | null>(null)
 const members = ref<AdminMembership[]>([])
 const membersLoading = ref(false)
 
 const columns = computed<DataTableColumn<AdminCompany>[]>(() => [
-  { key: 'name', label: t('admin.adminCompaniesView.nameColumn') },
+  { key: 'name', label: t('admin.adminCompaniesView.nameColumn'), sortable: true },
   { key: 'pib', label: t('admin.adminCompaniesView.pibColumn') },
   { key: 'city', label: t('admin.adminCompaniesView.cityColumn') },
   {
     key: 'created_at',
     label: t('admin.adminCompaniesView.registeredColumn'),
     format: (r) => formatDate(r.created_at),
+    sortable: true,
   },
 ])
 
-async function load() {
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    const result = await listAdminCompanies({ page: page.value })
-    companies.value = result.results
-    hasNext.value = result.next !== null
-    hasPrevious.value = result.previous !== null
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : t('admin.adminCompaniesView.loadError')
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  rows: companies,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+} = useTableQuery<AdminCompany>(
+  (q) => listAdminCompanies({ page: q.page, page_size: q.pageSize, search: q.search, ordering: q.ordering }),
+  { genericErrorMessage: t('admin.adminCompaniesView.loadError') },
+)
 
 async function onShowMembers(company: AdminCompany) {
   membersFor.value = company
@@ -60,15 +57,6 @@ async function onShowMembers(company: AdminCompany) {
   } finally {
     membersLoading.value = false
   }
-}
-
-function goNext() {
-  page.value += 1
-  load()
-}
-function goPrevious() {
-  page.value = Math.max(1, page.value - 1)
-  load()
 }
 
 onMounted(load)
@@ -83,18 +71,24 @@ onMounted(load)
     <DataTable
       :columns="columns"
       :rows="companies"
-      :loading="loading"
+      :loading="status === 'loading'"
+      :sort="sort"
       :empty-title="t('admin.adminCompaniesView.emptyTitle')"
+      @sort="onSort"
     >
       <template #actions="{ row }">
         <Button variant="secondary" @click="onShowMembers(row)">{{ t('admin.adminCompaniesView.membersButton') }}</Button>
       </template>
     </DataTable>
 
-    <div v-if="hasNext || hasPrevious" class="flex items-center gap-2">
-      <Button variant="secondary" :disabled="!hasPrevious" @click="goPrevious">{{ t('admin.adminCompaniesView.previousButton') }}</Button>
-      <Button variant="secondary" :disabled="!hasNext" @click="goNext">{{ t('admin.adminCompaniesView.nextButton') }}</Button>
-    </div>
+    <Pagination
+      :has-next="hasNext"
+      :has-previous="hasPrevious"
+      :page="page"
+      :total-pages="totalPages"
+      @next="nextPage"
+      @previous="prevPage"
+    />
 
     <Card v-if="membersFor">
       <div class="mb-3 flex items-center justify-between">

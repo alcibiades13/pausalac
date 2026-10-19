@@ -134,7 +134,7 @@ async function onExit() {
         </div>
       </header>
 
-      <main class="mx-auto max-w-5xl px-4 py-8">
+      <main class="mx-auto px-4 py-8" :class="route.meta.wideContent ? 'max-w-[1600px]' : 'max-w-5xl'">
         <RouterView v-slot="{ Component }">
           <Transition name="page" mode="out-in">
             <component :is="Component" />

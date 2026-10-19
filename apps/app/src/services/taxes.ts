@@ -63,11 +63,16 @@ export function listTaxResolutions(): Promise<Paginated<TaxResolution>> {
 }
 
 export function listTaxObligations(
-  options: { status?: ObligationStatus } = {},
+  options: { status?: ObligationStatus; page?: number; pageSize?: number; ordering?: string } = {},
 ): Promise<Paginated<TaxObligation>> {
   return apiFetch<Paginated<TaxObligation>>('taxes/obligations/', {
     companyId: currentCompanyId(),
-    params: { status: options.status },
+    params: {
+      status: options.status,
+      page: options.page,
+      page_size: options.pageSize,
+      ordering: options.ordering,
+    },
   })
 }
 

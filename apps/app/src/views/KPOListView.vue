@@ -1,40 +1,93 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Card, Alert, EmptyState, DatePicker, MoneyDisplay, Badge, Skeleton } from '@pausalac/ui'
-import { listKpoEntries, kpoExportPdfUrl, kpoExportXlsxUrl, type KPOEntry } from '@/services/kpo'
+import { Card, Alert, EmptyState, DatePicker, Input, MoneyDisplay, Badge, Skeleton, DataTable, Pagination, type DataTableColumn } from '@pausalac/ui'
+import { listKpoEntries, getKpoMonthlySummary, kpoExportPdfUrl, kpoExportXlsxUrl, type KPOEntry, type KpoMonthlySummaryRow } from '@/services/kpo'
 import { useCompanyStore } from '@/stores/company'
 import { ApiError } from '@/lib/api'
+import { useTableQuery } from '@/composables/useTableQuery'
+import KpoMonthlyBarChart from '@/components/charts/KpoMonthlyBarChart.vue'
 
 const { t } = useI18n()
 const company = useCompanyStore()
 const currency = computed(() => company.currentCompany?.default_currency ?? 'RSD')
 
-const entries = ref<KPOEntry[]>([])
-const status = ref<'loading' | 'ready' | 'error'>('loading')
-const errorMessage = ref('')
 const dateFrom = ref('')
 const dateTo = ref('')
 
-async function load() {
-  status.value = 'loading'
+const columns: DataTableColumn<KPOEntry>[] = [
+  { key: 'sequence_number', label: t('limitsAccountingEtc.kpoListView.columnSequence'), sortable: true },
+  { key: 'entry_date', label: t('limitsAccountingEtc.kpoListView.columnDate'), sortable: true },
+  { key: 'description', label: t('limitsAccountingEtc.kpoListView.columnDescription') },
+  { key: 'product_revenue', label: t('limitsAccountingEtc.kpoListView.columnProducts') },
+  { key: 'service_revenue', label: t('limitsAccountingEtc.kpoListView.columnServices') },
+  { key: 'total_revenue', label: t('limitsAccountingEtc.kpoListView.columnTotal') },
+]
+
+const {
+  rows: entries,
+  status,
+  errorMessage,
+  page,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  search,
+  sort,
+  onSort,
+  nextPage,
+  prevPage,
+  load,
+  reload,
+} = useTableQuery<KPOEntry>(
+  (q) =>
+    listKpoEntries({
+      dateFrom: dateFrom.value || undefined,
+      dateTo: dateTo.value || undefined,
+      page: q.page,
+      pageSize: q.pageSize,
+      search: q.search,
+      ordering: q.ordering,
+    }),
+  { genericErrorMessage: t('limitsAccountingEtc.kpoListView.loadError') },
+)
+
+onMounted(load)
+watch([dateFrom, dateTo], reload)
+
+// --- monthly summary chart (independent of the date filter above) -------
+
+const monthlySummary = ref<KpoMonthlySummaryRow[]>([])
+const summaryStatus = ref<'loading' | 'ready' | 'error'>('loading')
+const summaryError = ref('')
+
+async function loadSummary() {
+  summaryStatus.value = 'loading'
   try {
-    const page = await listKpoEntries({ dateFrom: dateFrom.value || undefined, dateTo: dateTo.value || undefined })
-    entries.value = page.results
-    status.value = 'ready'
+    monthlySummary.value = await getKpoMonthlySummary()
+    summaryStatus.value = 'ready'
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.kpoListView.loadError')
-    status.value = 'error'
+    summaryError.value = error instanceof ApiError ? error.message : t('limitsAccountingEtc.kpoListView.loadError')
+    summaryStatus.value = 'error'
   }
 }
 
-onMounted(load)
-watch([dateFrom, dateTo], load)
+onMounted(loadSummary)
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <h1 class="text-xl font-semibold text-navy">{{ t('limitsAccountingEtc.kpoListView.title') }}</h1>
+
+    <Card>
+      <h2 class="mb-3 text-sm font-medium text-navy">{{ t('limitsAccountingEtc.charts.kpoMonthly.title') }}</h2>
+      <Alert v-if="summaryStatus === 'error'" variant="danger">
+        {{ summaryError }}
+        <button class="ml-2 underline" @click="loadSummary">{{ t('limitsAccountingEtc.kpoListView.retryButton') }}</button>
+      </Alert>
+      <Skeleton v-else-if="summaryStatus === 'loading'" :count="1" height="260px" />
+      <KpoMonthlyBarChart v-else :rows="monthlySummary" :currency="currency" />
+    </Card>
 
     <Alert v-if="status === 'error'" variant="danger">
       {{ errorMessage }}
@@ -44,6 +97,12 @@ watch([dateFrom, dateTo], load)
     <Card v-else>
       <div class="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
         <div class="flex flex-wrap items-end gap-3">
+          <Input
+            v-model="search"
+            :label="t('limitsAccountingEtc.kpoListView.searchLabel')"
+            :placeholder="t('limitsAccountingEtc.kpoListView.searchPlaceholder')"
+            class="min-w-[200px]"
+          />
           <DatePicker v-model="dateFrom" :label="t('limitsAccountingEtc.kpoListView.dateFromLabel')" />
           <DatePicker v-model="dateTo" :label="t('limitsAccountingEtc.kpoListView.dateToLabel')" />
         </div>
@@ -55,7 +114,7 @@ watch([dateFrom, dateTo], load)
         </div>
       </div>
 
-      <Skeleton v-if="status === 'loading'" class="mt-4" :count="3" />
+      <Skeleton v-if="status === 'loading' && entries.length === 0" class="mt-4" :count="3" />
 
       <EmptyState
         v-else-if="entries.length === 0"
@@ -64,35 +123,41 @@ watch([dateFrom, dateTo], load)
         :description="t('limitsAccountingEtc.kpoListView.emptyDescription')"
       />
 
-      <div v-else class="mt-4 overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
-              <th class="py-2 pr-3">{{ t('limitsAccountingEtc.kpoListView.columnSequence') }}</th>
-              <th class="py-2 pr-3">{{ t('limitsAccountingEtc.kpoListView.columnDate') }}</th>
-              <th class="py-2 pr-3">{{ t('limitsAccountingEtc.kpoListView.columnDescription') }}</th>
-              <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.kpoListView.columnProducts') }}</th>
-              <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.kpoListView.columnServices') }}</th>
-              <th class="py-2 pr-3 text-right">{{ t('limitsAccountingEtc.kpoListView.columnTotal') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="entry in entries" :key="entry.id" class="border-b border-border">
-              <td class="py-2 pr-3 font-mono">{{ entry.sequence_number }}</td>
-              <td class="py-2 pr-3">{{ entry.entry_date }}</td>
-              <td class="py-2 pr-3">
-                {{ entry.description }}
-                <Badge v-if="entry.entry_type === 'storno'" variant="warning" class="ml-2">{{ t('limitsAccountingEtc.kpoListView.stornoBadge') }}</Badge>
-              </td>
-              <td class="py-2 pr-3 text-right"><MoneyDisplay :amount="entry.product_revenue" :currency="currency" /></td>
-              <td class="py-2 pr-3 text-right"><MoneyDisplay :amount="entry.service_revenue" :currency="currency" /></td>
-              <td class="py-2 pr-3 text-right font-medium text-navy">
-                <MoneyDisplay :amount="entry.total_revenue" :currency="currency" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <template v-else>
+        <DataTable
+          class="mt-4"
+          :columns="columns"
+          :rows="entries"
+          :loading="status === 'loading'"
+          :sort="sort"
+          row-key="id"
+          @sort="onSort"
+        >
+          <template #cell-description="{ row }">
+            {{ row.description }}
+            <Badge v-if="row.entry_type === 'storno'" variant="warning" class="ml-2">{{ t('limitsAccountingEtc.kpoListView.stornoBadge') }}</Badge>
+          </template>
+          <template #cell-product_revenue="{ row }">
+            <MoneyDisplay :amount="row.product_revenue" :currency="currency" />
+          </template>
+          <template #cell-service_revenue="{ row }">
+            <MoneyDisplay :amount="row.service_revenue" :currency="currency" />
+          </template>
+          <template #cell-total_revenue="{ row }">
+            <span class="font-medium text-navy"><MoneyDisplay :amount="row.total_revenue" :currency="currency" /></span>
+          </template>
+        </DataTable>
+
+        <Pagination
+          class="mt-4"
+          :has-next="hasNext"
+          :has-previous="hasPrevious"
+          :page="page"
+          :total-pages="totalPages"
+          @next="nextPage"
+          @previous="prevPage"
+        />
+      </template>
     </Card>
   </div>
 </template>

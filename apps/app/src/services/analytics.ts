@@ -12,16 +12,22 @@ export interface AttentionItem {
   action: { route: string; query?: Record<string, string> }
 }
 
+export interface MonthlyRevenuePoint {
+  month: string
+  amount: string
+}
+
 export interface Dashboard {
   business_health: { status: BusinessHealthStatus; reasons: string[] }
   attention: AttentionItem[]
-  revenue: { ytd: string; currency: string; basis: 'invoiced' }
+  revenue: { ytd: string; currency: string; basis: 'invoiced'; monthly_series: MonthlyRevenuePoint[] }
   outstanding: {
     count: number
     total: string
     currency: string
     overdue_count: number
     overdue_total: string
+    paid_ytd: string
   }
   onboarding: OnboardingStatus
   limits: Limits

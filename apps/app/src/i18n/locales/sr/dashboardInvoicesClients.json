@@ -26,12 +26,24 @@
     "outstandingOverdue": "od toga {count} kasni",
     "nextObligationTitle": "Sledeća obaveza",
     "nextObligationDue": "Rok: {date}",
-    "nextObligationOverdueSuffix": "— kasni",
     "noUpcomingObligation": "Nema predstojećih obaveza.",
     "onboardingProgress": "Nalog je {percentage}% podešen.",
-    "completeSetupLink": "Dovrši podešavanje →",
-    "newInvoiceButton": "+ Nova faktura",
-    "newClientButton": "+ Novi klijent"
+    "completeSetupLink": "Dovrši podešavanje →"
+  },
+  "charts": {
+    "revenueTrend": {
+      "title": "Kretanje prihoda",
+      "emptyTitle": "Još nema podataka o prihodu.",
+      "emptyDescription": "Grafikon će se popuniti čim izdaš prvu fakturu."
+    },
+    "invoiceStatusBreakdown": {
+      "title": "Status naplate",
+      "paid": "Naplaćeno",
+      "pending": "Na čekanju",
+      "overdue": "Kasni",
+      "emptyTitle": "Još nema faktura ove godine.",
+      "emptyDescription": "Grafikon će se popuniti čim izdaš prvu fakturu."
+    }
   },
   "settingsView": {
     "title": "Podešavanja",
@@ -86,7 +98,19 @@
     "emptyTitle": "Još nemaš fakture.",
     "emptyDescription": "Prva faktura može biti gotova za manje od minuta.",
     "newInvoiceCta": "+ Nova faktura",
-    "draftNumberFallback": "Nacrt #{id}"
+    "draftNumberFallback": "Nacrt #{id}",
+    "searchLabel": "Pretraga",
+    "searchPlaceholder": "Broj fakture, napomena...",
+    "columnNumber": "Broj",
+    "columnClient": "Klijent",
+    "columnIssueDate": "Datum izdavanja",
+    "columnDueDate": "Rok",
+    "columnAmount": "Iznos",
+    "columnStatus": "Status",
+    "statTotalLabel": "Ukupno fakturisano",
+    "statCountLabel": "Broj faktura",
+    "statOverdueLabel": "Kasni",
+    "statPaidYtdLabel": "Naplaćeno (ova godina)"
   },
   "invoiceFormView": {
     "loadError": "Ne možemo trenutno da učitamo podatke.",
@@ -195,6 +219,11 @@
     "loadError": "Ne možemo trenutno da učitamo klijente.",
     "emptyTitle": "Još nemaš klijente.",
     "emptyDescription": "Prvi klijent može biti dodat za manje od minuta.",
+    "columnName": "Naziv",
+    "columnTaxId": "PIB",
+    "columnEmail": "Email",
+    "columnType": "Tip",
+    "columnCreatedAt": "Dodat",
     "clientTypeLabels": {
       "company": "Pravno lice",
       "individual": "Fizičko lice"

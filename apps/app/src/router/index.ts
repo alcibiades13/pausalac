@@ -78,11 +78,17 @@ const router = createRouter({
           path: 'pocetna',
           name: 'home',
           component: () => import('@/views/HomeView.vue'),
+          // Only the dashboard opts into the wider content column
+          // (AppShell.vue) — cards/charts benefit from desktop width
+          // (blueprint §4.7), unlike a form or a reading-width detail
+          // page, which stay at the app's normal max-w-5xl.
+          meta: { wideContent: true },
         },
         {
           path: 'klijenti',
           name: 'clients',
           component: () => import('@/views/ClientsListView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'klijenti/novi',
@@ -108,6 +114,7 @@ const router = createRouter({
           path: 'fakture',
           name: 'invoices',
           component: () => import('@/views/InvoicesListView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'fakture/nova',
@@ -157,11 +164,13 @@ const router = createRouter({
           path: 'kpo',
           name: 'kpo',
           component: () => import('@/views/KPOListView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'obaveze',
           name: 'obligations',
           component: () => import('@/views/ObligationsView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'obavestenja',
@@ -172,6 +181,7 @@ const router = createRouter({
           path: 'dokumenti',
           name: 'documents',
           component: () => import('@/views/DocumentsView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'racunovodja',
@@ -182,7 +192,7 @@ const router = createRouter({
           path: 'organizacija',
           name: 'accounting-organization',
           component: () => import('@/views/AccountingOrganizationView.vue'),
-          meta: { section: 'accounting', breadcrumbKey: 'organization' },
+          meta: { section: 'accounting', breadcrumbKey: 'organization', wideContent: true },
         },
         {
           path: 'pretplata',
@@ -212,51 +222,61 @@ const router = createRouter({
           path: 'korisnici',
           name: 'admin-users',
           component: () => import('@/views/admin/AdminUsersView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'kompanije',
           name: 'admin-companies',
           component: () => import('@/views/admin/AdminCompaniesView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'pretplate',
           name: 'admin-subscriptions',
           component: () => import('@/views/admin/AdminSubscriptionsView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'planovi',
           name: 'admin-plans',
           component: () => import('@/views/admin/AdminPlansView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'fakture',
           name: 'admin-invoices',
           component: () => import('@/views/admin/AdminInvoicesView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'dokumenti',
           name: 'admin-documents',
           component: () => import('@/views/admin/AdminDocumentsView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'poreske-obaveze',
           name: 'admin-tax-obligations',
           component: () => import('@/views/admin/AdminTaxObligationsView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'pravila',
           name: 'admin-rules',
           component: () => import('@/views/admin/AdminRulesView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'obavestenja',
           name: 'admin-notifications',
           component: () => import('@/views/admin/AdminNotificationsView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'audit-log',
           name: 'admin-audit-log',
           component: () => import('@/views/admin/AdminAuditLogView.vue'),
+          meta: { wideContent: true },
         },
         {
           path: 'integracije',
