@@ -31,6 +31,7 @@
     "hero": {
       "titleMain": "Tvoj paušal,",
       "titleAccent": "na autopilotu.",
+      "subtitle": "Fakture, naplate, KPO, limiti i poreske obaveze - objedinjeni u preglednom sistemu za jednostavno poslovanje.",
       "facts": [
         "Vidiš tačno koliko si zaradio i koliko ti je ostalo do limita",
         "Faktura se šalje i naplata se prati bez ijedne Excel tabele",
@@ -44,17 +45,22 @@
       "mobileScreenshotAlt": "Dashboard Pausalac aplikacije na mobilnom telefonu — lista 'Zahteva pažnju' i donja navigacija"
     },
     "kickers": {
-      "kakoRadi": "Kako radi",
-      "moduli": "Moduli",
-      "jedanStatus": "Jedan status",
-      "fakturisanje": "Fakturisanje",
-      "poredjenje": "Poređenje",
-      "cenovnik": "Cenovnik",
-      "faq": "Pitanja"
+      "kakoRadi": "KAKO RADI",
+      "moduli": "MODULI",
+      "jedanStatus": "JEDAN STATUS",
+      "fakturisanje": "FAKTURISANJE",
+      "poredjenje": "POREĐENJE",
+      "cenovnik": "CENOVNIK",
+      "faq": "PITANJA",
+      "finalCta": "POSLEDNJI KORAK",
+      "announcement": "NOVO"
     },
     "problem": {
       "cards": [
-        { "title": "Koliko sam zaradio?", "body": "Fakturisano i naplaćeno na jednom mestu, uvek ažurno." },
+        {
+          "title": "Koliko sam zaradio?",
+          "body": "Fakturisano i naplaćeno na jednom mestu, uvek ažurno."
+        },
         {
           "title": "Koliko mi je ostalo do limita?",
           "body": "Paušalni i PDV limit prate se automatski, sa projekcijom do kraja godine."
@@ -90,9 +96,18 @@
         }
       ],
       "supporting": [
-        { "title": "Klijenti", "body": "Baza klijenata sa istorijom faktura i kontakt podacima." },
-        { "title": "Obaveze", "body": "Poreske i doprinosne obaveze sa rokovima na jednom mestu." },
-        { "title": "Dokumenti", "body": "Svi generisani PDF-ovi i priložena dokumentacija, organizovano." }
+        {
+          "title": "Klijenti",
+          "body": "Baza klijenata sa istorijom faktura i kontakt podacima."
+        },
+        {
+          "title": "Obaveze",
+          "body": "Poreske i doprinosne obaveze sa rokovima na jednom mestu."
+        },
+        {
+          "title": "Dokumenti",
+          "body": "Svi generisani PDF-ovi i priložena dokumentacija, organizovano."
+        }
       ]
     },
     "attention": {
@@ -122,7 +137,8 @@
           "body": "PDF i email idu direktno klijentu, status prati da li je faktura viđena i plaćena.",
           "screenshotAlt": "Izdata faktura spremna za slanje, sa stavkama i ukupnim iznosom"
         }
-      ]
+      ],
+      "description": "Bez posebnog alata za fakturisanje — klijent, stavke i slanje idu iz iste aplikacije u kojoj već pratiš naplatu i limite."
     },
     "comparison": {
       "heading": "Pausalac naspram ručnog vođenja",
@@ -131,19 +147,25 @@
         "Excel tabele i razbacani podsetnici",
         "Ručno računanje koliko ti je ostalo do limita",
         "Rokovi koje pratiš iz glave ili kalendara",
-        "Fakture bez uvida u status naplate"
+        "Fakture bez uvida u status naplate",
+        "KPO knjigu vodiš ručno, posle svake fakture",
+        "Ne znaš odakle dolazi broj na koji gledaš"
       ],
       "withTitle": "Sa Pausalac-om",
       "withItems": [
         "Sve na jednom mestu, uvek ažurno",
-        "Automatsko praćenje limita sa projekcijom",
+        "Automatsko praćenje limita sa projekcijom do kraja godine",
         "Jasan rok i status za svaku obavezu",
-        "Fakture sa PDF-om i statusom naplate uživo"
-      ]
+        "Fakture sa PDF-om i statusom naplate uživo",
+        "KPO knjiga se generiše sama, iz stvarnih transakcija",
+        "Svaki broj se može pratiti do izvora — transparentno i auditabilno"
+      ],
+      "description": "Isti posao, samo bez ručnog sastavljanja slike iz tabela, kalendara i podsetnika."
     },
     "pricing": {
       "heading": "Jednostavni paketi",
-      "seeAll": "Pogledaj sve pakete i detalje →"
+      "seeAll": "Pogledaj sve pakete i detalje →",
+      "description": "Bez skrivenih troškova — svaki paket jasno kaže šta dobijaš."
     },
     "faq": {
       "heading": "Česta pitanja",
@@ -175,7 +197,7 @@
       ]
     },
     "knowledgeBase": {
-      "kicker": "Baza znanja",
+      "kicker": "BAZA ZNANJA",
       "heading": "Naučite više o paušalnom poslovanju",
       "subtitle": "Kratki, praktični tekstovi o tome kako paušalno poslovanje funkcioniše i kako ga Pausalac pojednostavljuje.",
       "seeAll": "Pogledaj sve tekstove →",
@@ -184,7 +206,11 @@
     "finalCta": {
       "heading": "Spreman da prestaneš da razmišljaš o administraciji?",
       "cta": "Probaj besplatno",
-      "facts": ["14 dana besplatno", "Bez potrebe za karticom", "Sve na jednom mestu"]
+      "description": "14 dana besplatno, bez potrebe za karticom, sve na jednom mestu."
+    },
+    "announcement": {
+      "text": "Prijave su otvorene — vodi paušalni biznis sa jednim statusom umesto gomile kartica.",
+      "cta": "Probaj besplatno"
     }
   },
   "articles": {
@@ -311,6 +337,25 @@
   "pricingCard": {
     "perMonth": "/mes",
     "mostPopular": "Najpopularniji",
-    "cta": "Probaj besplatno"
+    "cta": "Probaj besplatno",
+    "includesLabel": "Uključuje",
+    "features": {
+      "starter": [
+        "Neograničen broj faktura i klijenata",
+        "Automatska KPO knjiga",
+        "Praćenje paušalnog i PDV limita"
+      ],
+      "professional": [
+        "Sve iz Starter paketa",
+        "Attention Center — jedna lista prioriteta",
+        "Poreski kalendar i podsetnici",
+        "Skladištenje dokumenata"
+      ],
+      "business": [
+        "Sve iz Professional paketa",
+        "Veza sa računovođom",
+        "Prioritetna podrška"
+      ]
+    }
   }
 }

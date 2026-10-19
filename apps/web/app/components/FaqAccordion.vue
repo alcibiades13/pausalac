@@ -12,7 +12,7 @@ function toggle(i: number) {
 </script>
 
 <template>
-  <div class="flex flex-col divide-y divide-border rounded-2xl border border-border bg-surface">
+  <div class="flex flex-col divide-y divide-border rounded-2xl border border-border bg-background">
     <div v-for="(item, i) in items" :key="i">
       <h3>
         <button

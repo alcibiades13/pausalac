@@ -31,6 +31,7 @@
     "hero": {
       "titleMain": "Your flat-rate business,",
       "titleAccent": "on autopilot.",
+      "subtitle": "Invoices, collections, revenue ledger, limits and tax obligations — unified in one clear system for simple bookkeeping.",
       "facts": [
         "See exactly how much you've earned and how much room is left under your limit",
         "Invoices go out and get tracked to payment without a single spreadsheet",
@@ -44,17 +45,22 @@
       "mobileScreenshotAlt": "Pausalac dashboard on a phone — the 'Needs attention' list and bottom navigation"
     },
     "kickers": {
-      "kakoRadi": "How it works",
-      "moduli": "Modules",
-      "jedanStatus": "One status",
-      "fakturisanje": "Invoicing",
-      "poredjenje": "Comparison",
-      "cenovnik": "Pricing",
-      "faq": "Questions"
+      "kakoRadi": "HOW IT WORKS",
+      "moduli": "MODULES",
+      "jedanStatus": "ONE STATUS",
+      "fakturisanje": "INVOICING",
+      "poredjenje": "COMPARISON",
+      "cenovnik": "PRICING",
+      "faq": "QUESTIONS",
+      "finalCta": "LAST STEP",
+      "announcement": "NEW"
     },
     "problem": {
       "cards": [
-        { "title": "How much have I earned?", "body": "Invoiced and collected revenue in one place, always up to date." },
+        {
+          "title": "How much have I earned?",
+          "body": "Invoiced and collected revenue in one place, always up to date."
+        },
         {
           "title": "How much room do I have left under my limit?",
           "body": "Your flat-rate and VAT limits are tracked automatically, with a year-end projection."
@@ -90,9 +96,18 @@
         }
       ],
       "supporting": [
-        { "title": "Clients", "body": "A client base with invoice history and contact details." },
-        { "title": "Obligations", "body": "Tax and contribution obligations with their due dates, in one place." },
-        { "title": "Documents", "body": "Every generated PDF and attached document, organized." }
+        {
+          "title": "Clients",
+          "body": "A client base with invoice history and contact details."
+        },
+        {
+          "title": "Obligations",
+          "body": "Tax and contribution obligations with their due dates, in one place."
+        },
+        {
+          "title": "Documents",
+          "body": "Every generated PDF and attached document, organized."
+        }
       ]
     },
     "attention": {
@@ -122,7 +137,8 @@
           "body": "The PDF and email go straight to the client — status tracks whether it's been seen and paid.",
           "screenshotAlt": "Issued invoice ready to send, with line items and total"
         }
-      ]
+      ],
+      "description": "No separate invoicing tool — the client, line items and sending all happen in the same app where you already track payments and limits."
     },
     "comparison": {
       "heading": "Pausalac vs. doing it by hand",
@@ -131,19 +147,25 @@
         "Spreadsheets and scattered reminders",
         "Manually working out how much room is left under your limit",
         "Deadlines you keep track of from memory or a calendar",
-        "Invoices with no visibility into payment status"
+        "Invoices with no visibility into payment status",
+        "A revenue ledger you keep by hand, after every invoice",
+        "No way to tell where a number you're looking at actually comes from"
       ],
       "withTitle": "With Pausalac",
       "withItems": [
         "Everything in one place, always up to date",
-        "Automatic limit tracking with a projection",
+        "Automatic limit tracking with a year-end projection",
         "A clear due date and status for every obligation",
-        "Invoices with a PDF and live payment status"
-      ]
+        "Invoices with a PDF and live payment status",
+        "The revenue ledger builds itself, from real transactions",
+        "Every number traces back to its source — transparent and auditable"
+      ],
+      "description": "Same work, just without manually piecing the picture together from spreadsheets, calendars and reminders."
     },
     "pricing": {
       "heading": "Simple plans",
-      "seeAll": "See all plans and details →"
+      "seeAll": "See all plans and details →",
+      "description": "No hidden costs — every plan clearly states what's included."
     },
     "faq": {
       "heading": "Frequently asked questions",
@@ -175,7 +197,7 @@
       ]
     },
     "knowledgeBase": {
-      "kicker": "Knowledge base",
+      "kicker": "KNOWLEDGE BASE",
       "heading": "Learn more about running a flat-rate business",
       "subtitle": "Short, practical articles on how flat-rate business works, and how Pausalac makes it simpler.",
       "seeAll": "See all articles →",
@@ -184,7 +206,11 @@
     "finalCta": {
       "heading": "Ready to stop thinking about admin?",
       "cta": "Try for free",
-      "facts": ["14 days free", "No card required", "Everything in one place"]
+      "description": "14 days free, no card required, everything in one place."
+    },
+    "announcement": {
+      "text": "Sign-ups are open — run your flat-rate business with one status instead of a pile of cards.",
+      "cta": "Try for free"
     }
   },
   "articles": {
@@ -311,6 +337,25 @@
   "pricingCard": {
     "perMonth": "/mo",
     "mostPopular": "Most popular",
-    "cta": "Try for free"
+    "cta": "Try for free",
+    "includesLabel": "Includes",
+    "features": {
+      "starter": [
+        "Unlimited invoices and clients",
+        "Automatic revenue ledger",
+        "Flat-rate and VAT limit tracking"
+      ],
+      "professional": [
+        "Everything in Starter",
+        "Attention Center — one prioritized list",
+        "Tax calendar and reminders",
+        "Document storage"
+      ],
+      "business": [
+        "Everything in Professional",
+        "Accountant connection",
+        "Priority support"
+      ]
+    }
   }
 }

@@ -1,18 +1,39 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { Button } from '@pausalac/ui'
 import LanguageSwitcher from '~/components/LanguageSwitcher.vue'
 
 const config = useRuntimeConfig()
 const { isLoggedIn } = useAuthStatus()
 const localePath = useLocalePath()
+
+// Full-bleed header (no floating card / border-radius per redesign) that
+// picks up a translucent glass (backdrop-blur) look once the page has
+// scrolled a bit, instead of always being glassy — a solid bg reads
+// cleanest sitting right at the top of the hero.
+const isScrolled = ref(false)
+let onScroll: (() => void) | undefined
+
+onMounted(() => {
+  onScroll = () => {
+    isScrolled.value = window.scrollY > 8
+  }
+  onScroll()
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  if (onScroll) window.removeEventListener('scroll', onScroll)
+})
 </script>
 
 <template>
   <div class="flex min-h-screen flex-col bg-background">
-    <div class="sticky top-4 z-20 px-4 sm:px-6">
-      <header
-        class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 rounded-2xl border border-border bg-surface px-4 py-3 shadow-[0_10px_40px_-10px_rgba(10,10,10,0.20)] sm:px-5"
-      >
+    <header
+      class="sticky top-0 z-30 w-full border-b border-border shadow-[0_10px_40px_-10px_rgba(10,10,10,0.20)] transition-colors duration-300"
+      :class="isScrolled ? 'bg-surface/70 backdrop-blur-md' : 'bg-surface'"
+    >
+      <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <NuxtLink :to="localePath('/')" class="flex items-center gap-2">
           <span
             class="h-6 w-6 shrink-0 rounded-lg bg-gradient-to-br from-primary to-primary-dark"
@@ -50,8 +71,8 @@ const localePath = useLocalePath()
             <Button>{{ $t('nav.aplikacija') }}</Button>
           </a>
         </div>
-      </header>
-    </div>
+      </div>
+    </header>
 
     <main class="flex-1">
       <slot />
